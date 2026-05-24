@@ -578,21 +578,58 @@ EOF
 
 # ============================================================================
 #  VIEW ERROR LOGS — show PHP/Apache error_log files created under the bot dir
+#  AND under every additional bot directory in /var/www/html/<bot>/ that has
+#  a config.php (so each additional bot is auto-discovered by its folder name).
 # ============================================================================
 view_error_logs() {
     show_logo
     ui_panel "VIEW ERROR LOGS" "$C_BOLD$C_GREEN" "$C_GREEN" \
-        "${C_WHITE}Shows error_log / *.log files created under ${BOT_DIR}.${C_RESET}"
+        "${C_WHITE}Shows error_log / *.log files for the main bot and every additional bot.${C_RESET}" \
+        "${C_DIM}Scans ${BOT_DIR} plus any /var/www/html/<bot>/ directory containing config.php.${C_RESET}"
 
-    if [ ! -d "$BOT_DIR" ]; then
-        ui_err "Bot directory not found: ${BOT_DIR}"
+    # Build the list of bot directories to scan: main bot + every additional
+    # bot directory under /var/www/html/ that has its own config.php. Using
+    # config.php as the marker means we skip unrelated folders (phpmyadmin,
+    # static sites, etc.) and auto-pick up any additional bot by folder name.
+    local SCAN_DIRS=()
+    [ -d "$BOT_DIR" ] && SCAN_DIRS+=("$BOT_DIR")
+
+    local d
+    for d in /var/www/html/*/; do
+        d="${d%/}"
+        [ "$d" = "$BOT_DIR" ] && continue
+        [ -f "${d}/config.php" ] || continue
+        SCAN_DIRS+=("$d")
+    done
+
+    if [ "${#SCAN_DIRS[@]}" -eq 0 ]; then
+        ui_err "No bot directories found under /var/www/html (looked for config.php)."
         printf '\n  %s❯%s Press Enter to return to main menu... ' "$C_YELLOW" "$C_RESET"; read -r
         show_menu; return 1
     fi
 
-    ui_action "Scanning ${BOT_DIR} for log files..."
+    local sd
+    for sd in "${SCAN_DIRS[@]}"; do
+        ui_action "Scanning ${sd} for log files..."
+    done
+
+    # Also include the per-bot Apache vhost logs in /var/log/apache2 that are
+    # named after each bot's domain (the additional-bot installer writes them
+    # as <domain>-error.log / <domain>-access.log).
     local LOGS=()
-    mapfile -t LOGS < <(find "$BOT_DIR" -type f \( -name 'error_log' -o -name '*.log' \) 2>/dev/null | sort)
+    local combined_find_paths=("${SCAN_DIRS[@]}")
+    mapfile -t LOGS < <(find "${combined_find_paths[@]}" -type f \( -name 'error_log' -o -name '*.log' \) 2>/dev/null | sort)
+
+    local sd2 domain vhost_err vhost_acc
+    for sd2 in "${SCAN_DIRS[@]}"; do
+        [ -f "${sd2}/config.php" ] || continue
+        domain=$(grep '^\$domainhosts' "${sd2}/config.php" 2>/dev/null | cut -d"'" -f2 | cut -d'/' -f1)
+        [ -z "$domain" ] && continue
+        vhost_err="/var/log/apache2/${domain}-error.log"
+        vhost_acc="/var/log/apache2/${domain}-access.log"
+        [ -f "$vhost_err" ] && LOGS+=("$vhost_err")
+        [ -f "$vhost_acc" ] && LOGS+=("$vhost_acc")
+    done
 
     if [ "${#LOGS[@]}" -eq 0 ]; then
         ui_ok "No error log files found under ${BOT_DIR} — nothing to show."
@@ -2679,21 +2716,27 @@ install_additional_bot() {
 
     ui_action "Stopping Apache 2 to free port 80..."
     systemctl stop apache2 2>/dev/null || true
+    # Remove any stale PID/socket files so Apache can come back cleanly.
+    cleanup_apache_state
 
     ui_action "Obtaining SSL certificate..."
     if ! wait_for_certbot; then
         ui_err "Certbot is busy. Please try again shortly."
-        systemctl start apache2 2>/dev/null || true
+        restore_apache_service
         return 1
     fi
     certbot certonly --standalone --agree-tos --preferred-challenges http -d "$DOMAIN_NAME" || {
         ui_err "Error obtaining SSL certificate."
-        systemctl start apache2 2>/dev/null || true
+        restore_apache_service
         return 1
     }
 
     ui_action "Restarting Apache 2..."
-    systemctl start apache2 2>/dev/null || true
+    restore_apache_service
+    if ! systemctl is-active --quiet apache2; then
+        ui_err "Apache 2 is not running after certbot — aborting before writing vhost."
+        return 1
+    fi
 
     while true; do
         printf '  %s❯%s Enter the bot name: ' "$C_YELLOW" "$C_RESET"
@@ -2710,6 +2753,14 @@ install_additional_bot() {
         return 1
     fi
 
+    # Make sure the modules the new vhost depends on are enabled before reload.
+    # On a fresh server certbot may not have enabled mod_ssl yet, and without
+    # rewrite the bot's .htaccess (if any) is silently ignored.
+    ui_action "Enabling required Apache 2 modules (ssl, rewrite, headers)..."
+    a2enmod ssl     >/dev/null 2>&1 || ui_warn "Failed to enable mod_ssl."
+    a2enmod rewrite >/dev/null 2>&1 || ui_warn "Failed to enable mod_rewrite."
+    a2enmod headers >/dev/null 2>&1 || true
+
     ui_action "Configuring Apache 2 for ${DOMAIN_NAME}..."
     cat > "$APACHE_CONFIG" <<EOF
 <VirtualHost *:80>
@@ -2721,16 +2772,56 @@ install_additional_bot() {
     ServerName ${DOMAIN_NAME}
     DocumentRoot /var/www/html/${BOT_NAME}
 
+    <Directory /var/www/html/${BOT_NAME}>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
     SSLEngine on
     SSLCertificateFile /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem
     SSLCertificateKeyFile /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem
+
+    ErrorLog \${APACHE_LOG_DIR}/${DOMAIN_NAME}-error.log
+    CustomLog \${APACHE_LOG_DIR}/${DOMAIN_NAME}-access.log combined
 </VirtualHost>
 EOF
 
     local BOT_PATH="/var/www/html/${BOT_NAME}"
     mkdir -p "$BOT_PATH"
-    a2ensite "${DOMAIN_NAME}.conf" >/dev/null
-    systemctl reload apache2
+
+    if ! a2ensite "${DOMAIN_NAME}.conf" >/dev/null; then
+        ui_err "Failed to enable Apache 2 site ${DOMAIN_NAME}.conf"
+        return 1
+    fi
+
+    # Validate the whole Apache config before touching the running service —
+    # a bad reload would take the main bot down with it.
+    if ! apache2ctl configtest >/dev/null 2>&1; then
+        ui_err "Apache 2 configuration test failed after adding ${DOMAIN_NAME}."
+        ui_warn "Disabling the new vhost so the main bot keeps working..."
+        a2dissite "${DOMAIN_NAME}.conf" >/dev/null 2>&1 || true
+        rm -f "$APACHE_CONFIG"
+        restore_apache_service
+        return 1
+    fi
+
+    # Full restart (not reload) so a previously-stopped Apache definitely
+    # comes back up, then assert it is actually active.
+    cleanup_apache_state
+    if ! systemctl restart apache2; then
+        ui_err "Apache 2 failed to restart after adding ${DOMAIN_NAME}."
+        ui_warn "Rolling back the new vhost to recover the main bot..."
+        a2dissite "${DOMAIN_NAME}.conf" >/dev/null 2>&1 || true
+        rm -f "$APACHE_CONFIG"
+        restore_apache_service
+        return 1
+    fi
+    if ! systemctl is-active --quiet apache2; then
+        ui_err "Apache 2 is not active after restart."
+        return 1
+    fi
+    ui_ok "Apache 2 is active and serving ${DOMAIN_NAME}."
 
     ui_action "Cloning Faoxima source code..."
     rm -rf "$BOT_PATH"
@@ -2832,10 +2923,28 @@ EOF
     curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
         -d chat_id="${CHAT_ID}" -d text="${MESSAGE}" || ui_warn "Failed to send Telegram welcome message."
 
+    # Final sanity check: Apache MUST be running before we hit table.php,
+    # otherwise the curl below silently fails and the database is left
+    # un-initialised (this was the cause of the "table.php ran once then
+    # everything stopped working" bug — Apache had quietly died).
+    if ! systemctl is-active --quiet apache2; then
+        ui_warn "Apache 2 is not active right before table.php — trying to recover..."
+        restore_apache_service
+    fi
+    grant_file_permissions "$BOT_PATH"
+
     local TABLE_SETUP_URL="https://${DOMAIN_NAME}/${BOT_NAME}/table.php?token=$(printf '%s' "$admin_panel_token" | sed 's/&/%26/g')"
     ui_action "Setting up database tables (with token)..."
     curl -s "$TABLE_SETUP_URL" >/dev/null || \
         ui_warn "Failed to fetch ${TABLE_SETUP_URL} — please open it manually in a browser."
+
+    # Apache may have been left in a bad state by anything above; make sure
+    # both the main bot and the new additional bot are actually being served
+    # before we tell the user the install succeeded.
+    if ! systemctl is-active --quiet apache2; then
+        ui_warn "Apache 2 stopped responding after table.php — restarting..."
+        restore_apache_service
+    fi
 
     clear
     show_logo
