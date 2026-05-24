@@ -210,10 +210,15 @@ if (in_array($text, $textadmin) || $datain == "admin") {
         }
 
         // ── Finance steps ──────────────────────────────────────────────────────
+        // NOTE: `getpricecashback` was here but it belongs to the SHOP menu
+        // ("🎁 کش بک تمدید" lives under $shopkeyboard, not the finance menu).
+        // Routing it to the finance menu via sendAdminFinanceMenu made the
+        // back-to-previous-menu button jump the user to the wrong parent.
+        // It's been moved to $discountSteps below, which returns $shopkeyboard.
         $financeSteps = [
             'marchent_tronseller', 'marchent_floypay', 'urlpaymenttron', 'cryptowallet_set',
             'admin_nav_finance', 'maxbalance', 'minbalance', 'CartDirect', 'showcardallusers',
-            'apiiranpay', 'getpricecashback', 'getnameconfigm',
+            'apiiranpay', 'getnameconfigm',
         ];
         if (in_array($currentStep, $financeSteps, true)) {
             step('home', $from_id);
@@ -245,14 +250,16 @@ if (in_array($text, $textadmin) || $datain == "admin") {
         }
 
         // ── Discount steps → shop menu ─────────────────────────────────────────
+        // (Also covers cashback-extension steps: `getpricecashback` step-1
+        // and `getagent` step-2 both live under shop menu → "کش بک تمدید".)
         $discountSteps = [
             'getdiscont', 'getfirstdiscount', 'getlimitcode', 'getlimitcodedis',
             'getlocdiscount', 'getproductdiscount', 'gettimediscount', 'gettypeagentoflist',
             'gettypecodeagent', 'getuseuser', 'getmaxbuyagent', 'getpercentuser',
             'setpercentage', 'remove-Discount', 'remove-Discountsell', 'get_price_code',
             'get_price_codesell', 'get_price_Negative', 'Negative_Balance',
-            'getlimitedpanel', 'getagent', 'stependforaddorder', 'getnameproduct',
-            'add_Balance_all', 'setbanner', 'show_info', 'reject-dec',
+            'getlimitedpanel', 'getagent', 'getpricecashback', 'stependforaddorder',
+            'getnameproduct', 'add_Balance_all', 'setbanner', 'show_info', 'reject-dec',
             'remove-product', 'get_number_limit', 'GetLocationEdit', 'PanelMenu',
         ];
         if (in_array($currentStep, $discountSteps, true)) {
@@ -5700,7 +5707,16 @@ $text_expie_agent
 } elseif ($user['step'] == "getlimitcodedis") {
     step("home", $from_id);
     update("Discount", "limituse", $text, "code", $user['Processing_value']);
-    nm_adminInstantReply($from_id, $textbotlang['Admin']['Discount']['SaveCode'], $keyboardadmin, 'HTML');
+
+    // Preview summary — mirror the discount-code success message at
+    // finance.php:1482-1491 so the admin can verify the fields at a glance.
+    $giftRow = select("Discount", "*", "code", $user['Processing_value'], "select");
+    $textgift = "🎁 کد هدیه شما با موفقیت ساخته شد.
+
+📩 نام کد هدیه: <code>{$giftRow['code']}</code>
+💰 مبلغ کد هدیه: {$giftRow['price']} تومان
+🔴 محدودیت استفاده: {$giftRow['limituse']}";
+    nm_adminInstantReply($from_id, $textgift, $keyboardadmin, 'HTML');
 } elseif ($text == "❌ حذف کد هدیه" && $adminrulecheck['rule'] == "administrator") {
     nm_adminInstantReply($from_id, $textbotlang['Admin']['Discount']['RemoveCode'], $json_list_Discount_list_admin, 'HTML');
     step('remove-Discount', $from_id);

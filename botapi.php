@@ -49,48 +49,85 @@ function telegram($method, $datas = [], $token = null)
 
     $preparedPayload = prepareTelegramRequestPayload($datas);
 
-    $ch = curl_init($url);
-    if ($ch === false) {
-        error_log('Unable to initialise cURL for Telegram request.');
-        return [
-            'ok' => false,
-            'description' => 'Unable to initialise cURL for Telegram request.'
-        ];
-    }
+    // Outbound to api.telegram.org has intermittent 2-5s connect timeouts
+    // on some hosting providers (MatHost.eu in particular). When a single
+    // sendmessage() fails, the calling handler usually has ALREADY advanced
+    // `step()` past this state — leaving the admin in a "stuck" state with
+    // no UI to recover. A short network-level retry inside telegram() makes
+    // the rest of the codebase resilient to those blips without touching
+    // ~50+ call-sites.
+    //
+    // Only retry on transient cURL errors (DNS, connect, timeout, recv).
+    // Application errors (HTTP 4xx/5xx, "message to edit not found", etc.)
+    // are NOT retried — they're real responses, not network failures.
+    $retryableCurlErrnos = [6, 7, 28, 35, 56];
+    $maxAttempts = 2; // 1 retry. Total worst case: ~10s (acceptable for a 30s webhook).
+    $rawResponse = false;
+    $curlErrorNumber = 0;
+    $curlError = '';
+    $httpCode = 0;
+    $duration = 0.0;
+    $attemptedTimes = 0;
 
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_ENCODING, '');
-    $timeout = isset($telegramCurlTimeout) && is_numeric($telegramCurlTimeout) ? (int)$telegramCurlTimeout : 10;
-    curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-    curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-    curl_setopt($ch, CURLOPT_TCP_KEEPALIVE, 1);
-    curl_setopt($ch, CURLOPT_TCP_KEEPIDLE, 60);
-    curl_setopt($ch, CURLOPT_TCP_KEEPINTVL, 30);
-    if (!empty($preparedPayload['headers'])) {
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $preparedPayload['headers']);
-    }
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $preparedPayload['body']);
+    while ($attemptedTimes < $maxAttempts) {
+        $attemptedTimes++;
 
-    $requestStartedAt = microtime(true);
-    $rawResponse = curl_exec($ch);
-    if ($rawResponse === false) {
+        $ch = curl_init($url);
+        if ($ch === false) {
+            error_log('Unable to initialise cURL for Telegram request.');
+            return [
+                'ok' => false,
+                'description' => 'Unable to initialise cURL for Telegram request.'
+            ];
+        }
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_ENCODING, '');
+        $timeout = isset($telegramCurlTimeout) && is_numeric($telegramCurlTimeout) ? (int)$telegramCurlTimeout : 10;
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        curl_setopt($ch, CURLOPT_TCP_KEEPALIVE, 1);
+        curl_setopt($ch, CURLOPT_TCP_KEEPIDLE, 60);
+        curl_setopt($ch, CURLOPT_TCP_KEEPINTVL, 30);
+        if (!empty($preparedPayload['headers'])) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $preparedPayload['headers']);
+        }
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $preparedPayload['body']);
+
+        $requestStartedAt = microtime(true);
+        $rawResponse = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $duration = microtime(true) - $requestStartedAt;
+
+        if ($rawResponse !== false) {
+            curl_close($ch);
+            break; // network success — proceed to response parsing below
+        }
+
         $curlErrorNumber = curl_errno($ch);
         $curlError = curl_error($ch);
         curl_close($ch);
 
+        // Stop if the error isn't network-transient, or if we just used the
+        // last attempt — fall through to the error-return block.
+        if (!in_array($curlErrorNumber, $retryableCurlErrnos, true) || $attemptedTimes >= $maxAttempts) {
+            break;
+        }
+
+        usleep(250000); // 250 ms backoff before retry
+    }
+
+    if ($rawResponse === false) {
         $logError = $curlError !== '' ? $curlError : 'Unknown cURL error';
-        error_log(sprintf('Telegram request failed (errno: %d, url: %s): %s', $curlErrorNumber, $url, $logError));
+        error_log(sprintf('Telegram request failed (errno: %d, url: %s, attempts: %d): %s',
+            $curlErrorNumber, $url, $attemptedTimes, $logError));
 
         return [
             'ok' => false,
             'description' => ($curlError !== '' ? $curlError : 'Telegram request failed.') . ' اتصال به تلگرام در مهلت مقرر برقرار نشد؛ فایروال یا پراکسی خروجی را بررسی کنید.'
         ];
     }
-
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $duration = microtime(true) - $requestStartedAt;
-    curl_close($ch);
 
     if ($duration >= 5.0) {
         error_log(sprintf('Slow Telegram response detected (method: %s, http_code: %d, duration: %.3fs)', $method, $httpCode, $duration));

@@ -6,21 +6,12 @@ if (is_file($guardHelperPath)) {
 }
 
 
-if (
-    in_array($from_id, $admin_ids ?? [])
-    && empty($callback_query_id)
-    && !empty($message_id)
-    && isset($setting['inlinebtnmain'])
-    && $setting['inlinebtnmain'] === 'oninline'
-    && function_exists('deletemessage')
-) {
-
-
-    if (!isset($GLOBALS['rx_admin_instant_deleted']) || $GLOBALS['rx_admin_instant_deleted'] !== $message_id) {
-        try { @deletemessage($from_id, $message_id); } catch (Throwable $e) {}
-        $GLOBALS['rx_admin_instant_deleted'] = $message_id;
-    }
-}
+// (Removed) Pre-handler auto-delete of admin typed input.
+// Used to fire when $setting['inlinebtnmain'] === 'oninline', muxing the
+// "glass/inline button mode" feature with "delete admin's typed text",
+// which are unrelated concerns. The glass-button feature is preserved
+// elsewhere (rx_keyboardToInline); the typed-input deletion is removed
+// so admin commands / form inputs stay visible in chat history.
 
 $textadmin = ["panel", "/panel", $textbotlang['Admin']['textpaneladmin']];
 if (isset($datain) && $datain != "" && $text == "" && in_array($from_id, $admin_ids)) {

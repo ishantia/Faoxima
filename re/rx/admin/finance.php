@@ -1,14 +1,35 @@
 <?php
 
 if (function_exists('nmResolvePanelNameForUser')) {
-    $rxResolvedPanelName = nmResolvePanelNameForUser($user);
-    if ($rxResolvedPanelName !== '') {
-        $rawProcessing = (string)($user['Processing_value'] ?? '');
-        if ($rawProcessing === '' || $rawProcessing[0] === '{' || $rawProcessing[0] === '[') {
-            $user['Processing_value'] = $rxResolvedPanelName;
+    // Some legacy handlers in this file (panel-name edit, URL edit, etc.)
+    // expect $user['Processing_value'] to be a SCALAR panel name. This shim
+    // extracts the panel name from a JSON-encoded state and writes it back
+    // as a scalar — but doing that UNCONDITIONALLY destroys the multi-key
+    // JSON state used by the discount/gift creation flows.
+    //
+    // Symptom: in step `getproductdiscount` the admin types "all", the
+    // handler runs json_decode($user['Processing_value']) and gets NULL
+    // (because this shim just overwrote the JSON with "/all"), every key
+    // looks "missing", and the bot replies "اطلاعات ساخت کد تخفیف ناقص".
+    //
+    // Skip the shim while the user is mid-flow in one of those JSON-state
+    // steps. Other steps keep their previous behavior.
+    $jsonStateSteps = [
+        'get_code','get_price_code','getlimitcodedis',
+        'get_codesell','get_price_codesell','getlimitcode','gettypecodeagent',
+        'gettimediscount','getfirstdiscount','getuseuser','getlocdiscount','getproductdiscount',
+    ];
+    if (!in_array($user['step'] ?? '', $jsonStateSteps, true)) {
+        $rxResolvedPanelName = nmResolvePanelNameForUser($user);
+        if ($rxResolvedPanelName !== '') {
+            $rawProcessing = (string)($user['Processing_value'] ?? '');
+            if ($rawProcessing === '' || $rawProcessing[0] === '{' || $rawProcessing[0] === '[') {
+                $user['Processing_value'] = $rxResolvedPanelName;
+            }
         }
+        unset($rxResolvedPanelName, $rawProcessing);
     }
-    unset($rxResolvedPanelName, $rawProcessing);
+    unset($jsonStateSteps);
 }
 if (false) {
 } elseif ($text == "✍️ نام پنل" && $adminrulecheck['rule'] == "administrator") {

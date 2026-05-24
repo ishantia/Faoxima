@@ -453,14 +453,16 @@ if ($table_exists) {
         'keyboard' => [],
         'resize_keyboard' => true,
     ];
-    $list_product['keyboard'][] = [
-        ['text' => $textbotlang['Admin']['backadmin']],
-    ];
     foreach ($product as $button) {
         $list_product['keyboard'][] = [
             ['text' => $button[0]]
         ];
     }
+    // Back row appended last so it renders at the bottom of the product
+    // picker. Same fix as the gift-code/discount-code delete lists below.
+    $list_product['keyboard'][] = [
+        ['text' => $textbotlang['Admin']['backadmin']],
+    ];
     $json_list_product_list_admin = json_encode($list_product);
 }
 
@@ -479,14 +481,18 @@ if ($table_exists) {
         'keyboard' => [],
         'resize_keyboard' => true,
     ];
-    $list_Discount['keyboard'][] = [
-        ['text' => $textbotlang['Admin']['backadmin']],
-    ];
     foreach ($Discount as $button) {
         $list_Discount['keyboard'][] = [
             ['text' => $button[0]]
         ];
     }
+    // Back row goes LAST so it renders at the bottom of the reply keyboard
+    // (matches the convention used by $list_Inbound below + every static
+    // admin keyboard). Previously this was inserted before the foreach loop
+    // which forced the back row to the top of the gift-code delete list.
+    $list_Discount['keyboard'][] = [
+        ['text' => $textbotlang['Admin']['backadmin']],
+    ];
     $json_list_Discount_list_admin = json_encode($list_Discount);
 }
 
@@ -536,14 +542,18 @@ if ($table_exists) {
         'keyboard' => [],
         'resize_keyboard' => true,
     ];
-    $list_Discountsell['keyboard'][] = [
-        ['text' => $textbotlang['Admin']['backadmin']],
-    ];
     foreach ($DiscountSell as $button) {
         $list_Discountsell['keyboard'][] = [
             ['text' => $button[0]]
         ];
     }
+    // Back row appended last so it renders at the bottom (same fix as the
+    // gift-code list above — the original code prepended this row before
+    // the foreach loop, forcing it to the top of the discount-code delete
+    // keyboard).
+    $list_Discountsell['keyboard'][] = [
+        ['text' => $textbotlang['Admin']['backadmin']],
+    ];
     $json_list_Discount_list_admin_sell = json_encode($list_Discountsell);
 }
 $payment = json_encode([

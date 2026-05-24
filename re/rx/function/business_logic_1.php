@@ -386,6 +386,16 @@ if (!function_exists('nm_adminInstantReply')) {
 function nm_adminInstantReply($chatId, $text, $keyboard = null, $parseMode = 'HTML')
 {
     global $message_id, $callback_query_id;
+
+    // If a prior call in THIS request already edited/deleted this message_id,
+    // a second call must NOT try to delete it again — that's the bug where
+    // "مدیریت کاربر" briefly showed user details and then wiped them, leaving
+    // only the "select option" prompt. We track consumed message_ids in the
+    // same global that bootstrap_1.php uses for its own pre-handler delete.
+    $alreadyHandled = !empty($message_id)
+                      && isset($GLOBALS['rx_admin_instant_deleted'])
+                      && $GLOBALS['rx_admin_instant_deleted'] === $message_id;
+
     $isCallback = !empty($callback_query_id) && !empty($message_id);
     $isInlineKbd = false;
     if (is_string($keyboard) && $keyboard !== '') {
@@ -396,12 +406,19 @@ function nm_adminInstantReply($chatId, $text, $keyboard = null, $parseMode = 'HT
     }
     $rx_edit_failed = false;
 
-    if ($isCallback && $isInlineKbd && function_exists('Editmessagetext')) {
+    // Don't try to edit a message we already deleted/edited earlier in this
+    // request — Telegram would either return "message to edit not found" or
+    // (worse) we'd overwrite a different in-flight edit.
+    if ($isCallback && $isInlineKbd && !$alreadyHandled && function_exists('Editmessagetext')) {
         try {
             $rx_edit_result = Editmessagetext($chatId, $message_id, $text, $keyboard, $parseMode);
 
 
             if (is_array($rx_edit_result) && !empty($rx_edit_result['ok'])) {
+                // Mark this message_id as consumed so any subsequent
+                // nm_adminInstantReply call in the same request skips the
+                // delete branch and just appends a new message instead.
+                $GLOBALS['rx_admin_instant_deleted'] = $message_id;
 
                 if (!empty($callback_query_id) && function_exists('telegram')) {
                     try {
@@ -446,8 +463,9 @@ function nm_adminInstantReply($chatId, $text, $keyboard = null, $parseMode = 'HT
 
 
     if ($isCallback) {
-        if (!empty($message_id) && function_exists('deletemessage')) {
+        if (!empty($message_id) && !$alreadyHandled && function_exists('deletemessage')) {
             try { @deletemessage($chatId, $message_id); } catch (Throwable $e) {}
+            $GLOBALS['rx_admin_instant_deleted'] = $message_id;
         }
         if (!empty($callback_query_id) && function_exists('telegram')) {
             try {
@@ -461,9 +479,13 @@ function nm_adminInstantReply($chatId, $text, $keyboard = null, $parseMode = 'HT
     }
 
 
-    if (!empty($message_id) && function_exists('deletemessage')) {
-        try { @deletemessage($chatId, $message_id); } catch (Throwable $e) {}
-    }
+    // (Removed) Unconditional delete of admin's typed input message.
+    // This previously wiped values like discount code / gift code amount /
+    // forced-join channel link the admin had just typed, making the chat
+    // history confusing. Bot prompts and admin inputs now both stay visible.
+    // The callback branch above still deletes inline-button-bearing messages
+    // when transitioning to a reply-keyboard menu — that's intentional UX
+    // (you don't want stale buttons stacking up).
 
     return sendmessage($chatId, $text, $keyboard, $parseMode);
 }}
