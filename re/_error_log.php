@@ -15,8 +15,40 @@ ini_set('error_log', REFACTORED_LOG_DIR . DIRECTORY_SEPARATOR . 'php-error.log')
 
 error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);
 
+if (!function_exists('faoxima_dedup_error_log')) {
+    function faoxima_dedup_error_log($key, $message, $ttl = 21600) {
+        $cacheDir = sys_get_temp_dir() . '/faoxima_log_dedup';
+        if (!is_dir($cacheDir)) {
+            @mkdir($cacheDir, 0700, true);
+        }
+        $cacheFile = $cacheDir . '/' . md5($key);
+        if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < $ttl) {
+            return false;
+        }
+        @touch($cacheFile);
+        error_log($message);
+        return true;
+    }
+}
+
 if (!function_exists('rx_log_event')) {
     function rx_log_event($type, $message, $context = []) {
+        $rxStatus = isset($context['status']) ? (string)$context['status'] : '';
+        $rxUriRaw = $_SERVER['REQUEST_URI'] ?? '';
+        $rxUriTpl = preg_replace('/(username=|order_id=|hash=|user_id=)[^&]+/', '$1*', $rxUriRaw);
+        $rxBodyRaw = isset($context['body']) ? (string)$context['body'] : '';
+        $rxBodyClean = preg_replace('/"(username|order_id|hash|user_id|custom_username)"\s*:\s*"[^"]*"/', '"$1":"*"', $rxBodyRaw);
+        $rxKey = 'rx|' . $type . '|' . $rxStatus . '|' . $rxUriTpl . '|' . md5(substr($rxBodyClean, 0, 200));
+        $rxCacheDir = sys_get_temp_dir() . '/faoxima_log_dedup';
+        if (!is_dir($rxCacheDir)) {
+            @mkdir($rxCacheDir, 0700, true);
+        }
+        $rxCacheFile = $rxCacheDir . '/' . md5($rxKey);
+        if (is_file($rxCacheFile) && (time() - filemtime($rxCacheFile)) < 21600) {
+            return;
+        }
+        @touch($rxCacheFile);
+
         $line = '[' . date('Y-m-d H:i:s') . '] [' . $type . '] ' . $message;
         $line .= ' | method=' . ($_SERVER['REQUEST_METHOD'] ?? 'CLI');
         $line .= ' | uri=' . ($_SERVER['REQUEST_URI'] ?? ($_SERVER['SCRIPT_NAME'] ?? 'CLI'));
@@ -99,6 +131,10 @@ if (!defined('RX_DEBUG_TRACE_ACTIVE')) {
         );
 
         if ($status < 400 && !$hasFatal) {
+            return;
+        }
+
+        if ($status === 409 || $status === 422) {
             return;
         }
 

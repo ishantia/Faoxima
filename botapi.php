@@ -157,6 +157,9 @@ function telegram($method, $datas = [], $token = null)
             'query is too old',
             'MESSAGE_ID_INVALID',
             'replied message not found',
+            'bot was blocked by the user',
+            'user is deactivated',
+            'chat not found',
         ];
         $rxDesc = (string) ($decodedResponse['description'] ?? '');
         $rxIsBenign = false;
@@ -167,7 +170,12 @@ function telegram($method, $datas = [], $token = null)
             }
         }
         if (!$rxIsBenign) {
-            error_log(json_encode($decodedResponse));
+            $rxTgKey = 'tg|' . (string)($decodedResponse['error_code'] ?? 0) . '|' . substr($rxDesc, 0, 60);
+            if (function_exists('faoxima_dedup_error_log')) {
+                faoxima_dedup_error_log($rxTgKey, json_encode($decodedResponse), 21600);
+            } else {
+                error_log(json_encode($decodedResponse));
+            }
         }
     }
 

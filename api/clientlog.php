@@ -83,6 +83,23 @@ $entry = [
     'extra' => $payload['extra'] ?? null,
 ];
 
+if (stripos($entry['msg'], 'Script error') === 0) {
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
+$clKey = 'cl|' . $entry['level'] . '|' . substr($entry['msg'], 0, 120) . '|' . substr($entry['where'], 0, 80);
+$clCacheDir = sys_get_temp_dir() . '/faoxima_log_dedup';
+if (!is_dir($clCacheDir)) {
+    @mkdir($clCacheDir, 0700, true);
+}
+$clCacheFile = $clCacheDir . '/' . md5($clKey);
+if (is_file($clCacheFile) && (time() - filemtime($clCacheFile)) < 21600) {
+    echo json_encode(['ok' => true]);
+    exit;
+}
+@touch($clCacheFile);
+
 $line = json_encode($entry, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 if ($line === false) {
     $line = '{"ts":"' . date('Y-m-d H:i:s') . '","msg":"<unencodable>"}';

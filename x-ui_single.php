@@ -430,7 +430,12 @@ function get_clinets($username, $namepanel)
 
 
     if (!empty($response['error']) && stripos((string) $response['error'], 'Inbound Not Found For Email') === false) {
-        error_log(json_encode($response));
+        $dedupKey = 'xui_single_resp|' . (string) $response['error'];
+        if (function_exists('faoxima_dedup_error_log')) {
+            faoxima_dedup_error_log($dedupKey, json_encode($response));
+        } else {
+            error_log(json_encode($response));
+        }
     }
 
     if (is_file(xuisingle_cookie_path())) {

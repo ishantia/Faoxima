@@ -1,5 +1,21 @@
 <?php
 
+if (!function_exists('faoxima_dedup_error_log')) {
+    function faoxima_dedup_error_log($key, $message, $ttl = 3600) {
+        $cacheDir = sys_get_temp_dir() . '/faoxima_log_dedup';
+        if (!is_dir($cacheDir)) {
+            @mkdir($cacheDir, 0700, true);
+        }
+        $cacheFile = $cacheDir . '/' . md5($key);
+        if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < $ttl) {
+            return false;
+        }
+        @touch($cacheFile);
+        error_log($message);
+        return true;
+    }
+}
+
 class CurlRequest {
     private $url;
     private $headers = [];
@@ -87,7 +103,13 @@ class CurlRequest {
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if (curl_errno($ch)) {
             $error = curl_error($ch);
-            error_log(sprintf('CurlRequest error calling %s: %s (HTTP code: %s)', $this->url, $error, var_export($httpCode, true)));
+            $host = parse_url($this->url, PHP_URL_HOST);
+            $port = parse_url($this->url, PHP_URL_PORT);
+            $dedupKey = 'curlerr|' . ($host ?: $this->url) . ':' . ($port ?: '') . '|' . $error;
+            faoxima_dedup_error_log(
+                $dedupKey,
+                sprintf('CurlRequest error calling %s: %s (HTTP code: %s)', $this->url, $error, var_export($httpCode, true))
+            );
             curl_close($ch);
             return [
                 'status' => $httpCode,
@@ -100,7 +122,13 @@ class CurlRequest {
 
         $rxLogAll = defined('BOT_CURL_LOG_ALL_HTTP_ERRORS') && BOT_CURL_LOG_ALL_HTTP_ERRORS === true;
         if ($httpCode === 0 || $httpCode >= 500 || ($rxLogAll && $httpCode >= 400)) {
-            error_log(sprintf('CurlRequest call to %s returned HTTP code %s', $this->url, var_export($httpCode, true)));
+            $host = parse_url($this->url, PHP_URL_HOST);
+            $port = parse_url($this->url, PHP_URL_PORT);
+            $dedupKey = 'curlhttp|' . ($host ?: $this->url) . ':' . ($port ?: '') . '|' . $httpCode;
+            faoxima_dedup_error_log(
+                $dedupKey,
+                sprintf('CurlRequest call to %s returned HTTP code %s', $this->url, var_export($httpCode, true))
+            );
         }
 
         return [

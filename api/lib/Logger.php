@@ -88,6 +88,23 @@ final class FaoximaLogger
             return;
         }
 
+        $fxCtxFingerprint = '';
+        foreach (['panel', 'username', 'user_id', 'reason', 'msg'] as $fxKey) {
+            if (isset($context[$fxKey]) && is_scalar($context[$fxKey])) {
+                $fxCtxFingerprint .= '|' . $fxKey . '=' . (string)$context[$fxKey];
+            }
+        }
+        $fxDedupKey = 'fx|' . $level . '|' . substr($message, 0, 120) . $fxCtxFingerprint;
+        $fxCacheDir = sys_get_temp_dir() . '/faoxima_log_dedup';
+        if (!is_dir($fxCacheDir)) {
+            @mkdir($fxCacheDir, 0700, true);
+        }
+        $fxCacheFile = $fxCacheDir . '/' . md5($fxDedupKey);
+        if (is_file($fxCacheFile) && (time() - filemtime($fxCacheFile)) < 21600) {
+            return;
+        }
+        @touch($fxCacheFile);
+
         $entry = [
             'ts' => date('Y-m-d H:i:s'),
             'level' => $level,
