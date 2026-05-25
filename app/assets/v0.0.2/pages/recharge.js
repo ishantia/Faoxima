@@ -533,7 +533,7 @@ async function startGatewayWatchForRecharge(view, methodId, obj) {
             gatewayUrl: obj.url,
             isCrypto,
             mode: 'recharge',
-            timeoutSec: 600,
+            timeoutSec: 1800,
             pollEverySec: 5,
             onSuccess: (st) => {
                 const amount = Number(st.amount || 0).toLocaleString('en-US');
@@ -590,7 +590,7 @@ async function startGatewayWatchForRecharge(view, methodId, obj) {
                                 ${icon('clock', 'class="ico ico-xxl ico-warn"')}
                             </div>
                             <h2 style="margin:6px 0;font-size:18px">زمان انتظار به پایان رسید</h2>
-                            <p class="muted">۱۰ دقیقه گذشت و پرداخت تایید نشد. اگر مبلغ کسر شده، با پشتیبانی تماس بگیرید.</p>
+                            <p class="muted">۳۰ دقیقه گذشت و پرداخت تایید نشد. اگر مبلغ کسر شده، با پشتیبانی تماس بگیرید.</p>
                             <div class="row-spread mt-md stack-on-mobile" style="gap:10px">
                                 <a href="#/recharge" class="btn btn-primary btn-block" style="flex:1">تلاش مجدد</a>
                                 <a href="#/" class="btn btn-ghost btn-block" style="flex:1">بازگشت به خانه</a>

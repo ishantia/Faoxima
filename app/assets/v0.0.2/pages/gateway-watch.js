@@ -19,7 +19,7 @@ export function startGatewayWatch(view, opts) {
         gatewayUrl = '',
         isCrypto = false,
         mode = 'direct_buy',
-        timeoutSec = 600,
+        timeoutSec = 1800,
         expiresAtSec = 0,
         pollEverySec = 5,
         onSuccess,
@@ -254,7 +254,7 @@ export function startGatewayWatch(view, opts) {
         $check.addEventListener('click', () => {
             hapticImpact('light');
             if (!deadlineReached) {
-                toast('لطفاً تا پایان زمان انتظار (۱۰ دقیقه) صبر کنید، سپس روی «بررسی نهایی» بزنید.', 'warn', 4500);
+                toast('لطفاً تا پایان زمان انتظار (۳۰ دقیقه) صبر کنید، سپس روی «بررسی نهایی» بزنید.', 'warn', 4500);
                 return;
             }
             runFinalCheck();

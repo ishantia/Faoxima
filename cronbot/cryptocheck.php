@@ -67,10 +67,8 @@ if (!($pdo instanceof PDO)) {
 }
 
 
-$ttl = (int) crypto_pay_setting('cryptocheck_invoice_ttl', '86400');
-$ttl = max(300, $ttl);
-$ttlIranian = (int) crypto_pay_setting('cryptocheck_invoice_ttl_iranian', '7200');
-$ttlIranian = max(300, $ttlIranian);
+$ttl = 1800;
+$ttlIranian = 1800;
 $expireBefore = date('Y/m/d H:i:s', time() - min($ttl, $ttlIranian));
 
 try {

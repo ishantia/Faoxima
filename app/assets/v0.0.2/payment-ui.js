@@ -375,7 +375,7 @@ function renderGatewayTimeout(view, opts) {
                     ${icon('clock', 'class="ico ico-xxl ico-warn"')}
                 </div>
                 <h2 style="margin:6px 0;font-size:18px">زمان انتظار به پایان رسید</h2>
-                <p class="muted">پرداخت در ۱۰ دقیقه‌ی گذشته تایید نشد. اگر پول از حساب شما کسر شده، با پشتیبانی تماس بگیرید.</p>
+                <p class="muted">پرداخت در ۳۰ دقیقه‌ی گذشته تایید نشد. اگر پول از حساب شما کسر شده، با پشتیبانی تماس بگیرید.</p>
                 <div class="row-spread mt-md stack-on-mobile" style="gap:10px">
                     <a href="#/recharge" class="btn btn-primary btn-block" style="flex:1">تلاش مجدد</a>
                     <a href="#/" class="btn btn-ghost btn-block" style="flex:1">بازگشت به خانه</a>
@@ -403,7 +403,7 @@ export function startUrlGatewayFlow(rootView, methodId, obj, opts = {}) {
             gatewayUrl: url,
             isCrypto: isCryptoMethod(methodId),
             mode: opts.purchaseUsername ? 'direct_buy' : 'recharge',
-            timeoutSec: 600,
+            timeoutSec: 1800,
             pollEverySec: 5,
             onSuccess: (statusObj) => renderGatewaySuccess(watchHost, statusObj, opts),
             onFail: (statusObj) => renderGatewayFail(watchHost, statusObj, opts),

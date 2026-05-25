@@ -510,7 +510,7 @@ export function renderCryptoOffline(view, opts = {}) {
                                 ${icon('clock', 'class="ico ico-xxl ico-warn"')}
                             </div>
                             <h2 style="margin:6px 0;font-size:18px">زمان انتظار تمام شد</h2>
-                            <p class="muted">۱۰ دقیقه گذشت و تراکنش تایید نشد. ربات تا ۲۴ ساعت هم همچنان بررسی می‌کند؛ اگر تایید شد، در ربات تلگرام به شما اطلاع داده می‌شود.</p>
+                            <p class="muted">۳۰ دقیقه گذشت و تراکنش تایید نشد. اگر مبلغ از حساب شما کسر شده، با پشتیبانی تماس بگیرید.</p>
                             <p class="muted mt-sm" style="font-size:12px">کد فاکتور: <span class="mono">${escapeHtml(state.invoice.order_id)}</span></p>
                             <div class="row-spread mt-md stack-on-mobile" style="gap:10px">
                                 <a href="#/recharge" class="btn btn-primary btn-block" style="flex:1">تلاش مجدد</a>

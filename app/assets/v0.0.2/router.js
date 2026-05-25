@@ -39,7 +39,7 @@ async function watchResumePage(view, encodedOrderId) {
         methodStr = String(obj.method || '').toLowerCase();
         flowStr = String(obj.flow || '').toLowerCase();
 
-        const WATCH_WINDOW_SEC = 600;
+        const WATCH_WINDOW_SEC = 1800;
         const nowSec = Math.floor(Date.now() / 1000);
         const hashAt = Number(obj.hash_at || 0);
         const expiresAtFromServer = Number(obj.expires_at || 0);
@@ -65,7 +65,7 @@ async function watchResumePage(view, encodedOrderId) {
         mode:     resolvedMode,
         isCrypto: isCryptoFlow,
         expiresAtSec,
-        timeoutSec: 600,
+        timeoutSec: 1800,
         pollEverySec: 5,
         onSuccess: (st) => {
             const amount = Number(st.amount || 0).toLocaleString('en-US');
