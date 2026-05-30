@@ -1269,19 +1269,6 @@ if (function_exists('rx_getKeyboardDefaultStyles')) {
     unset($rxPanelDefaults, $rxPanelSec, $rxPanelPairs, $rxPanelKey, $rxPanelVal);
 }
 
-// One-time normalisation: drop user picks that exactly match a factory default,
-// so that toggling defaults off later actually removes them from the visible UI.
-// (Legacy data may contain merged-in defaults persisted as user picks.)
-foreach ($factoryDefaultsMap as $rxSec => $rxPairs) {
-    if (empty($userStylesRaw[$rxSec]) || !is_array($userStylesRaw[$rxSec])) continue;
-    foreach ($rxPairs as $rxKey => $rxVal) {
-        if (isset($userStylesRaw[$rxSec][$rxKey]) && $userStylesRaw[$rxSec][$rxKey] === $rxVal) {
-            unset($userStylesRaw[$rxSec][$rxKey]);
-        }
-    }
-}
-unset($rxSec, $rxPairs, $rxKey, $rxVal);
-
 if ($useBuiltinDefaults) {
     foreach ($factoryDefaultsMap as $rxSec => $rxPairs) {
         if (!isset($currentStyles[$rxSec]) || !is_array($currentStyles[$rxSec])) {
@@ -1295,8 +1282,6 @@ if ($useBuiltinDefaults) {
     }
     unset($rxSec, $rxPairs, $rxKey, $rxVal);
 } else {
-    // Keep currentStyles in sync with normalised userStylesRaw so initial render
-    // doesn't show stale "default" placeholders that were removed above.
     foreach ($currentStyles as $csMenu => $_) {
         $currentStyles[$csMenu] = isset($userStylesRaw[$csMenu]) ? $userStylesRaw[$csMenu] : [];
     }
