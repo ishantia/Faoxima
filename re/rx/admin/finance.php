@@ -2440,11 +2440,22 @@ n2", $backadmin, 'HTML');
         $rx_cron_rows[] = [
             ['text' => "⛔ غیرفعال", 'callback_data' => "cronjob_apply-{$rx_cron_key}-disabled-1"],
         ];
+        $rx_cron_hour_fields = ['lottery' => 'lottery_hour', 'statusday' => 'statusday_hour'];
+        $rx_cron_has_hour = isset($rx_cron_hour_fields[$rx_cron_key]);
+        $rx_cron_hour_now = $rx_cron_has_hour ? (int) ($setting[$rx_cron_hour_fields[$rx_cron_key]] ?? 0) : 0;
+        if ($rx_cron_has_hour) {
+            $rx_cron_rows[] = [
+                ['text' => "🕛 تنظیم ساعت اجرا (فعلی: {$rx_cron_hour_now}:00)", 'callback_data' => "cronjob_sethour-{$rx_cron_key}"],
+            ];
+        }
         $rx_cron_rows[] = [
             ['text' => "🔙 بازگشت به لیست کرون‌ها", 'callback_data' => "cronjobs_settings"],
         ];
         $rx_cron_keyboard = json_encode(['inline_keyboard' => $rx_cron_rows], JSON_UNESCAPED_UNICODE);
         $rx_cron_text = "⚙️ تنظیم زمان‌بندی\n\n📌 کرون: <b>{$rx_cron_label}</b>\n⏱ زمان فعلی: <b>{$rx_cron_current_label}</b>\n\nزمان‌بندی جدید را انتخاب کنید:";
+        if ($rx_cron_has_hour) {
+            $rx_cron_text .= "\n\n🕛 اگر بازه را روی «هر ۱ روز» بگذاری، این کرون رأس ساعت <b>{$rx_cron_hour_now}:00</b> (به وقت تهران) اجرا می‌شود.\nبرای تغییرِ این ساعت، دکمهٔ «تنظیم ساعت اجرا» را بزن.\n(برای حالت «هر N ساعت/دقیقه» این ساعت بی‌اثر است و دقیقاً طبق همان بازه اجرا می‌شود.)";
+        }
         step('cronjob_set_value', $from_id);
         nm_adminInstantReply($from_id, $rx_cron_text, $rx_cron_keyboard, 'HTML');
     }
@@ -2468,6 +2479,20 @@ n2", $backadmin, 'HTML');
         step('admin_nav_cron_jobs', $from_id);
         nm_adminInstantReply($from_id, "🕚 زمان‌بندی کرون‌ها\n\nبرای تغییر بازهٔ اجرای هر کرون روی ⚙️ تنظیمات همان ردیف بزنید.", buildCronJobsKeyboard(), 'HTML');
     }
+} elseif (preg_match('/^cronjob_sethour-(lottery|statusday)$/', $datain, $rx_cron_h) && $adminrulecheck['rule'] == "administrator") {
+    $rx_h_field = $rx_cron_h[1] === 'lottery' ? 'lottery_hour' : 'statusday_hour';
+    $rx_h_now   = (int) ($setting[$rx_h_field] ?? 0);
+    step("cronjob_get_hour-{$rx_cron_h[1]}", $from_id);
+    nm_adminInstantReply($from_id, "🕛 ساعت اجرای این کرون را به‌صورت عددی بین <b>0</b> تا <b>23</b> ارسال کنید (به وقت تهران).\n\nساعت فعلی: <b>{$rx_h_now}:00</b>", $backadmin, 'HTML');
+} elseif (preg_match('/^cronjob_get_hour-(lottery|statusday)$/', (string) ($user['step'] ?? ''), $rx_cron_hs) && $adminrulecheck['rule'] == "administrator") {
+    $rx_h_field = $rx_cron_hs[1] === 'lottery' ? 'lottery_hour' : 'statusday_hour';
+    if (!ctype_digit((string) $text) || (int) $text < 0 || (int) $text > 23) {
+        nm_adminInstantReply($from_id, "❌ لطفاً فقط یک عدد بین 0 تا 23 ارسال کنید.", $backadmin, 'HTML');
+        return;
+    }
+    update("setting", $rx_h_field, (int) $text, null, null);
+    step('admin_nav_cron_jobs', $from_id);
+    nm_adminInstantReply($from_id, "✅ ساعت اجرا روی <b>" . (int) $text . ":00</b> تنظیم شد.", buildCronJobsKeyboard(), 'HTML');
 } elseif ($text == "خروجی کاربران" && $adminrulecheck['rule'] == "administrator") {
     $counttable = select("user", "*", null, null, "count");
     if ($counttable == 0) {

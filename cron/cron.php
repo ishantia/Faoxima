@@ -108,13 +108,23 @@ if (function_exists('ensureCronRuntimeStateTable')) {
 $runtimeState = function_exists('loadCronRuntimeState') ? loadCronRuntimeState($pdo) : [];
 
 
+$jobHours = [];
+try {
+    $rxSettingRow = function_exists('select') ? select('setting', '*') : null;
+    if (is_array($rxSettingRow)) {
+        $jobHours['lottery']   = max(0, min(23, (int) ($rxSettingRow['lottery_hour']   ?? 0)));
+        $jobHours['statusday'] = max(0, min(23, (int) ($rxSettingRow['statusday_hour'] ?? 0)));
+    }
+} catch (Throwable $e) {}
+
+
 $now       = time();
 $minute    = (int) date('i', $now);
 $hour      = (int) date('G', $now);
 $dayOfYear = (int) date('z', $now);
 
 
-$shouldRun = static function (string $jobKey, array $schedule, int $minute, int $hour, int $dayOfYear, int $now, array $runtimeState): bool {
+$shouldRun = static function (string $jobKey, array $schedule, int $minute, int $hour, int $dayOfYear, int $now, array $runtimeState, int $targetHour = 0): bool {
     $unit  = strtolower((string) ($schedule['unit'] ?? 'minute'));
     $value = max(1, (int) ($schedule['value'] ?? 1));
     if ($unit === 'disabled') {
@@ -126,7 +136,8 @@ $shouldRun = static function (string $jobKey, array $schedule, int $minute, int 
     } elseif ($unit === 'hour') {
         $aligned = ($minute === 0 && $hour % $value === 0);
     } elseif ($unit === 'day') {
-        $aligned = ($minute === 0 && $hour === 0 && $dayOfYear % $value === 0);
+        // جابِ روزانه رأس ساعتِ تنظیم‌شده شلیک می‌شود (پیش‌فرض ۰ = نیمه‌شب).
+        $aligned = ($minute === 0 && $hour === $targetHour && $dayOfYear % $value === 0);
     }
     if (!$aligned) {
         return false;
@@ -139,11 +150,12 @@ $shouldRun = static function (string $jobKey, array $schedule, int $minute, int 
 };
 
 
-$dispatchAsync = static function (array $urls): void {
-    if (empty($urls)) return;
+$dispatchAsync = static function (array $urls, bool $useLoopback): array {
+    if (empty($urls)) return [];
     $multi = curl_multi_init();
-    if ($multi === false) return;
-    $handles = [];
+    if ($multi === false) return $urls;
+    $handles    = [];
+    $handleUrls = [];
     foreach ($urls as $url) {
         $bustedUrl = $url . (strpos($url, '?') === false ? '?' : '&') . '_t=' . microtime(true);
         $ch = curl_init($bustedUrl);
@@ -168,7 +180,8 @@ $dispatchAsync = static function (array $urls): void {
             ],
             CURLOPT_USERAGENT       => 'CronOrchestrator/2.0 (+internal)',
         ];
-        if (is_string($rxResolveHost) && $rxResolveHost !== '' && $rxResolveHost !== '127.0.0.1' && $rxResolveHost !== 'localhost') {
+        if ($useLoopback
+            && is_string($rxResolveHost) && $rxResolveHost !== '' && $rxResolveHost !== '127.0.0.1' && $rxResolveHost !== 'localhost') {
             $curlOpts[CURLOPT_RESOLVE] = [
                 $rxResolveHost . ':443:127.0.0.1',
                 $rxResolveHost . ':80:127.0.0.1',
@@ -176,11 +189,12 @@ $dispatchAsync = static function (array $urls): void {
         }
         curl_setopt_array($ch, $curlOpts);
         curl_multi_add_handle($multi, $ch);
-        $handles[] = $ch;
+        $handles[]             = $ch;
+        $handleUrls[(int) $ch] = $url;
     }
     if (empty($handles)) {
         curl_multi_close($multi);
-        return;
+        return [];
     }
 
 
@@ -192,11 +206,21 @@ $dispatchAsync = static function (array $urls): void {
         }
     } while ($running > 0 && microtime(true) < $deadline);
 
+    $failed = [];
     foreach ($handles as $ch) {
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err  = curl_error($ch);
+        if ($err !== '' || $code < 200 || $code >= 400) {
+            $url = $handleUrls[(int) $ch] ?? null;
+            if ($url !== null) {
+                $failed[] = $url;
+            }
+        }
         curl_multi_remove_handle($multi, $ch);
         curl_close($ch);
     }
     curl_multi_close($multi);
+    return $failed;
 };
 
 
@@ -213,7 +237,7 @@ if ($bootstrapLoaded && function_exists('getCronJobDefinitions')) {
         $defaultConfig = $definition['default'] ?? ['unit' => 'minute', 'value' => 1];
         $schedule      = $schedules[$key] ?? $defaultConfig;
 
-        if (!$shouldRun($key, $schedule, $minute, $hour, $dayOfYear, $now, $runtimeState)) {
+        if (!$shouldRun($key, $schedule, $minute, $hour, $dayOfYear, $now, $runtimeState, $jobHours[$key] ?? 0)) {
             continue;
         }
 
@@ -242,7 +266,16 @@ if ($bootstrapLoaded && function_exists('getCronJobDefinitions')) {
 }
 
 if (!empty($dueUrls)) {
-    $dispatchAsync($dueUrls);
+    // راه ۱: DNS عمومی. هر جابی که شکست خورد، خودکار با راه ۲ (loopback) دوباره فرستاده می‌شود.
+    $loopbackFlag  = __DIR__ . '/use_loopback.flag';
+    $forceLoopback = is_file($loopbackFlag);
+    $failed = $dispatchAsync($dueUrls, $forceLoopback);
+    if (!$forceLoopback && !empty($failed)) {
+        $stillFailed = $dispatchAsync($failed, true);
+        if (count($stillFailed) < count($failed)) {
+            @touch($loopbackFlag);
+        }
+    }
 }
 
 @unlink($lockFile);

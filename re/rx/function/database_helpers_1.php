@@ -333,7 +333,7 @@ if (!function_exists('getCronJobDefinitions')) {
     function getCronJobDefinitions(): array
     {
         return [
-            'statusday' => ['script' => 'statusday.php', 'admin_label' => 'کرون وضعیت روزانه', 'instruction' => '🕚 بررسی وضعیت روزانه — %s', 'default' => ['unit' => 'minute', 'value' => 15]],
+            'statusday' => ['script' => 'statusday.php', 'admin_label' => 'کرون وضعیت روزانه', 'instruction' => '🕚 بررسی وضعیت روزانه — %s', 'default' => ['unit' => 'day', 'value' => 1]],
             'croncard' => ['script' => 'croncard.php', 'admin_label' => 'کرون کارت‌به‌کارت', 'instruction' => '💳 بررسی کارت‌به‌کارت — %s', 'default' => ['unit' => 'minute', 'value' => 1]],
             'notifications' => ['script' => 'NoticationsService.php', 'admin_label' => 'کرون اعلان‌ها', 'instruction' => '🔔 ارسال اعلان‌ها — %s', 'default' => ['unit' => 'minute', 'value' => 1]],
             'payment_expire' => ['script' => 'payment_expire.php', 'admin_label' => 'کرون انقضای پرداخت', 'instruction' => '⏳ بررسی انقضای پرداخت‌ها — %s', 'default' => ['unit' => 'minute', 'value' => 5]],
@@ -344,7 +344,8 @@ if (!function_exists('getCronJobDefinitions')) {
             'iranpay1' => ['script' => 'iranpay1.php', 'admin_label' => 'کرون ایران‌پی', 'instruction' => '🇮🇷 بررسی پرداخت ایران‌پی — %s', 'default' => ['unit' => 'minute', 'value' => 1]],
             'backupbot' => ['script' => 'backupbot.php', 'admin_label' => 'کرون بکاپ', 'instruction' => '📦 بکاپ‌گیری — %s', 'default' => ['unit' => 'hour', 'value' => 5]],
             'gift' => ['script' => 'gift.php', 'admin_label' => 'کرون هدایا', 'instruction' => '🎁 ارسال هدایا — %s', 'default' => ['unit' => 'minute', 'value' => 2]],
-            'lottery' => ['script' => 'lottery.php', 'admin_label' => 'قرعه‌کشی شبانه', 'instruction' => '🎁 قرعه‌کشی شبانه — %s', 'default' => ['unit' => 'minute', 'value' => 1]],
+            'discount_expire' => ['script' => 'discount_expire.php', 'admin_label' => 'کرون انقضای تخفیف', 'instruction' => '🏷 بررسی انقضای تخفیف‌ها — %s', 'default' => ['unit' => 'minute', 'value' => 30]],
+            'lottery' => ['script' => 'lottery.php', 'admin_label' => 'قرعه‌کشی شبانه', 'instruction' => '🎁 قرعه‌کشی شبانه — %s', 'default' => ['unit' => 'day', 'value' => 1]],
             'expireagent' => ['script' => 'expireagent.php', 'admin_label' => 'کرون انقضای نمایندگان', 'instruction' => '👥 بررسی انقضای نمایندگان — %s', 'default' => ['unit' => 'minute', 'value' => 30]],
             'on_hold' => ['script' => 'on_hold.php', 'admin_label' => 'کرون سرویس‌های معلق', 'instruction' => '⏸ بررسی سفارش‌های معلق — %s', 'default' => ['unit' => 'minute', 'value' => 15]],
             'configtest' => ['script' => 'configtest.php', 'admin_label' => 'کرون تست تنظیمات', 'instruction' => '🧪 تست تنظیمات سیستم — %s', 'default' => ['unit' => 'minute', 'value' => 2]],

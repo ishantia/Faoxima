@@ -21,10 +21,13 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
 
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-$datefirst        = date('Y-m-d') . ' 00:00:00';
-$dateend          = date('Y-m-d') . ' 23:59:59';
-$datefirstextend  = date('Y/m/d') . ' 00:00:00';
-$dateendextend    = date('Y/m/d') . ' 23:59:59';
+// گزارش، روزی را پوشش می‌دهد که تازه تمام شده: اجرای قبل از ظهر = دیروز، بعدازظهر/شب = امروز.
+$rxReportTs = ((int) date('G') < 12) ? strtotime('-1 day') : time();
+
+$datefirst        = date('Y-m-d', $rxReportTs) . ' 00:00:00';
+$dateend          = date('Y-m-d', $rxReportTs) . ' 23:59:59';
+$datefirstextend  = date('Y/m/d', $rxReportTs) . ' 00:00:00';
+$dateendextend    = date('Y/m/d', $rxReportTs) . ' 23:59:59';
 
 $executeQuery = static function (PDO $pdo, string $sql, array $params = []) {
     $stmt = $pdo->prepare($sql);
