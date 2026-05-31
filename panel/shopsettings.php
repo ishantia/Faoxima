@@ -60,26 +60,6 @@ $SHOP_GROUPS = [
         ],
     ],
 
-    'bulk' => [
-        'title' => 'خرید عمده',
-        'icon'  => 'grid',
-        'fields' => [
-            ['type' => 'number', 'name' => 'minbalancebuybulk', 'label' => 'حداقل موجودی برای خرید عمده (تومان)', 'placeholder' => '0'],
-        ],
-    ],
-
-    'custom' => [
-        'title' => 'مقادیر دلخواه (حجم/زمان)',
-        'icon'  => 'sliders',
-        'fields' => [
-            ['type' => 'number', 'name' => 'customvolmef',      'label' => 'قیمت هر گیگ دلخواه (کاربر عادی)',    'placeholder' => '4000'],
-            ['type' => 'number', 'name' => 'customvolmen',      'label' => 'قیمت هر گیگ دلخواه (نماینده)',       'placeholder' => '4000'],
-            ['type' => 'number', 'name' => 'customvolmen2',     'label' => 'قیمت هر گیگ دلخواه (نماینده+)',      'placeholder' => '4000'],
-            ['type' => 'number', 'name' => 'customtimepricef',  'label' => 'قیمت هر روز دلخواه (کاربر عادی)',    'placeholder' => '4000'],
-            ['type' => 'number', 'name' => 'customtimepricen',  'label' => 'قیمت هر روز دلخواه (نماینده)',       'placeholder' => '4000'],
-            ['type' => 'number', 'name' => 'customtimepricen2', 'label' => 'قیمت هر روز دلخواه (نماینده+)',      'placeholder' => '4000'],
-        ],
-    ],
 ];
 
 

@@ -26,7 +26,7 @@ if (!isset($_SESSION["user"]) || !$adminRow) {
 
 $PANEL_TYPES = [
     'marzban'        => 'مرزبان (Marzban)',
-    'pasargard'      => '🎛 پاسارگارد',
+    'pasargard'      => 'پاسارگارد',
     'marzneshin'     => 'مرزنشین (Marzneshin)',
     'hiddify'        => 'هیدیفای (Hiddify)',
     'x-ui_single'    => 'ثنایی تک پورت (Sanaei single)',
@@ -225,14 +225,14 @@ function faoxima_test_panel_auth(string $url, string $username, string $password
             $jt = json_decode((string)$rt['body'], true);
             if (is_array($jt) && array_key_exists('success', $jt)) {
                 if (filter_var($jt['success'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) === true) {
-                    return ['ok' => true, 'verified' => true, 'message' => 'توکن API معتبر است ✅ (حالت 3x-ui توکنی)'];
+                    return ['ok' => true, 'verified' => true, 'message' => 'توکن API معتبر است (حالت 3x-ui توکنی)'];
                 }
-                return ['ok' => true, 'verified' => false, 'message' => '❌ توکن API نامعتبر است (' . (string)($jt['msg'] ?? 'success=false') . ')'];
+                return ['ok' => true, 'verified' => false, 'message' => ' توکن API نامعتبر است (' . (string)($jt['msg'] ?? 'success=false') . ')'];
             }
             if ($rt['code'] === 401 || $rt['code'] === 403) {
-                return ['ok' => true, 'verified' => false, 'message' => '❌ توکن API نادرست (HTTP ' . $rt['code'] . ')'];
+                return ['ok' => true, 'verified' => false, 'message' => ' توکن API نادرست (HTTP ' . $rt['code'] . ')'];
             }
-            return ['ok' => true, 'verified' => false, 'message' => '❌ پاسخ نامعتبر برای توکن API (HTTP ' . $rt['code'] . ')'];
+            return ['ok' => true, 'verified' => false, 'message' => ' پاسخ نامعتبر برای توکن API (HTTP ' . $rt['code'] . ')'];
         }
         if ($username === '' || $password === '') {
             return ['ok' => true, 'verified' => false, 'message' => 'یوزرنیم یا پسورد خالی است'];
@@ -252,14 +252,14 @@ function faoxima_test_panel_auth(string $url, string $username, string $password
         if (is_array($j) && array_key_exists('success', $j)) {
             $isOk = filter_var($j['success'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
             if ($isOk === true) {
-                return ['ok' => true, 'verified' => true, 'message' => 'ورود موفق ✅'];
+                return ['ok' => true, 'verified' => true, 'message' => 'ورود موفق '];
             }
             
             if ($r['code'] === 429) {
-                return ['ok' => true, 'verified' => false, 'message' => '⏱ سرور rate-limit کرده (429) — چند ثانیه صبر کنید و دوباره تست کنید'];
+                return ['ok' => true, 'verified' => false, 'message' => ' سرور rate-limit کرده (429) — چند ثانیه صبر کنید و دوباره تست کنید'];
             }
             $msg = !empty($j['msg']) ? (string)$j['msg'] : 'success=false';
-            return ['ok' => true, 'verified' => false, 'message' => '❌ یوزرنیم یا پسورد نادرست (' . $msg . ')'];
+            return ['ok' => true, 'verified' => false, 'message' => ' یوزرنیم یا پسورد نادرست (' . $msg . ')'];
         }
         
         if ($body !== '' && $r['code'] > 0 && $r['code'] < 500) {
@@ -284,21 +284,21 @@ function faoxima_test_panel_auth(string $url, string $username, string $password
         $j = json_decode($r['body'], true);
         
         if (is_array($j) && isset($j['access_token']) && is_string($j['access_token']) && $j['access_token'] !== '') {
-            return ['ok' => true, 'verified' => true, 'message' => 'ورود موفق ✅'];
+            return ['ok' => true, 'verified' => true, 'message' => 'ورود موفق '];
         }
         
         if ($r['code'] === 429) {
-            return ['ok' => true, 'verified' => false, 'message' => '⏱ سرور rate-limit کرده (429) — چند ثانیه صبر کنید و دوباره تست کنید'];
+            return ['ok' => true, 'verified' => false, 'message' => ' سرور rate-limit کرده (429) — چند ثانیه صبر کنید و دوباره تست کنید'];
         }
         
         if ($r['code'] === 401 || $r['code'] === 403) {
             $detail = '';
             if (is_array($j) && !empty($j['detail'])) $detail = ' · ' . (is_string($j['detail']) ? $j['detail'] : 'auth refused');
-            return ['ok' => true, 'verified' => false, 'message' => '❌ یوزرنیم یا پسورد نادرست (HTTP ' . $r['code'] . $detail . ')'];
+            return ['ok' => true, 'verified' => false, 'message' => ' یوزرنیم یا پسورد نادرست (HTTP ' . $r['code'] . $detail . ')'];
         }
         $detail = 'HTTP ' . $r['code'];
         if (is_array($j) && !empty($j['detail'])) $detail .= ' · ' . (is_string($j['detail']) ? $j['detail'] : 'رد شد');
-        return ['ok' => true, 'verified' => false, 'message' => '❌ ورود ناموفق (' . $detail . ')'];
+        return ['ok' => true, 'verified' => false, 'message' => ' ورود ناموفق (' . $detail . ')'];
     }
 
     
@@ -309,15 +309,15 @@ function faoxima_test_panel_auth(string $url, string $username, string $password
         $r = faoxima_http_get($endpoint);
         if (!$r['ok']) return ['ok' => false, 'verified' => false, 'message' => 'اتصال ناموفق: ' . $r['error']];
         if ($r['code'] >= 200 && $r['code'] < 300) {
-            return ['ok' => true, 'verified' => true, 'message' => 'ورود موفق ✅'];
+            return ['ok' => true, 'verified' => true, 'message' => 'ورود موفق '];
         }
         if ($r['code'] === 429) {
-            return ['ok' => true, 'verified' => false, 'message' => '⏱ سرور rate-limit کرده (429) — چند ثانیه صبر کنید و دوباره تست کنید'];
+            return ['ok' => true, 'verified' => false, 'message' => ' سرور rate-limit کرده (429) — چند ثانیه صبر کنید و دوباره تست کنید'];
         }
         if ($r['code'] === 401 || $r['code'] === 403) {
-            return ['ok' => true, 'verified' => false, 'message' => '❌ API key نادرست (HTTP ' . $r['code'] . ')'];
+            return ['ok' => true, 'verified' => false, 'message' => ' API key نادرست (HTTP ' . $r['code'] . ')'];
         }
-        return ['ok' => true, 'verified' => false, 'message' => '❌ ورود ناموفق (HTTP ' . $r['code'] . ')'];
+        return ['ok' => true, 'verified' => false, 'message' => ' ورود ناموفق (HTTP ' . $r['code'] . ')'];
     }
 
     
@@ -331,15 +331,15 @@ function faoxima_test_panel_auth(string $url, string $username, string $password
         if (!$r['ok']) return ['ok' => false, 'verified' => false, 'message' => 'اتصال ناموفق: ' . $r['error']];
         $j = json_decode($r['body'], true);
         if ($r['code'] >= 200 && $r['code'] < 300 && is_array($j) && (isset($j['username']) || isset($j['id']))) {
-            return ['ok' => true, 'verified' => true, 'message' => 'اتصال موفق ✅'];
+            return ['ok' => true, 'verified' => true, 'message' => 'اتصال موفق '];
         }
         if ($r['code'] === 429) {
-            return ['ok' => true, 'verified' => false, 'message' => '⏱ سرور rate-limit کرده (429) — چند ثانیه صبر کنید و دوباره تست کنید'];
+            return ['ok' => true, 'verified' => false, 'message' => ' سرور rate-limit کرده (429) — چند ثانیه صبر کنید و دوباره تست کنید'];
         }
         if ($r['code'] === 401 || $r['code'] === 403) {
-            return ['ok' => true, 'verified' => false, 'message' => '❌ API key نادرست (HTTP ' . $r['code'] . ')'];
+            return ['ok' => true, 'verified' => false, 'message' => ' API key نادرست (HTTP ' . $r['code'] . ')'];
         }
-        return ['ok' => true, 'verified' => false, 'message' => '❌ احراز هویت گارد ناموفق (HTTP ' . $r['code'] . ')'];
+        return ['ok' => true, 'verified' => false, 'message' => ' احراز هویت گارد ناموفق (HTTP ' . $r['code'] . ')'];
     }
 
     
@@ -356,21 +356,21 @@ function faoxima_test_panel_auth(string $url, string $username, string $password
         $j = json_decode($r['body'], true);
         
         if (is_array($j) && !empty($j['token'])) {
-            return ['ok' => true, 'verified' => true, 'message' => 'ورود موفق ✅'];
+            return ['ok' => true, 'verified' => true, 'message' => 'ورود موفق '];
         }
         
         if (is_array($j) && isset($j['status']) && filter_var($j['status'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) === true) {
-            return ['ok' => true, 'verified' => true, 'message' => 'ورود موفق ✅'];
+            return ['ok' => true, 'verified' => true, 'message' => 'ورود موفق '];
         }
         if ($r['code'] === 401 || $r['code'] === 403) {
-            return ['ok' => true, 'verified' => false, 'message' => '❌ یوزرنیم یا پسورد WGDashboard نادرست'];
+            return ['ok' => true, 'verified' => false, 'message' => ' یوزرنیم یا پسورد WGDashboard نادرست'];
         }
         if ($r['code'] === 429) {
-            return ['ok' => true, 'verified' => false, 'message' => '⏱ سرور rate-limit کرده (429) — چند ثانیه صبر کنید و دوباره تست کنید'];
+            return ['ok' => true, 'verified' => false, 'message' => ' سرور rate-limit کرده (429) — چند ثانیه صبر کنید و دوباره تست کنید'];
         }
         
         if ($r['code'] > 0 && $r['code'] < 500) {
-            return ['ok' => true, 'verified' => false, 'message' => '❌ یوزرنیم یا پسورد WGDashboard نادرست (HTTP ' . $r['code'] . ')'];
+            return ['ok' => true, 'verified' => false, 'message' => ' یوزرنیم یا پسورد WGDashboard نادرست (HTTP ' . $r['code'] . ')'];
         }
         return ['ok' => false, 'verified' => false, 'message' => 'اتصال به WGDashboard ناموفق (HTTP ' . $r['code'] . ')'];
     }
@@ -380,7 +380,7 @@ function faoxima_test_panel_auth(string $url, string $username, string $password
     if (in_array($type, ['ibsng', 'mikrotik'], true)) {
         $reach = faoxima_test_panel_url_reachable($url);
         if ($reach['ok']) {
-            return ['ok' => true, 'verified' => true, 'message' => 'سرور قابل دسترس است ⚠️ (اعتبارسنجی کامل برای این نوع پنل از وب پشتیبانی نمی‌شود — در ربات بررسی کنید)'];
+            return ['ok' => true, 'verified' => true, 'message' => 'سرور قابل دسترس است (اعتبارسنجی کامل برای این نوع پنل از وب پشتیبانی نمی‌شود — در ربات بررسی کنید)'];
         }
         return ['ok' => false, 'verified' => false, 'message' => 'اتصال ناموفق: ' . $reach['error']];
     }
@@ -408,15 +408,15 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'test_auth') {
     $type     = trim((string)($_POST['type']     ?? 'marzban'));
 
     if ($type === 'Manualsale') {
-        echo json_encode(['ok' => true, 'verified' => true, 'message' => '✅ پنل فروش دستی — نیازی به تست ندارد']);
+        echo json_encode(['ok' => true, 'verified' => true, 'message' => ' پنل فروش دستی — نیازی به تست ندارد']);
         exit;
     }
     if ($url === '') {
-        echo json_encode(['ok' => false, 'verified' => false, 'message' => '⚠️ آدرس URL خالی است']);
+        echo json_encode(['ok' => false, 'verified' => false, 'message' => ' آدرس URL خالی است']);
         exit;
     }
     if (!preg_match('~^https?://~i', $url)) {
-        echo json_encode(['ok' => false, 'verified' => false, 'message' => '⚠️ آدرس باید با http:// یا https:// شروع شود']);
+        echo json_encode(['ok' => false, 'verified' => false, 'message' => ' آدرس باید با http:// یا https:// شروع شود']);
         exit;
     }
 
@@ -458,7 +458,7 @@ function faoxima_validate_inbound_id(string $panelUrl, string $username, string 
     $id   = trim($inboundId);
 
     if ($id === '') {
-        return ['ok' => false, 'message' => '⚠️ شناسه اینباند خالی است'];
+        return ['ok' => false, 'message' => ' شناسه اینباند خالی است'];
     }
 
     
@@ -472,7 +472,7 @@ function faoxima_validate_inbound_id(string $panelUrl, string $username, string 
         if (!$loginResp['ok']) return ['ok' => false, 'message' => 'اتصال به WGDashboard ناموفق: ' . $loginResp['error']];
         $j = json_decode($loginResp['body'], true);
         $token = is_array($j) ? ($j['token'] ?? '') : '';
-        if ($token === '') return ['ok' => false, 'message' => '❌ ورود به WGDashboard ناموفق — اعتبارها را بررسی کنید'];
+        if ($token === '') return ['ok' => false, 'message' => ' ورود به WGDashboard ناموفق — اعتبارها را بررسی کنید'];
 
         
         $listResp = faoxima_http_get($url . '/api/getAllPeersData', ['Authorization: Bearer ' . $token]);
@@ -487,14 +487,14 @@ function faoxima_validate_inbound_id(string $panelUrl, string $username, string 
             if (is_array($val) && isset($val['configuration_name'])) $names[] = (string)$val['configuration_name'];
         }
         if (in_array($id, $names, true)) {
-            return ['ok' => true, 'message' => "✅ کانفیگ «{$id}» در WGDashboard یافت شد"];
+            return ['ok' => true, 'message' => " کانفیگ «{$id}» در WGDashboard یافت شد"];
         }
-        return ['ok' => false, 'message' => "❌ کانفیگ «{$id}» در WGDashboard یافت نشد — لطفاً نام صحیح کانفیگ را وارد کنید"];
+        return ['ok' => false, 'message' => " کانفیگ «{$id}» در WGDashboard یافت نشد — لطفاً نام صحیح کانفیگ را وارد کنید"];
     }
 
     
     if (!ctype_digit($id)) {
-        return ['ok' => false, 'message' => '⚠️ شناسه اینباند باید یک عدد صحیح باشد (مثلاً: 1 یا 3)'];
+        return ['ok' => false, 'message' => ' شناسه اینباند باید یک عدد صحیح باشد (مثلاً: 1 یا 3)'];
     }
     $numId = (int)$id;
 
@@ -507,7 +507,7 @@ function faoxima_validate_inbound_id(string $panelUrl, string $username, string 
     if (!$loginResp['ok']) return ['ok' => false, 'message' => 'اتصال به پنل ناموفق: ' . $loginResp['error']];
     $lj = json_decode($loginResp['body'], true);
     if (!is_array($lj) || empty($lj['success'])) {
-        return ['ok' => false, 'message' => '❌ ورود به پنل ناموفق — اعتبارها را بررسی کنید'];
+        return ['ok' => false, 'message' => ' ورود به پنل ناموفق — اعتبارها را بررسی کنید'];
     }
     
     
@@ -563,40 +563,40 @@ function faoxima_validate_inbound_id(string $panelUrl, string $username, string 
     
     if (!is_array($ldata)) {
         $preview = mb_substr(strip_tags((string)$listResp['body']), 0, 120);
-        return ['ok' => false, 'message' => '❌ پاسخ معتبر از پنل دریافت نشد (مسیر یا session) — پاسخ: ' . $preview];
+        return ['ok' => false, 'message' => ' پاسخ معتبر از پنل دریافت نشد (مسیر یا session) — پاسخ: ' . $preview];
     }
     if (!isset($ldata['obj']) || !is_array($ldata['obj'])) {
         
         if (isset($ldata['success']) && $ldata['success'] === true) {
-            return ['ok' => false, 'message' => '⚠️ پنل هیچ اینباندی ندارد — ابتدا اینباند بسازید'];
+            return ['ok' => false, 'message' => ' پنل هیچ اینباندی ندارد — ابتدا اینباند بسازید'];
         }
         $msg = isset($ldata['msg']) ? (string)$ldata['msg'] : 'پاسخ نامعتبر';
-        return ['ok' => false, 'message' => '❌ لیست اینباندها خالی یا نامعتبر: ' . $msg];
+        return ['ok' => false, 'message' => ' لیست اینباندها خالی یا نامعتبر: ' . $msg];
     }
 
     foreach ($ldata['obj'] as $inbound) {
         if (isset($inbound['id']) && (int)$inbound['id'] === $numId) {
             $tag      = $inbound['remark'] ?? $inbound['tag'] ?? '';
             $protocol = $inbound['protocol'] ?? '';
-            return ['ok' => true, 'message' => "✅ اینباند #{$numId} یافت شد" . ($tag !== '' ? " — «{$tag}»" : '') . ($protocol !== '' ? " ({$protocol})" : '')];
+            return ['ok' => true, 'message' => " اینباند #{$numId} یافت شد" . ($tag !== '' ? " — «{$tag}»" : '') . ($protocol !== '' ? " ({$protocol})" : '')];
         }
     }
 
-    return ['ok' => false, 'message' => "❌ اینباند #{$numId} در پنل یافت نشد — لطفاً شناسهٔ صحیح اینباند را وارد کنید"];
+    return ['ok' => false, 'message' => " اینباند #{$numId} در پنل یافت نشد — لطفاً شناسهٔ صحیح اینباند را وارد کنید"];
 }
 
 
 function faoxima_validate_sublink(string $linksubx, string $type): array
 {
     $url = trim($linksubx);
-    if ($url === '') return ['ok' => false, 'message' => '⚠️ دامنه لینک ساب خالی است'];
+    if ($url === '') return ['ok' => false, 'message' => ' دامنه لینک ساب خالی است'];
 
     
     if (!preg_match('~^https?://~i', $url)) {
         $url = 'https://' . ltrim($url, '/');
     }
     if (!filter_var($url, FILTER_VALIDATE_URL)) {
-        return ['ok' => false, 'message' => '⚠️ فرمت آدرس نامعتبر است'];
+        return ['ok' => false, 'message' => ' فرمت آدرس نامعتبر است'];
     }
 
     
@@ -606,7 +606,7 @@ function faoxima_validate_sublink(string $linksubx, string $type): array
         return ['ok' => false, 'message' => 'اتصال به آدرس ساب ناموفق: ' . ($resp['error'] ?? 'خطای ناشناخته')];
     }
     if ($resp['code'] < 200 || $resp['code'] >= 400) {
-        return ['ok' => false, 'message' => "❌ سرور پاسخ HTTP {$resp['code']} داد — آدرس را بررسی کنید"];
+        return ['ok' => false, 'message' => " سرور پاسخ HTTP {$resp['code']} داد — آدرس را بررسی کنید"];
     }
 
     $body = trim((string)($resp['body'] ?? ''));
@@ -624,7 +624,7 @@ function faoxima_validate_sublink(string $linksubx, string $type): array
             
             $parsed  = parse_url($url);
             $baseUrl = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '') . (isset($parsed['port']) ? ':' . $parsed['port'] : '');
-            return ['ok' => true, 'message' => "✅ لینک ساب معتبر است — پروتکل: " . rtrim($proto, '://') . " — دامنه: {$baseUrl}"];
+            return ['ok' => true, 'message' => " لینک ساب معتبر است — پروتکل: " . rtrim($proto, '://') . " — دامنه: {$baseUrl}"];
         }
     }
 
@@ -632,10 +632,10 @@ function faoxima_validate_sublink(string $linksubx, string $type): array
     if ($resp['code'] >= 200 && $resp['code'] < 300) {
         $parsed  = parse_url($url);
         $baseUrl = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '') . (isset($parsed['port']) ? ':' . $parsed['port'] : '');
-        return ['ok' => true, 'message' => "✅ آدرس در دسترس است (HTTP {$resp['code']}) — دامنه: {$baseUrl}"];
+        return ['ok' => true, 'message' => " آدرس در دسترس است (HTTP {$resp['code']}) — دامنه: {$baseUrl}"];
     }
 
-    return ['ok' => false, 'message' => "❌ محتوای پاسخ حاوی کانفیگ VPN نیست — آدرس را بررسی کنید"];
+    return ['ok' => false, 'message' => " محتوای پاسخ حاوی کانفیگ VPN نیست — آدرس را بررسی کنید"];
 }
 
 
@@ -847,7 +847,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($auth['verified'] === true) {
                     $initialStatus = 'active';
-                    $testNote = ' ✅ اعتبار تایید شد — پنل فعال شد.';
+                    $testNote = ' اعتبار تایید شد — پنل فعال شد.';
                 } else {
 
 
@@ -856,7 +856,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $hint     = '';
                     if (stripos($rawMsg, 'Invalid username or password') !== false) {
                         $friendly = 'یوزرنیم یا پسورد نادرست (یا 2FA فعال است)';
-                        $hint = ' — 💡 اگر مطمئنید اعتبارها درست‌اند، پنل احتمالاً پس از یک تلاش ناموفق قبلی چند دقیقه rate-limit کرده. ۱-۲ دقیقه صبر کنید و دوباره امتحان کنید.';
+                        $hint = ' — اگر مطمئنید اعتبارها درست‌اند، پنل احتمالاً پس از یک تلاش ناموفق قبلی چند دقیقه rate-limit کرده. ۱-۲ دقیقه صبر کنید و دوباره امتحان کنید.';
                     } elseif (stripos($rawMsg, 'two-factor') !== false || stripos($rawMsg, '2fa') !== false) {
                         $friendly = 'کد دومرحله‌ای (2FA) لازم است — از طریق وب قابل تست نیست';
                     } elseif (stripos($rawMsg, 'Could not resolve host') !== false || stripos($rawMsg, 'DNS') !== false) {
@@ -869,9 +869,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $friendly = 'خطای SSL در اتصال به پنل';
                     }
                     if (!empty($auth['ok'])) {
-                        $testNote = ' ⚠️ پنل غیرفعال ثبت شد — ' . $friendly . $hint;
+                        $testNote = ' پنل غیرفعال ثبت شد — ' . $friendly . $hint;
                     } else {
-                        $testNote = ' ⚠️ پنل غیرفعال ثبت شد — اتصال ناموفق: ' . $friendly;
+                        $testNote = ' پنل غیرفعال ثبت شد — اتصال ناموفق: ' . $friendly;
                     }
                 }
             } else {
@@ -901,7 +901,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':type' => $type,
                     ':agent'=> $agent,
                 ]);
-                $statusLabel = $initialStatus === 'active' ? '🟢 «فعال»' : '🔴 «غیرفعال»';
+                $statusLabel = $initialStatus === 'active' ? '«فعال»' : '«غیرفعال»';
                 $flash['ok'] = 'پنل جدید با وضعیت ' . $statusLabel . ' ثبت شد.' . $testNote;
                 faoxima_panel_authlog('ADD_DONE', [
                     'name'         => $namePanel,
@@ -1029,7 +1029,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $prevUrlValid = !(preg_match('~://[^/?#@]*:(?:/|$|\?|\#)~', (string)($prev['url_panel'] ?? '')) && !parse_url((string)($prev['url_panel'] ?? ''), PHP_URL_PORT));
                         if ($prevWasActive && $sameUrl && $sameUser && $prevUrlValid) {
                             $skipTest = true;
-                            $skipNote = ' ✅ تغییری در اعتبارها داده نشده — وضعیت قبلی (فعال) حفظ شد.';
+                            $skipNote = ' تغییری در اعتبارها داده نشده — وضعیت قبلی (فعال) حفظ شد.';
                             error_log(sprintf(
                                 '[panel/panels] EDIT auth test SKIPPED (no credential change): id=%d type=%s url=%s user=%s',
                                 $id, $type, $urlPanel, $userPanel
@@ -1105,7 +1105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($auth['verified'] === true) {
                     $status = 'active';
-                    $testNote = ' ✅ اعتبار تایید شد — پنل فعال شد.';
+                    $testNote = ' اعتبار تایید شد — پنل فعال شد.';
                 } else {
 
 
@@ -1117,7 +1117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $hint = '';
                     if (stripos($rawMsg, 'Invalid username or password') !== false) {
                         $friendly = 'یوزرنیم یا پسورد نادرست (یا 2FA فعال است)';
-                        $hint = ' — 💡 اگر مطمئنید اعتبارها درست‌اند، پنل احتمالاً پس از یک تلاش ناموفق قبلی چند دقیقه rate-limit کرده. ۱-۲ دقیقه صبر کنید و دوباره ذخیره را بزنید.';
+                        $hint = ' — اگر مطمئنید اعتبارها درست‌اند، پنل احتمالاً پس از یک تلاش ناموفق قبلی چند دقیقه rate-limit کرده. ۱-۲ دقیقه صبر کنید و دوباره ذخیره را بزنید.';
                     } elseif (stripos($rawMsg, 'two-factor') !== false || stripos($rawMsg, '2fa') !== false) {
                         $friendly = 'کد دومرحله‌ای (2FA) لازم است — از طریق وب قابل تست نیست';
                     } elseif (stripos($rawMsg, 'Could not resolve host') !== false || stripos($rawMsg, 'DNS') !== false) {
@@ -1130,9 +1130,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $friendly = 'خطای SSL در اتصال به پنل';
                     }
                     if (empty($auth['ok'])) {
-                        $testNote = ' ⚠️ پنل غیرفعال شد چون سرور پاسخ نداد: ' . $friendly;
+                        $testNote = ' پنل غیرفعال شد چون سرور پاسخ نداد: ' . $friendly;
                     } else {
-                        $testNote = ' ⚠️ پنل غیرفعال شد — ' . $friendly . $hint;
+                        $testNote = ' پنل غیرفعال شد — ' . $friendly . $hint;
                     }
 
                     if ($passPanel !== '' || $apiKey !== '') {
@@ -1225,7 +1225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $pdo->prepare("DELETE FROM marzban_panel WHERE id = :id")->execute([':id' => $id]);
                     $flash['ok'] = 'پنل «' . $panelRow['name_panel'] . '» حذف شد.'
-                        . ($orphanCount > 0 ? ' ⚠️ ' . $orphanCount . ' سرویس متصل به این پنل بدون پنل ماندند.' : '');
+                        . ($orphanCount > 0 ? ' ' . $orphanCount . ' سرویس متصل به این پنل بدون پنل ماندند.' : '');
                 }
             } catch (\Throwable $e) {
                 $flash['err'] = 'حذف ناموفق: ' . $e->getMessage();
@@ -1413,9 +1413,6 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                                 <?php else: ?>
                                     <small class="badge badge-block">غیرفعال</small>
                                 <?php endif; ?>
-                                <?php if ($nationalOn): ?>
-                                    <small class="badge badge-warning">🌐 نت ملی</small>
-                                <?php endif; ?>
                             </div>
                             <div class="panel-card__actions">
                                 <button class="btn btn-sm btn-soft-purple"
@@ -1467,10 +1464,6 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                                         <span class="info-line__k">پسورد:</span>
                                         <span class="info-line__v"><?php echo faoxima_mask_secret($p['password_panel'] ?? ''); ?></span>
                                     </div>
-                                    <div class="info-line">
-                                        <span class="info-line__k">API Key:</span>
-                                        <span class="info-line__v"><?php echo faoxima_mask_secret($p['api_key'] ?? ''); ?></span>
-                                    </div>
                                     <?php if ($type === 'x-ui_single' && trim((string)($p['xui_api_token'] ?? '')) !== ''): ?>
                                     <div class="info-line">
                                         <span class="info-line__k">توکن 3x-ui:</span>
@@ -1489,7 +1482,7 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                                                data-id="<?php echo (int)$p['id']; ?>" data-field="inboundstatus"
                                                <?php echo $inboundOn ? 'checked' : ''; ?>>
                                         <span class="switch__slot"></span>
-                                        <span class="toggle-row__label">📡 inboundها فعال</span>
+                                        <span class="toggle-row__label"><?php echo icon('antenna','svg-icon svg-sm'); ?> inboundها فعال</span>
                                     </label>
                                 <?php endif; ?>
 
@@ -1498,7 +1491,7 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                                            data-id="<?php echo (int)$p['id']; ?>" data-field="TestAccount"
                                            <?php echo $testOn ? 'checked' : ''; ?>>
                                     <span class="switch__slot"></span>
-                                    <span class="toggle-row__label">🔑 اکانت تست</span>
+                                    <span class="toggle-row__label"><?php echo icon('key','svg-icon svg-sm'); ?> اکانت تست</span>
                                 </label>
 
                                 <?php
@@ -1511,7 +1504,7 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                                            data-id="<?php echo (int)$p['id']; ?>" data-field="config"
                                            <?php echo $configOn ? 'checked' : ''; ?>>
                                     <span class="switch__slot"></span>
-                                    <span class="toggle-row__label">⚙️ ارسال کانفیگ</span>
+                                    <span class="toggle-row__label"><?php echo icon('gear','svg-icon svg-sm'); ?> ارسال کانفیگ</span>
                                 </label>
                                 <?php endif; ?>
 
@@ -1525,61 +1518,10 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                                            data-id="<?php echo (int)$p['id']; ?>" data-field="sublink"
                                            <?php echo $sublinkOn ? 'checked' : ''; ?>>
                                     <span class="switch__slot"></span>
-                                    <span class="toggle-row__label">🔗 ارسال لینک ساب</span>
+                                    <span class="toggle-row__label"><?php echo icon('link','svg-icon svg-sm'); ?> ارسال لینک ساب</span>
                                 </label>
                                 <?php endif; ?>
-
-                                <?php
-                                
-                                $conectonOn = faoxima_is_truthy_panel_flag($p['conecton'] ?? '', ['onconecton']);
-                                if (in_array($type, ['marzban', 'x-ui_single', 'marzneshin'])):
-                                ?>
-                                <label class="toggle-row" title="فعال‌سازی سطر کانکشن — نمایش زمان اولین اتصال کاربر">
-                                    <input type="checkbox" class="panel-toggle"
-                                           data-id="<?php echo (int)$p['id']; ?>" data-field="conecton"
-                                           <?php echo $conectonOn ? 'checked' : ''; ?>>
-                                    <span class="switch__slot"></span>
-                                    <span class="toggle-row__label">📊 سطر کانکشن</span>
-                                </label>
-                                <?php endif; ?>
-
-                                <label class="toggle-row" title="پنل اضطراری — هنگام قطعی پنل اصلی، این پنل جایگزین می‌شود">
-                                    <input type="checkbox" class="panel-toggle"
-                                           data-id="<?php echo (int)$p['id']; ?>" data-field="emergency_panel_status"
-                                           <?php echo $emergencyOn ? 'checked' : ''; ?>>
-                                    <span class="switch__slot"></span>
-                                    <span class="toggle-row__label">🚨 پنل اضطراری</span>
-                                </label>
-
-                                <label class="toggle-row" title="وضعیت نت ملی — حالت پنل برای زمان قطعی اینترنت خارج">
-                                    <input type="checkbox" class="panel-toggle"
-                                           data-id="<?php echo (int)$p['id']; ?>" data-field="national_net_status"
-                                           <?php echo $nationalOn ? 'checked' : ''; ?>>
-                                    <span class="switch__slot"></span>
-                                    <span class="toggle-row__label">🌐 وضعیت نت ملی</span>
-                                </label>
                             </div>
-
-                            <?php if ($emergencyOn): ?>
-                                <div class="emergency-config">
-                                    <form method="POST" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                        <input type="hidden" name="_action" value="set_emergency_source">
-                                        <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
-                                        <label style="font-size:12.5px; color:var(--text-muted);">📌 ثبت پنل جایگزین اضطراری:</label>
-                                        <select name="emergency_source_panel" class="form-control" style="flex:1; min-width:160px; padding:6px 10px; font-size:12.5px;">
-                                            <option value="">— انتخاب —</option>
-                                            <?php foreach ($panels as $other):
-                                                if ((int)$other['id'] === (int)$p['id']) continue; ?>
-                                                <option value="<?php echo htmlspecialchars($other['code_panel'] ?? '', ENT_QUOTES); ?>"
-                                                    <?php echo ((string)($p['emergency_source_panel'] ?? '') === (string)($other['code_panel'] ?? '')) ? 'selected' : ''; ?>>
-                                                    <?php echo htmlspecialchars($other['name_panel'] ?? '', ENT_QUOTES); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <button type="submit" class="btn btn-sm btn-soft-warning">ثبت</button>
-                                    </form>
-                                </div>
-                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -1628,12 +1570,12 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                                         <?php else: ?><span class="badge badge-block">غیرفعال</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td data-label="اکانت تست"><?php echo $testOn ? '✅' : '❌'; ?></td>
-                                    <td data-label="کانفیگ"><?php echo (!in_array($type, ['Manualsale','WGDashboard','hiddify','guard'])) ? ($configOn_t ? '✅' : '❌') : '—'; ?></td>
-                                    <td data-label="لینک ساب"><?php echo (!in_array($type, ['Manualsale','WGDashboard','hiddify'])) ? ($sublinkOn_t ? '✅' : '❌') : '—'; ?></td>
-                                    <td data-label="سطر کانکشن"><?php echo in_array($type, ['marzban','x-ui_single','marzneshin']) ? ($conectonOn_t ? '✅' : '❌') : '—'; ?></td>
-                                    <td data-label="اضطراری"><?php echo $emergencyOn ? '🚨 روشن' : '⚪️'; ?></td>
-                                    <td data-label="نت ملی"><?php echo $nationalOn ? '🌐 روشن' : '⚪️'; ?></td>
+                                    <td data-label="اکانت تست"><?php echo $testOn ? icon('circle-check','svg-icon svg-sm icon-ok') : icon('xmark','svg-icon svg-sm icon-no'); ?></td>
+                                    <td data-label="کانفیگ"><?php echo (!in_array($type, ['Manualsale','WGDashboard','hiddify','guard'])) ? ($configOn_t ? icon('circle-check','svg-icon svg-sm icon-ok') : icon('xmark','svg-icon svg-sm icon-no')) : '—'; ?></td>
+                                    <td data-label="لینک ساب"><?php echo (!in_array($type, ['Manualsale','WGDashboard','hiddify'])) ? ($sublinkOn_t ? icon('circle-check','svg-icon svg-sm icon-ok') : icon('xmark','svg-icon svg-sm icon-no')) : '—'; ?></td>
+                                    <td data-label="سطر کانکشن"><?php echo in_array($type, ['marzban','x-ui_single','marzneshin']) ? ($conectonOn_t ? icon('circle-check','svg-icon svg-sm icon-ok') : icon('xmark','svg-icon svg-sm icon-no')) : '—'; ?></td>
+                                    <td data-label="اضطراری"><?php echo $emergencyOn ? icon('siren','svg-icon svg-sm icon-warn').' روشن' : icon('circle','svg-icon svg-sm icon-muted'); ?></td>
+                                    <td data-label="نت ملی"><?php echo $nationalOn ? icon('globe','svg-icon svg-sm icon-warn').' روشن' : icon('circle','svg-icon svg-sm icon-muted'); ?></td>
                                     <td data-label="عملیات" class="cell-actions">
                                         <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
                                             <button class="btn btn-sm btn-soft-purple"
@@ -1718,10 +1660,6 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                     <input type="password" name="password_panel" class="form-control" style="direction:ltr" autocomplete="new-password">
                 </div>
             </div>
-            <div class="form-group" id="addApiGroup">
-                <label class="form-label">API Key (اختیاری)</label>
-                <input type="text" name="api_key" class="form-control" style="direction:ltr" autocomplete="off">
-            </div>
             <div class="form-group" id="addXuiTokenGroup" style="display:none">
                 <label class="form-label">توکن API پنل 3x-ui (صنایی نسخه جدید)</label>
                 <input type="text" name="xui_api_token" id="xui_api_token" class="form-control" style="direction:ltr" autocomplete="off" placeholder="Settings → Telegram/Subscription → API token">
@@ -1742,7 +1680,7 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
             <div class="modal-foot">
                 <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-add-panel')">انصراف</button>
                 <button type="button" class="btn btn-soft-purple btn-sm" id="btn_add_test" onclick="testPanelAuth('add')">
-                    🔍 تست اتصال
+                    <?php echo icon('search','svg-icon svg-sm'); ?> تست اتصال
                 </button>
                 <button type="submit" class="btn btn-primary btn-sm">
                     <?php echo icon('plus', 'svg-icon svg-sm'); ?>
@@ -1792,10 +1730,6 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                     <input type="password" name="password_panel" class="form-control" style="direction:ltr" autocomplete="new-password" placeholder="برای تغییر پسورد، اینجا تایپ کنید">
                 </div>
             </div>
-            <div class="form-group">
-                <label class="form-label">API Key جدید <small style="color:var(--text-muted)">(خالی = بدون تغییر)</small></label>
-                <input type="text" name="api_key" class="form-control" style="direction:ltr" autocomplete="off" placeholder="برای تغییر API key، اینجا تایپ کنید">
-            </div>
             <div class="form-group" id="edit_xui_token_group" style="display:none">
                 <label class="form-label">توکن API پنل 3x-ui (صنایی نسخه جدید) <small style="color:var(--text-muted)">(خالی = بدون تغییر)</small></label>
                 <input type="text" name="xui_api_token" id="edit_xui_api_token" class="form-control" style="direction:ltr" autocomplete="off" placeholder="برای تغییر توکن، اینجا تایپ کنید">
@@ -1820,11 +1754,11 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                         <span class="switch__slot"></span>
                     </label>
                     <span style="font-size:13px;" id="edit_status_label">
-                        <span id="edit_status_text_auto">🔄 وضعیت خودکار</span>
+                        <span id="edit_status_text_auto"><?php echo icon('refresh','svg-icon svg-sm'); ?> وضعیت خودکار</span>
                         <span id="edit_status_text_manual" style="display:none;">پنل فعال</span>
                         <small style="display:block; color:var(--text-muted); font-size:11.5px; margin-top:2px;">
                             <span id="edit_status_hint_auto">پس از ذخیره، اگر اعتبار پنل (یوزرنیم/پسورد/آدرس) درست باشد فعال و در غیر این صورت غیرفعال می‌شود.</span>
-                            <span id="edit_status_hint_manual" style="display:none;">💡 پنل فروش دستی — وضعیت را خودتان انتخاب کنید.</span>
+                            <span id="edit_status_hint_manual" style="display:none;"><?php echo icon('lightbulb','svg-icon svg-xs'); ?> پنل فروش دستی — وضعیت را خودتان انتخاب کنید.</span>
                         </small>
                     </span>
                 </div>
@@ -1833,31 +1767,31 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
             
             <details id="edit_advanced_details" style="margin-top: 12px; border: 1px dashed var(--border-mid); border-radius: 8px; padding: 10px 14px;">
                 <summary style="cursor:pointer; font-size:13px; font-weight:700; color:var(--accent);">
-                    ⚙️ تنظیمات پیشرفته پنل
+                    <?php echo icon('gear','svg-icon svg-sm'); ?> تنظیمات پیشرفته پنل
                 </summary>
                 <div style="margin-top: 12px;">
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">⏳ زمان سرویس تست (روز)</label>
+                            <label class="form-label"><?php echo icon('hourglass','svg-icon svg-sm'); ?> زمان سرویس تست (روز)</label>
                             <input type="number" min="0" name="time_usertest" id="edit_time_usertest" class="form-control" placeholder="1">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">💾 حجم اکانت تست (٪ یا MB)</label>
+                            <label class="form-label"><?php echo icon('save','svg-icon svg-sm'); ?> حجم اکانت تست (٪ یا MB)</label>
                             <input type="text" name="val_usertest" id="edit_val_usertest" class="form-control" placeholder="100" style="direction:ltr">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">🚨 محدودیت ساخت اکانت</label>
+                            <label class="form-label"><?php echo icon('siren','svg-icon svg-sm'); ?> محدودیت ساخت اکانت</label>
                             <input type="text" name="limit_panel" id="edit_limit_panel" class="form-control" placeholder="unlimted یا عدد" style="direction:ltr">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">🌍 قیمت تغییر لوکیشن (تومان)</label>
+                            <label class="form-label"><?php echo icon('globe','svg-icon svg-sm'); ?> قیمت تغییر لوکیشن (تومان)</label>
                             <input type="number" min="0" name="priceChangeloc" id="edit_priceChangeloc" class="form-control" placeholder="0">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">🔋 روش تمدید سرویس</label>
+                        <label class="form-label"><?php echo icon('battery','svg-icon svg-sm'); ?> روش تمدید سرویس</label>
                         <select name="Methodextend" id="edit_Methodextend" class="form-control">
                             <option value="">— انتخاب —</option>
                             <option value="ریست حجم و زمان">ریست حجم و زمان</option>
@@ -1868,7 +1802,7 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">💡 روش ساخت نام کاربری</label>
+                        <label class="form-label"><?php echo icon('lightbulb','svg-icon svg-sm'); ?> روش ساخت نام کاربری</label>
                         <select name="MethodUsername" id="edit_MethodUsername" class="form-control" onchange="onMethodUsernameChange(this.value)">
                             <option value="">— انتخاب روش —</option>
                             <option value="آیدی عددی + حروف و عدد رندوم">آیدی عددی + حروف و عدد رندوم</option>
@@ -1886,14 +1820,14 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
 
                     
                     <div class="form-group" id="edit_namecustom_group" style="display:none;">
-                        <label class="form-label">✏️ متن پیشوند دلخواه (namecustom)</label>
+                        <label class="form-label"><?php echo icon('pen','svg-icon svg-sm'); ?> متن پیشوند دلخواه (namecustom)</label>
                         <input type="text" name="namecustom" id="edit_namecustom" class="form-control" style="direction:ltr" placeholder="مثلاً: vip یا user">
                         <small style="color:var(--text-muted); font-size:11.5px; margin-top:4px; display:block;">متنی که به‌عنوان پیشوند نام کاربری استفاده می‌شود. فقط حروف انگلیسی و عدد.</small>
                     </div>
 
                     
                     <div class="form-group" id="edit_inboundid_group" style="display:none;">
-                        <label class="form-label">💎 شناسه اینباند (Inbound ID)</label>
+                        <label class="form-label"><?php echo icon('gem','svg-icon svg-sm'); ?> شناسه اینباند (Inbound ID)</label>
                         <input type="text" name="inboundid" id="edit_inboundid" class="form-control" style="direction:ltr" placeholder="مثلاً: 1 یا 3 (عدد ID ستون اینباند در پنل)">
                         <small style="color:var(--text-muted); font-size:11.5px; margin-top:4px; display:block;">ثنایی / علیرضا تک‌پورت: شناسه عددی اینباند در پنل. WGDashboard: نام کانفیگ Wireguard.</small>
                         <div id="edit_inbound_result" style="display:none; margin-top:6px; padding:8px 12px; border-radius:6px; font-size:12.5px; font-weight:600;"></div>
@@ -1901,7 +1835,7 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
 
                     
                     <div class="form-group" id="edit_linksubx_group" style="display:none;">
-                        <label class="form-label">🔗 دامنه لینک ساب (Sub Link Domain)</label>
+                        <label class="form-label"><?php echo icon('link','svg-icon svg-sm'); ?> دامنه لینک ساب (Sub Link Domain)</label>
                         <input type="text" name="linksubx" id="edit_linksubx" class="form-control" style="direction:ltr" placeholder="مثلاً: https://example.com:2053/sub">
                         <small style="color:var(--text-muted); font-size:11.5px; margin-top:4px; display:block;">ثنایی: یک لینک ساب نمونه از پنل کپی کنید تا دامنه خودکار استخراج شود. هیدیفای: آدرس کامل دامنه.</small>
                         <div id="edit_sublink_result" style="display:none; margin-top:6px; padding:8px 12px; border-radius:6px; font-size:12.5px; font-weight:600;"></div>
@@ -1909,7 +1843,7 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
 
                     
                     <div class="form-group" id="edit_secret_code_group" style="display:none;">
-                        <label class="form-label">🔗 UUID ادمین (Admin UUID)</label>
+                        <label class="form-label"><?php echo icon('link','svg-icon svg-sm'); ?> UUID ادمین (Admin UUID)</label>
                         <input type="text" name="secret_code" id="edit_secret_code" class="form-control" style="direction:ltr" placeholder="مثلاً: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
                         <small style="color:var(--text-muted); font-size:11.5px; margin-top:4px; display:block;">UUID ادمین پنل هیدیفای — از صفحه تنظیمات پنل قابل کپی است.</small>
                     </div>
@@ -1922,7 +1856,7 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
             <div class="modal-foot">
                 <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-edit-panel')">انصراف</button>
                 <button type="button" class="btn btn-soft-purple btn-sm" id="btn_edit_test" onclick="testPanelAuth('edit')">
-                    🔍 تست اتصال
+                    <?php echo icon('search','svg-icon svg-sm'); ?> تست اتصال
                 </button>
                 <button type="submit" class="btn btn-primary btn-sm">
                     <?php echo icon('check', 'svg-icon svg-sm'); ?>
@@ -1941,11 +1875,43 @@ function toggleUrlField(type) {
     var hide = (type === 'Manualsale');
     document.getElementById('addUrlGroup').style.display    = hide ? 'none' : '';
     document.getElementById('addCredsGroup').style.display  = hide ? 'none' : '';
-    document.getElementById('addApiGroup').style.display    = hide ? 'none' : '';
     var xt = document.getElementById('addXuiTokenGroup');
     if (xt) xt.style.display = (type === 'x-ui_single') ? '' : 'none';
     var u = document.getElementById('addUrlInput');
     if (u) u.required = !hide;
+}
+
+function fxIcon(name) {
+    var p = {
+        'circle-check': '<circle cx="12" cy="12" r="10"/><polyline points="9 12 12 15 16 10"/>',
+        'xmark':        '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+        'warn':         '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+        'hourglass':    '<line x1="5" y1="2" x2="19" y2="2"/><line x1="5" y1="22" x2="19" y2="22"/><path d="M17 22v-3.17a2 2 0 0 0-.59-1.42L12 13l-4.41 4.41A2 2 0 0 0 7 18.83V22"/><path d="M7 2v3.17a2 2 0 0 0 .59 1.42L12 11l4.41-4.41A2 2 0 0 0 17 5.17V2"/>',
+        'search':       '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>'
+    }[name] || '';
+    return '<svg class="svg-icon svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
+}
+function fxStripEmoji(s) {
+    return String(s).replace(/[\u2600-\u27BF\u2B00-\u2BFF\u2190-\u21FF\u2300-\u23FF\u24C2\u25A0-\u25FF\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim();
+}
+function fxSetBox(el, state, msg) {
+    if (!el) return;
+    el.style.display = '';
+    if (state === 'ok') {
+        el.style.border = '1px solid var(--success, #22c55e)';
+        el.style.background = 'rgba(34,197,94,.1)';
+        el.style.color = 'var(--success, #16a34a)';
+    } else if (state === 'fail' || state === 'warn') {
+        el.style.border = '1px solid var(--danger, #ef4444)';
+        el.style.background = 'rgba(239,68,68,.1)';
+        el.style.color = 'var(--danger, #dc2626)';
+    } else {
+        el.style.border = '1px solid var(--border-mid)';
+        el.style.background = 'var(--surface-1)';
+        el.style.color = 'var(--text-muted)';
+    }
+    el.innerHTML = fxIcon(state === 'ok' ? 'circle-check' : (state === 'fail' ? 'xmark' : (state === 'warn' ? 'warn' : 'hourglass')));
+    el.appendChild(document.createTextNode(' ' + fxStripEmoji(msg)));
 }
 
 /**
@@ -1967,23 +1933,19 @@ function testPanelAuth(mode) {
     var panelId  = mode === 'edit' ? ((document.getElementById('edit_id') || {}).value || '') : '';
 
     if (type === 'Manualsale') {
-        showTestResult(resultEl, true, '✅ پنل فروش دستی — نیازی به تست ندارد');
+        fxSetBox(resultEl, 'ok', 'پنل فروش دستی — نیازی به تست ندارد');
         return;
     }
     if (!url) {
-        showTestResult(resultEl, false, '⚠️ ابتدا آدرس URL پنل را وارد کنید');
+        fxSetBox(resultEl, 'warn', 'ابتدا آدرس URL پنل را وارد کنید');
         return;
     }
 
     // نمایش حالت loading
     if (resultEl) {
-        resultEl.style.display = '';
-        resultEl.style.background = 'var(--surface-1)';
-        resultEl.style.color = 'var(--text-muted)';
-        resultEl.style.border = '1px solid var(--border-mid)';
-        resultEl.textContent = '⏳ در حال تست اتصال...';
+        fxSetBox(resultEl, 'loading', 'در حال تست اتصال...');
     }
-    if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳ ...'; }
+    if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = fxIcon('hourglass') + ' ...'; }
 
     var fd = new FormData();
     fd.append('url',      url);
@@ -1997,22 +1959,17 @@ function testPanelAuth(mode) {
     fetch('panels.php?ajax=test_auth', { method: 'POST', body: fd, credentials: 'same-origin' })
         .then(function(r) { return r.json(); })
         .then(function(j) {
-            if (btnEl) { btnEl.disabled = false; btnEl.textContent = '🔍 تست اتصال'; }
-            showTestResult(resultEl, !!j.verified, j.message || (j.verified ? 'ورود موفق ✅' : '❌ ورود ناموفق'));
+            if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = fxIcon('search') + ' تست اتصال'; }
+            fxSetBox(resultEl, j.verified ? 'ok' : 'fail', j.message || (j.verified ? 'ورود موفق' : 'ورود ناموفق'));
         })
         .catch(function(e) {
-            if (btnEl) { btnEl.disabled = false; btnEl.textContent = '🔍 تست اتصال'; }
-            showTestResult(resultEl, false, '❌ خطا در ارسال درخواست: ' + e.message);
+            if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = fxIcon('search') + ' تست اتصال'; }
+            fxSetBox(resultEl, 'fail', 'خطا در ارسال درخواست: ' + e.message);
         });
 }
 
 function showTestResult(el, success, msg) {
-    if (!el) return;
-    el.style.display = '';
-    el.style.border = '1px solid ' + (success ? 'var(--success, #22c55e)' : 'var(--danger, #ef4444)');
-    el.style.background = success ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)';
-    el.style.color = success ? 'var(--success, #16a34a)' : 'var(--danger, #dc2626)';
-    el.textContent = msg;
+    fxSetBox(el, success ? 'ok' : 'fail', msg);
 }
 
 
@@ -2041,11 +1998,7 @@ function showTestResult(el, success, msg) {
 
             var d = getEditFormData();
             // نمایش حالت loading
-            result.style.display = '';
-            result.style.border = '1px solid var(--border-mid)';
-            result.style.background = 'var(--surface-1)';
-            result.style.color = 'var(--text-muted)';
-            result.textContent = '⏳ در حال بررسی...';
+            fxSetBox(result, 'loading', 'در حال بررسی...');
 
             var fd = new FormData();
             fd.append(postKeyName, val);
@@ -2058,12 +2011,8 @@ function showTestResult(el, success, msg) {
             fetch('panels.php?ajax=' + endpoint, { method: 'POST', body: fd, credentials: 'same-origin' })
                 .then(function (r) { return r.json(); })
                 .then(function (j) {
-                    result.style.display = '';
                     var ok = !!j.ok;
-                    result.style.border = '1px solid ' + (ok ? 'var(--success, #22c55e)' : 'var(--danger, #ef4444)');
-                    result.style.background = ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)';
-                    result.style.color = ok ? 'var(--success, #16a34a)' : 'var(--danger, #dc2626)';
-                    result.textContent = j.message || (ok ? '✅ معتبر است' : '❌ نامعتبر');
+                    fxSetBox(result, ok ? 'ok' : 'fail', j.message || (ok ? 'معتبر است' : 'نامعتبر'));
                 })
                 .catch(function () { result.style.display = 'none'; });
         });

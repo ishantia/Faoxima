@@ -276,10 +276,10 @@ if (!$tableMissing && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $parts = ["✅ ثبت‌شده: {$ok}"];
-            if ($duplicate > 0) $parts[] = "♻️ تکراری: {$duplicate}";
-            if ($bad       > 0) $parts[] = "⚠️ نامعتبر: {$bad}";
-            if ($badSub    > 0) $parts[] = "🔗 لینک اشتراک نامعتبر (کانفیگ ثبت شد): {$badSub}";
+            $parts = ["ثبت‌شده: {$ok}"];
+            if ($duplicate > 0) $parts[] = "تکراری: {$duplicate}";
+            if ($bad       > 0) $parts[] = "نامعتبر: {$bad}";
+            if ($badSub    > 0) $parts[] = "لینک اشتراک نامعتبر (کانفیگ ثبت شد): {$badSub}";
             $flash['ok'] = 'نتیجه ورود کانفیگ‌ها — ' . implode(' · ', $parts);
             header('Location: stock.php?shelf=' . $shelfId);
             exit;
@@ -473,10 +473,10 @@ if (!$tableMissing) {
 
 function faoxima_stock_status_label(string $s): array {
     switch ($s) {
-        case 'active':    return ['✅ موجود', 'badge-active'];
-        case 'reserved':  return ['🔒 رزرو', 'badge-warning'];
-        case 'delivered': return ['📦 تحویل شده', 'badge-info'];
-        case 'disabled':  return ['❌ غیرفعال', 'badge-block'];
+        case 'active':    return [icon('circle-check', 'svg-icon svg-sm') . ' موجود', 'badge-active'];
+        case 'reserved':  return [icon('lock', 'svg-icon svg-sm') . ' رزرو', 'badge-warning'];
+        case 'delivered': return [icon('package', 'svg-icon svg-sm') . ' تحویل شده', 'badge-info'];
+        case 'disabled':  return [icon('xmark', 'svg-icon svg-sm') . ' غیرفعال', 'badge-block'];
         default:          return [htmlspecialchars($s, ENT_QUOTES), 'badge-gray'];
     }
 }
@@ -522,7 +522,7 @@ function faoxima_stock_status_label(string $s): array {
                 <div class="page-head">
                     <div>
                         <div class="page-head__title">
-                            <a href="stock.php" style="text-decoration:none; color:var(--text-muted); margin-inline-end:8px;">←</a>
+                            <a href="stock.php" style="text-decoration:none; color:var(--text-muted); margin-inline-end:8px;"><?php echo icon('arrow-left', 'svg-icon svg-sm'); ?></a>
                             <?php echo icon('package', 'svg-icon svg-lg'); ?>
                             <?php echo htmlspecialchars($selectedShelf['name'], ENT_QUOTES, 'UTF-8'); ?>
                         </div>
@@ -547,10 +547,10 @@ function faoxima_stock_status_label(string $s): array {
                 <?php $counts = $shelfCounts[$viewShelfId] ?? ['total'=>0,'active'=>0,'reserved'=>0,'delivered'=>0,'disabled'=>0]; ?>
                 <div class="stat-row" style="margin-bottom:16px;">
                     <div class="stat-chip">کل: <strong><?php echo $counts['total']; ?></strong></div>
-                    <div class="stat-chip" style="color:var(--color-success)">✅ موجود: <strong><?php echo $counts['active']; ?></strong></div>
-                    <div class="stat-chip" style="color:var(--color-warning)">🔒 رزرو: <strong><?php echo $counts['reserved']; ?></strong></div>
-                    <div class="stat-chip" style="color:var(--accent)">📦 تحویل شده: <strong><?php echo $counts['delivered']; ?></strong></div>
-                    <?php if ($counts['disabled'] > 0): ?><div class="stat-chip" style="color:var(--color-danger)">❌ غیرفعال: <strong><?php echo $counts['disabled']; ?></strong></div><?php endif; ?>
+                    <div class="stat-chip" style="color:var(--color-success)"><?php echo icon('circle-check','svg-icon svg-sm'); ?> موجود: <strong><?php echo $counts['active']; ?></strong></div>
+                    <div class="stat-chip" style="color:var(--color-warning)"><?php echo icon('lock','svg-icon svg-sm'); ?> رزرو: <strong><?php echo $counts['reserved']; ?></strong></div>
+                    <div class="stat-chip" style="color:var(--accent)"><?php echo icon('package','svg-icon svg-sm'); ?> تحویل شده: <strong><?php echo $counts['delivered']; ?></strong></div>
+                    <?php if ($counts['disabled'] > 0): ?><div class="stat-chip" style="color:var(--color-danger)"><?php echo icon('xmark','svg-icon svg-sm'); ?> غیرفعال: <strong><?php echo $counts['disabled']; ?></strong></div><?php endif; ?>
                 </div>
 
                 <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
@@ -582,10 +582,10 @@ function faoxima_stock_status_label(string $s): array {
                     <?php
                         $cfgFilters = [
                             'all'       => 'همه',
-                            'active'    => '✅ موجود',
-                            'reserved'  => '🔒 رزرو',
-                            'delivered' => '📦 تحویل شده',
-                            'disabled'  => '❌ غیرفعال',
+                            'active'    => icon('circle-check','svg-icon svg-sm').' موجود',
+                            'reserved'  => icon('lock','svg-icon svg-sm').' رزرو',
+                            'delivered' => icon('package','svg-icon svg-sm').' تحویل شده',
+                            'disabled'  => icon('xmark','svg-icon svg-sm').' غیرفعال',
                         ];
                         foreach ($cfgFilters as $fk => $fl):
                             $isActive = ($cfgFilter === $fk);
@@ -623,10 +623,10 @@ function faoxima_stock_status_label(string $s): array {
                                 <div class="config-row__meta">
                                     <span>
                                     <?php if (!empty($cfg['sub_link'])): ?>
-                                        <span style="color:var(--accent)">🔗 سابسکریپشن دارد</span>
+                                        <span style="color:var(--accent)"><?php echo icon('link','svg-icon svg-sm'); ?> سابسکریپشن دارد</span>
                                     <?php endif; ?>
                                     <?php if (!empty($cfg['assigned_user'])): ?>
-                                        <span>👤 <?php echo htmlspecialchars((string)$cfg['assigned_user'], ENT_QUOTES); ?></span>
+                                        <span><?php echo icon('user','svg-icon svg-sm'); ?> <?php echo htmlspecialchars((string)$cfg['assigned_user'], ENT_QUOTES); ?></span>
                                     <?php endif; ?>
 
                                     <?php if ($cfgStatus === 'active'): ?>
@@ -644,11 +644,11 @@ function faoxima_stock_status_label(string $s): array {
                                             <input type="hidden" name="config_id" value="<?php echo (int)$cfg['id']; ?>">
                                             <input type="hidden" name="shelf_id" value="<?php echo $viewShelfId; ?>">
                                             <button type="submit" class="btn btn-sm btn-outline" title="فعال‌سازی مجدد" style="color:var(--color-success); border-color:var(--color-success);">
-                                                ♻️ فعال‌سازی
+                                                <?php echo icon('refresh','svg-icon svg-sm'); ?> فعال‌سازی
                                             </button>
                                         </form>
                                     <?php else:  ?>
-                                        <span title="به یک سرویس متصل است" style="color:var(--text-muted); font-size:11px;">🔒 متصل به سرویس</span>
+                                        <span title="به یک سرویس متصل است" style="color:var(--text-muted); font-size:11px;"><?php echo icon('lock','svg-icon svg-sm'); ?> متصل به سرویس</span>
                                     <?php endif; ?>
                                     <form method="POST" action="stock.php" style="display:inline" onsubmit="return confirm('این کانفیگ برای همیشه از دیتابیس حذف شود؟ این عمل بازگشت‌پذیر نیست.<?php echo ($cfgStatus === 'delivered' || $cfgStatus === 'reserved') ? '\n(این کانفیگ تحویل/رزرو شده؛ سرویس کاربر چون کانفیگ در فاکتورش ذخیره شده دست‌نخورده می‌ماند.)' : ''; ?>');">
                                         <input type="hidden" name="_action" value="delete_config_hard">
@@ -703,14 +703,14 @@ function faoxima_stock_status_label(string $s): array {
                                     <label class="mode-pill" data-mode="single" style="flex:1; min-width:140px; cursor:pointer; padding:10px 12px; border-radius:8px; border:2px solid var(--border-color); display:flex; align-items:center; gap:8px; transition:all 0.15s;">
                                         <input type="radio" name="entry_mode" value="single" checked style="margin:0;">
                                         <div>
-                                            <div style="font-weight:700; font-size:12.5px;">➕ تکی</div>
+                                            <div style="font-weight:700; font-size:12.5px;"><?php echo icon('plus','svg-icon svg-sm'); ?> تکی</div>
                                             <small style="color:var(--text-muted); font-size:11px;">یک کانفیگ همراه لینک</small>
                                         </div>
                                     </label>
                                     <label class="mode-pill" data-mode="bulk" style="flex:1; min-width:140px; cursor:pointer; padding:10px 12px; border-radius:8px; border:2px solid var(--border-color); display:flex; align-items:center; gap:8px; transition:all 0.15s;">
                                         <input type="radio" name="entry_mode" value="bulk" style="margin:0;">
                                         <div>
-                                            <div style="font-weight:700; font-size:12.5px;">📦 دسته‌ای</div>
+                                            <div style="font-weight:700; font-size:12.5px;"><?php echo icon('package','svg-icon svg-sm'); ?> دسته‌ای</div>
                                             <small style="color:var(--text-muted); font-size:11px;">چند کانفیگ + چند لینک</small>
                                         </div>
                                     </label>
@@ -724,7 +724,7 @@ function faoxima_stock_status_label(string $s): array {
                                     <span class="switch__slot"></span>
                                 </label>
                                 <div style="flex:1;">
-                                    <div style="font-weight:700; font-size:13px;">✅ بله، لینک اشتراک هم دارم</div>
+                                    <div style="font-weight:700; font-size:13px;"><?php echo icon('circle-check','svg-icon svg-sm'); ?> بله، لینک اشتراک هم دارم</div>
                                     <small style="color:var(--text-muted); font-size:11.5px;">دقیقاً مثل ربات: اول کانفیگ، بعد لینک اشتراکش. این گزینه فیلد لینک را نمایان می‌کند.</small>
                                 </div>
                             </div>
@@ -831,9 +831,9 @@ function faoxima_stock_status_label(string $s): array {
                                     <div style="margin-bottom:6px;"><span style="color:var(--text-muted)">قیمت:</span> <?php echo number_format((int)$sh['price']); ?> تومان</div>
 
                                     <div class="stat-row">
-                                        <div class="stat-chip">✅ موجود <strong><?php echo $cnt['active']; ?></strong></div>
-                                        <?php if ($cnt['reserved']  > 0): ?><div class="stat-chip">🔒 <strong><?php echo $cnt['reserved']; ?></strong></div><?php endif; ?>
-                                        <?php if ($cnt['delivered'] > 0): ?><div class="stat-chip">📦 <strong><?php echo $cnt['delivered']; ?></strong></div><?php endif; ?>
+                                        <div class="stat-chip"><?php echo icon('circle-check','svg-icon svg-sm'); ?> موجود <strong><?php echo $cnt['active']; ?></strong></div>
+                                        <?php if ($cnt['reserved']  > 0): ?><div class="stat-chip"><?php echo icon('lock','svg-icon svg-sm'); ?> <strong><?php echo $cnt['reserved']; ?></strong></div><?php endif; ?>
+                                        <?php if ($cnt['delivered'] > 0): ?><div class="stat-chip"><?php echo icon('package','svg-icon svg-sm'); ?> <strong><?php echo $cnt['delivered']; ?></strong></div><?php endif; ?>
                                     </div>
 
                                     <div style="display:flex; gap:6px; flex-wrap:wrap; padding-top:8px; border-top: 1px dashed var(--border-soft);">

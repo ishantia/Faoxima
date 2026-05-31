@@ -35,17 +35,17 @@ function fx_req_status($raw): array {
 /* request "type" label from id_order + method */
 function fx_req_type($idOrder, $method): string {
     $io = (string)$idOrder; $m = strtolower(trim((string)$method));
-    if ($m === 'cart to cart' || $m === 'carttocart_pv') return '💳 رسید بانکی';
-    if ($m === 'add balance by admin' || $m === 'low balance by admin') return '🛠 تنظیم کیف پول (ادمین)';
-    if (in_array($m, ['plisio','nowpayment','digitaltron','arze digital offline'], true)) return '🪙 ارز دیجیتال';
-    if ($m === 'star telegram') return '⭐ استارز تلگرام';
-    if (strpos($io,'Add_Balance')!==false) return '💰 افزایش موجودی';
-    if (strpos($io,'getconfigafterpay')!==false) return '🛒 خرید سرویس';
-    if (strpos($io,'getextenduser')!==false) return '♻️ تمدید سرویس';
-    if (strpos($io,'getextravolumeuser')!==false) return '📶 حجم اضافه';
-    if (strpos($io,'getextratimeuser')!==false) return '⏳ زمان اضافه';
-    if ($m !== '') return '💼 پرداخت (' . htmlspecialchars($method, ENT_QUOTES, 'UTF-8') . ')';
-    return '💼 پرداخت';
+    if ($m === 'cart to cart' || $m === 'carttocart_pv') return 'رسید بانکی';
+    if ($m === 'add balance by admin' || $m === 'low balance by admin') return 'تنظیم کیف پول (ادمین)';
+    if (in_array($m, ['plisio','nowpayment','digitaltron','arze digital offline'], true)) return 'ارز دیجیتال';
+    if ($m === 'star telegram') return 'استارز تلگرام';
+    if (strpos($io,'Add_Balance')!==false) return 'افزایش موجودی';
+    if (strpos($io,'getconfigafterpay')!==false) return 'خرید سرویس';
+    if (strpos($io,'getextenduser')!==false) return 'تمدید سرویس';
+    if (strpos($io,'getextravolumeuser')!==false) return 'حجم اضافه';
+    if (strpos($io,'getextratimeuser')!==false) return 'زمان اضافه';
+    if ($m !== '') return 'پرداخت (' . htmlspecialchars($method, ENT_QUOTES, 'UTF-8') . ')';
+    return 'پرداخت';
 }
 function fx_purpose($idOrder): string {
     $io = (string)$idOrder;
@@ -124,7 +124,7 @@ try {
         $rows[] = [
             'sortid'  => 1000000000 + (int)($r['id'] ?? 0),
             'idlabel' => 'C' . (int)($r['id'] ?? 0),
-            'type'    => '🚫 لغو سرویس',
+            'type'    => 'لغو سرویس',
             'source'  => 'ربات',
             'user'    => (string)($r['id_user'] ?? ''),
             'details' => 'سرویس: ' . (string)($r['username'] ?? '') . (trim((string)($r['description'] ?? '')) !== '' ? ' — ' . (string)$r['description'] : ''),
@@ -143,7 +143,7 @@ try {
         $rows[] = [
             'sortid'  => 1500000000,
             'idlabel' => (string)($r['id_invoice'] ?? ''),
-            'type'    => '↩️ بازگشت وجه (نت ملی)',
+            'type'    => 'بازگشت وجه (نت ملی)',
             'source'  => 'ربات',
             'user'    => (string)($r['id_user'] ?? ''),
             'details' => 'سرویس: ' . (string)($r['username'] ?? '') . ' — ' . (string)($r['name_product'] ?? ''),
@@ -235,7 +235,7 @@ usort($rows, function ($a, $b) { return $b['sortid'] <=> $a['sortid']; });
                     </table>
                 </div>
                 <div class="page-head__sub" style="margin-top:12px;">
-                    💡 تأیید/رد نهاییِ پرداخت‌ها و افزایش/کاهش موجودی همچنان از داخل ربات انجام می‌شود (تا حساب‌داری دوبار اعمال نشود)؛ این صفحه همه‌ی درخواست‌ها را برای مشاهده، جست‌وجو و فیلتر یک‌جا نمایش می‌دهد.
+                    <?php echo icon('lightbulb','svg-icon svg-sm'); ?> تأیید/رد نهاییِ پرداخت‌ها و افزایش/کاهش موجودی همچنان از داخل ربات انجام می‌شود (تا حساب‌داری دوبار اعمال نشود)؛ این صفحه همه‌ی درخواست‌ها را برای مشاهده، جست‌وجو و فیلتر یک‌جا نمایش می‌دهد.
                 </div>
             </div>
 

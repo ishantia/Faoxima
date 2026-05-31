@@ -97,7 +97,7 @@ if (is_file($__schemaLib) && is_readable($__schemaLib)) {
 
 
         var color = localStorage.getItem('faoxima_color') || 'blue';
-        var theme = localStorage.getItem('faoxima_theme') || 'dark';
+        var theme = 'dark';
         var html = document.documentElement;
         if (!html.getAttribute('data-color')) html.setAttribute('data-color', color);
         if (!html.getAttribute('data-theme')) html.setAttribute('data-theme', theme);
@@ -154,13 +154,6 @@ if (is_file($__schemaLib) && is_readable($__schemaLib)) {
 
             <hr>
 
-            <button id="theme-toggle" type="button">
-                <span id="theme-toggle-icon"><?php echo icon('moon', 'svg-icon svg-sm'); ?></span>
-                <span id="theme-toggle-label">حالت روز</span>
-            </button>
-
-            <hr>
-
             <a href="login.php" class="menu-danger">
                 <?php echo icon('arrow-right-from-bracket', 'svg-icon svg-sm'); ?>
                 <span>خروج از حساب</span>
@@ -178,23 +171,18 @@ if (is_file($__schemaLib) && is_readable($__schemaLib)) {
         <li><a href="service.php"><span class="menu-symbol"><?php echo icon('package', 'svg-icon svg-sm'); ?></span><span>سرویس‌ها</span></a></li>
         <li><a href="product.php"><span class="menu-symbol"><?php echo icon('grid', 'svg-icon svg-sm'); ?></span><span>محصولات</span></a></li>
         <li><a href="payment.php"><span class="menu-symbol"><?php echo icon('wallet', 'svg-icon svg-sm'); ?></span><span>تراکنش‌ها</span></a></li>
-        <li><a href="cancelService.php"><span class="menu-symbol"><?php echo icon('ban', 'svg-icon svg-sm'); ?></span><span>درخواست لغو</span></a></li>
+        <li><a href="cancelService.php"><span class="menu-symbol"><?php echo icon('list', 'svg-icon svg-sm'); ?></span><span>لیست درخواست‌ها</span></a></li>
     </ul>
 
     <div class="sidebar-section-label">مدیریت</div>
     <ul class="sidebar-menu">
         <li><a href="panels.php"><span class="menu-symbol"><?php echo icon('server', 'svg-icon svg-sm'); ?></span><span>مدیریت پنل‌ها</span></a></li>
         <li><a href="stock.php"><span class="menu-symbol"><?php echo icon('package', 'svg-icon svg-sm'); ?></span><span>انبار شبکه ملی</span></a></li>
-        <li><a href="finance.php"><span class="menu-symbol"><?php echo icon('money-bill', 'svg-icon svg-md'); ?></span><span>تنظیمات مالی</span></a></li>
         <li><a href="discounts.php"><span class="menu-symbol"><?php echo icon('ticket', 'svg-icon svg-sm'); ?></span><span>کدهای تخفیف</span></a></li>
-        <li><a href="broadcast.php"><span class="menu-symbol"><?php echo icon('megaphone', 'svg-icon svg-sm'); ?></span><span>پیام همگانی</span></a></li>
     </ul>
 
     <div class="sidebar-section-label">پیکربندی</div>
     <ul class="sidebar-menu">
-        <li><a href="settings.php"><span class="menu-symbol"><?php echo icon('sliders', 'svg-icon svg-sm'); ?></span><span>تنظیمات ربات</span></a></li>
-        <li><a href="shopsettings.php"><span class="menu-symbol"><?php echo icon('package', 'svg-icon svg-sm'); ?></span><span>قابلیت‌های فروشگاه</span></a></li>
-        <li><a href="applinks.php"><span class="menu-symbol"><?php echo icon('grid', 'svg-icon svg-sm'); ?></span><span>لینک‌های نصب اپ</span></a></li>
         <li><a href="textbot.php"><span class="menu-symbol"><?php echo icon('text', 'svg-icon svg-sm'); ?></span><span>متن‌های ربات</span></a></li>
         <li><a href="keyboard.php"><span class="menu-symbol"><?php echo icon('keyboard', 'svg-icon svg-sm'); ?></span><span>چیدمان کیبورد</span></a></li>
         <li><a href="service_keyboard.php"><span class="menu-symbol"><?php echo icon('palette', 'svg-icon svg-sm'); ?></span><span>رنگ‌بندی دکمه‌ها</span></a></li>

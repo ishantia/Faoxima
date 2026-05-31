@@ -58,17 +58,6 @@ $SETTING_GROUPS = [
         ],
     ],
 
-    'support' => [
-        'title' => 'پشتیبانی',
-        'icon'  => 'message',
-        'fields' => [
-            ['type' => 'toggle', 'col' => 'statussupportpv',  'label' => 'پشتیبانی از طریق پی‌وی',          'on' => 'onpvsupport',         'off' => 'offpvsupport'],
-            ['type' => 'text',   'col' => 'id_support',       'label' => 'آیدی عددی ادمین پشتیبانی',         'placeholder' => '123456789',
-             'hint'  => 'وقتی «پشتیبانی پی‌وی» روشن است، پیام‌های پشتیبانی به این آیدی تلگرام ارسال می‌شوند. عدد آیدی (نه یوزرنیم) را وارد کنید.'],
-            ['type' => 'toggle', 'col' => 'categoryhelp',     'label' => 'دسته‌بندی متن‌های آموزش',          'on' => '1',                   'off' => '0'],
-        ],
-    ],
-
     'agent' => [
         'title' => 'نمایندگی و زیرمجموعه',
         'icon'  => 'users',
@@ -158,7 +147,6 @@ try {
 
 
 $savedCount = 0;
-$pvWarning  = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['_save'])) {
     foreach ($SETTING_GROUPS as $group) {
         foreach ($group['fields'] as $f) {
@@ -194,11 +182,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['_save'])) {
                         if ($col === 'affiliatespercentage' && (float)$new > 100) $new = '100';
                     }
 
-                    if ($col === 'id_support' && $new !== '' && !preg_match('/^-?\d{1,20}$/', $new)) {
-                        error_log('[panel/settings] id_support rejected (not numeric): ' . $new);
-                        continue;
-                    }
-
                     if ($f['type'] === 'text' && mb_strlen($new) > 500) {
                         $new = mb_substr($new, 0, 500);
                     }
@@ -219,20 +202,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['_save'])) {
         }
     }
 
-
-    $pvOn  = isset($_POST['f_statussupportpv']);
-    $pvId  = trim((string)($_POST['f_id_support'] ?? ''));
-    if ($pvOn && $pvId === '') {
-        $pvWarning = '1';
-    }
-
-    header('Location: settings.php?saved=' . $savedCount . ($pvWarning ? '&pvwarn=1' : ''));
+    header('Location: settings.php?saved=' . $savedCount);
     exit;
 }
 
 $showSaved = isset($_GET['saved']);
 $savedNum  = isset($_GET['saved']) ? (int)$_GET['saved'] : 0;
-$pvWarn    = isset($_GET['pvwarn']);
 
 function faoxima_is_toggle_on($cur, $on, $off) {
     if ($cur === null) return false;
@@ -281,13 +256,6 @@ function faoxima_is_toggle_on($cur, $on, $off) {
                             هیچ تغییری انجام نشد.
                         <?php endif; ?>
                     </span>
-                </div>
-            <?php endif; ?>
-
-            <?php if ($pvWarn): ?>
-                <div class="alert alert-warning">
-                    <?php echo icon('circle-exclamation', 'svg-icon'); ?>
-                    <span><b>هشدار:</b> «پشتیبانی پی‌وی» روشن است اما <b>آیدی عددی ادمین پشتیبانی</b> خالی است. پیام‌های پشتیبانی به جایی ارسال نمی‌شوند تا این فیلد را پر کنید.</span>
                 </div>
             <?php endif; ?>
 

@@ -1489,14 +1489,14 @@ function phoneRows(string $mKey, array $btns): array {
         .skb-page { max-width:1000px; margin:0 auto; padding:82px 18px 60px; }
 
         /* Group tabs */
-        .g-tabs { display:flex; gap:3px; background:var(--surface-1); border:1px solid var(--border-soft); border-radius:12px 12px 0 0; padding:8px 12px 0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+        .g-tabs { display:flex; gap:3px; background:var(--surface-1); border:1px solid var(--border-soft); border-radius:12px 12px 0 0; padding:8px 12px 0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; backdrop-filter:blur(18px) saturate(135%); -webkit-backdrop-filter:blur(18px) saturate(135%); }
         .g-tabs::-webkit-scrollbar { display:none; }
         .g-tab { padding:8px 20px 10px; border:none; background:none; cursor:pointer; font-family:'Arad',sans-serif; font-size:13px; font-weight:700; color:var(--text-muted); border-bottom:2px solid transparent; margin-bottom:-1px; border-radius:6px 6px 0 0; transition:all .15s; white-space:nowrap; flex-shrink:0; }
         .g-tab:hover { color:var(--text-main); background:var(--surface-2); }
         .g-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
         /* Sub-tabs */
-        .s-tabs-outer { position:relative; display:flex; align-items:stretch; background:var(--surface-1); border:1px solid var(--border-soft); border-top:none; border-bottom:1px solid var(--border-mid); }
+        .s-tabs-outer { position:relative; display:flex; align-items:stretch; background:var(--surface-1); border:1px solid var(--border-soft); border-top:none; border-bottom:1px solid var(--border-mid); backdrop-filter:blur(18px) saturate(135%); -webkit-backdrop-filter:blur(18px) saturate(135%); }
         .s-tabs-wrap { flex:1 1 auto; min-width:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-behavior:smooth; padding:0 6px; }
         .s-tabs-wrap::-webkit-scrollbar { height:4px; }
         .s-tabs-wrap::-webkit-scrollbar-track { background:transparent; }
@@ -1533,7 +1533,7 @@ function phoneRows(string $mKey, array $btns): array {
         .g-panel.active { display:block; }
         .m-panel { display:none; }
         .m-panel.active { display:block; }
-        .m-body { background:var(--surface-1); border:1px solid var(--border-soft); border-top:none; border-radius:0 0 14px 14px; padding:22px 18px 28px; }
+        .m-body { background:var(--surface-1); border:1px solid var(--border-soft); border-top:none; border-radius:0 0 14px 14px; padding:22px 18px 28px; backdrop-filter:blur(18px) saturate(135%); -webkit-backdrop-filter:blur(18px) saturate(135%); }
         .m-desc { font-size:12px; color:var(--text-muted); margin:0 0 20px; padding:10px 14px; background:var(--surface-2); border-radius:8px; border:1px solid var(--border-soft); line-height:1.8; }
 
         /* Layout */

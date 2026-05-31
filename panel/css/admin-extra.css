@@ -46,7 +46,7 @@
 
 .setting-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
     gap: 18px;
 }
 .setting-row {
@@ -111,15 +111,18 @@
 
 .panel-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(380px, 100%), 1fr));
     gap: 16px;
 }
 .panel-card {
-    background: var(--surface-2);
-    border: 1px solid var(--border-soft);
+    background: linear-gradient(180deg, var(--glass-sheen), transparent 38%), var(--surface-2);
+    border: 1px solid var(--glass-border);
     border-radius: 14px;
     overflow: hidden;
     transition: border-color .15s;
+    backdrop-filter: blur(18px) saturate(135%);
+    -webkit-backdrop-filter: blur(18px) saturate(135%);
+    box-shadow: var(--shadow-1), var(--glass-edge);
 }
 .panel-card:hover { border-color: var(--accent-mid); }
 .panel-card__head {
