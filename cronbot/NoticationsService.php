@@ -70,9 +70,6 @@ class ServiceMonitor
     private function getActiveInvoices()
     {
         $time_hours = time() - 3600;
-        // شاردینگِ چند-worker: هر worker فقط ردیف‌هایی را می‌گیرد که id_invoice % N == W.
-        // مجموعه‌ها کاملاً مجزا هستند ⇒ هیچ فاکتوری دوبار پردازش نمی‌شود. ($w,$n اعدادِ صحیحِ
-        // محدودشده‌اند، پس درج مستقیمشان امن است.)
         list($w, $n) = function_exists('rx_cron_shard') ? rx_cron_shard() : [0, 1];
         $shard = ($n > 1) ? " AND MOD(id_invoice, $n) = $w " : "";
         $QUERY = "SELECT * FROM invoice WHERE (Status = 'active' OR Status = 'end_of_time' OR Status = 'end_of_volume' OR Status = 'sendedwarn' OR Status = 'send_on_hold') AND name_product != 'سرویس تست' AND (time_cron <= '$time_hours' OR time_cron IS NULL)$shard ORDER BY time_cron  LIMIT 30";

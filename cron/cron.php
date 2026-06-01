@@ -109,11 +109,8 @@ $runtimeState = function_exists('loadCronRuntimeState') ? loadCronRuntimeState($
 
 
 $jobHours = [];
-// تعدادِ workerهای موازی برای کرون‌های پرکار. هر job که اینجا >1 باشد، به‌جای یک
-// درخواست، N درخواستِ ?worker=i&workers=N شلیک می‌شود (curl_multi همه را موازی می‌فرستد).
-// قابلِ تنظیم با ستون‌های setting (در صورت نبودِ ستون، پیش‌فرض استفاده می‌شود — بدون نیاز به migration).
-$rxBroadcastWorkers = 3; // sendmessage + notifications
-$rxPaymentWorkers   = 2; // pollerهای پرداخت (با درگاه‌ها ملایم‌تر)
+$rxBroadcastWorkers = 3;
+$rxPaymentWorkers   = 2;
 $jobWorkerCounts = [];
 try {
     $rxSettingRow = function_exists('select') ? select('setting', '*') : null;
@@ -128,9 +125,6 @@ try {
         }
     }
 } catch (Throwable $e) {}
-// نکته: cryptocheck عمداً اینجا نیست — پاس‌های refund/retry آن read-modify-writeِ
-// غیراتمیک روی موجودی دارند و چند-workerِ نادرست می‌تواند refundِ مضاعف بسازد.
-// backlog آن هم کوچک است؛ تک‌worker می‌ماند.
 $jobWorkerCounts = [
     'sendmessage'   => $rxBroadcastWorkers,
     'notifications' => $rxBroadcastWorkers,
@@ -265,8 +259,6 @@ if ($bootstrapLoaded && function_exists('getCronJobDefinitions')) {
 
         $rxN = (int) ($jobWorkerCounts[$key] ?? 1);
         if ($rxN > 1) {
-            // چند workerِ موازی: N درخواستِ مجزا با worker/workers. هر worker
-            // بخشِ مجزایی از کار را برمی‌دارد (شاردینگ یا claim-lock در خودِ اسکریپت).
             $rxBase = $buildCronUrl($definition['script']);
             $rxSep  = (strpos($rxBase, '?') === false) ? '?' : '&';
             for ($rxI = 0; $rxI < $rxN; $rxI++) {

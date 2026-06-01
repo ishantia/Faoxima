@@ -7,8 +7,6 @@ error_reporting(E_ALL);
 
 
 $rxBackupLock = __DIR__ . '/backup.lock';
-// قفلِ اتمیک با flock؛ هنگام kill، سیستم‌عامل قفل را خودکار آزاد می‌کند و بکاپ‌های
-// بعدی تا ۱۰ دقیقه مسدود نمی‌مانند (برخلافِ قفلِ mtimeِ قبلی).
 $rxBackupFh = @fopen($rxBackupLock, 'c');
 if ($rxBackupFh === false) {
     if (is_file($rxBackupLock) && (time() - (int) @filemtime($rxBackupLock)) < 600) { exit; }
@@ -22,7 +20,6 @@ if ($rxBackupFh === false) {
     @ftruncate($rxBackupFh, 0);
     @fwrite($rxBackupFh, getmypid() . '|' . date('Y-m-d H:i:s'));
     @fflush($rxBackupFh);
-    // فایلِ قفل را پاک نمی‌کنیم (حذف با اجرای هم‌زمان مسابقه می‌دهد)؛ فقط flock آزاد می‌شود.
     register_shutdown_function(static function () use ($rxBackupFh) {
         @flock($rxBackupFh, LOCK_UN);
         @fclose($rxBackupFh);
@@ -256,8 +253,6 @@ try {
     $backup_file_name = 'backup_' . date("Y-m-d") . '.sql';
     $zip_file_name = 'backup_' . date("Y-m-d") . '.zip';
     $dumpCreated = false;
-    // escape برای جلوگیری از shell-injection؛ پسورد از طریق MYSQL_PWD تا در لیست پراسس‌ها دیده نشود.
-    // به فایل موقت بنویس و فقط در صورت موفقیت rename کن تا بکاپِ نیمه‌کاره (هنگام kill) ارسال نشود.
     $tmpDump = $backup_file_name . '.tmp';
     $command = sprintf(
         'MYSQL_PWD=%s mysqldump -h localhost -u %s --no-tablespaces %s > %s',

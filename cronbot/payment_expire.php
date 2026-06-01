@@ -61,10 +61,8 @@ if ($table_exists) {
 $month_date_time_start = date('Y/m/d H:i:s', time() - 86400);
 $stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE time < :cutoff AND payment_Status = 'Unpaid' ORDER BY id ASC LIMIT 200");
 $stmt->execute([':cutoff' => $month_date_time_start]);
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC); // یکجا بخوان تا بشود حین حلقه UPDATEِ محافظت‌شده زد
+$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// فقط ردیفی که هنوز Unpaid است منقضی شود؛ اگر بینِ SELECT و این لحظه پرداخت تأیید شده
-// باشد، rowCount صفر می‌شود و paid را با expire رونویسی نمی‌کنیم.
 $expireStmt = $pdo->prepare("UPDATE Payment_report SET payment_Status = 'expire' WHERE id_order = :o AND payment_Status = 'Unpaid'");
 
 foreach ($rows as $result) {
@@ -94,10 +92,9 @@ foreach ($rows as $result) {
 📌 کد فاکتور : <code>{$result['id_order']}</code>
 🪙 مبلغ فاکتور :  {$result['price']} تومان";
 
-    // اول اتمیک منقضی کن؛ فقط اگر واقعاً ردیفِ Unpaid را تغییر دادیم، پیامِ پرداخت را حذف کن.
     $expireStmt->execute([':o' => $result['id_order']]);
     if ($expireStmt->rowCount() !== 1) {
-        continue; // پرداخت شده یا قبلاً منقضی شده → دست نزن
+        continue;
     }
     deletemessage($result['id_user'], $result['message_id']);
 }

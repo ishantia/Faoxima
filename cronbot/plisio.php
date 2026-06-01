@@ -50,9 +50,6 @@ while ($row = mysqli_fetch_assoc($list_service)) {
 
     $StatusPayment = statusplisio($Payment_report['id_order']);
 
-    // اگر پاسخِ API نامعتبر بود (timeout/خطای شبکه/JSON خراب)، وضعیت نامشخص است —
-    // این فاکتور را در این اجرا رد کن و هرگز به‌خاطرِ خطای موقت منقضی‌اش نکن.
-    // فقط با وضعیتِ صریحِ لغو/انقضا منقضی می‌کنیم.
     if (!is_array($StatusPayment) || !isset($StatusPayment['data']['operations'][0]['status'])) {
         continue;
     }
