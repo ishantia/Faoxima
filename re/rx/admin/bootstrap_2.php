@@ -2294,7 +2294,8 @@ $textday
             "pingmessage" => $userdata['typepinmessage'],
             "btnmessage" => $userdata['btntypemessage']
         ));
-        nm_writeBroadcastQueueFromJson($userslist); $userslist = null;
+        $rxBuilt = nm_writeBroadcastQueueFromJson($userslist); $userslist = null;
+        @file_put_contents('cronbot/broadcast_build.log', '[' . date('Y-m-d H:i:s') . '] type=' . $typeservice . ' | group=' . ($userdata['typeusermessage'] ?? '-') . ' | agent=' . $agent . ' | panel=' . ($userdata['selectpanel'] ?? '-') . ' | تعداد نوشته‌شده در users.txt=' . $rxBuilt . PHP_EOL, FILE_APPEND);
         file_put_contents('cronbot/info', $data);
     } elseif ($typeservice == "forwardmessage") {
         if ($agent == "all") {
@@ -2342,7 +2343,8 @@ $textday
             "message" => $userdata['message'],
             "pingmessage" => $userdata['typepinmessage'],
         ));
-        nm_writeBroadcastQueueFromJson($userslist); $userslist = null;
+        $rxBuilt = nm_writeBroadcastQueueFromJson($userslist); $userslist = null;
+        @file_put_contents('cronbot/broadcast_build.log', '[' . date('Y-m-d H:i:s') . '] type=' . $typeservice . ' | group=' . ($userdata['typeusermessage'] ?? '-') . ' | agent=' . $agent . ' | panel=' . ($userdata['selectpanel'] ?? '-') . ' | تعداد نوشته‌شده در users.txt=' . $rxBuilt . PHP_EOL, FILE_APPEND);
         file_put_contents('cronbot/info', $data);
     } elseif ($typeservice == "xdaynotmessage") {
         $timedaystamp = intval($userdata['daynoyuse']) * 86400;
@@ -2402,7 +2404,8 @@ $textday
             "pingmessage" => $userdata['typepinmessage'],
             "btnmessage" => $userdata['btntypemessage']
         ));
-        nm_writeBroadcastQueueFromJson($userslist); $userslist = null;
+        $rxBuilt = nm_writeBroadcastQueueFromJson($userslist); $userslist = null;
+        @file_put_contents('cronbot/broadcast_build.log', '[' . date('Y-m-d H:i:s') . '] type=' . $typeservice . ' | group=' . ($userdata['typeusermessage'] ?? '-') . ' | agent=' . $agent . ' | panel=' . ($userdata['selectpanel'] ?? '-') . ' | تعداد نوشته‌شده در users.txt=' . $rxBuilt . PHP_EOL, FILE_APPEND);
         file_put_contents('cronbot/info', $data);
     }
 } elseif ($datain == "cancel_sendmessage") {

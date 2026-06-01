@@ -118,7 +118,7 @@ if (!function_exists('payment_confirm_paid')) {
 
         $cashbackAmount = 0;
         if ($cashbackPercent !== '' && $cashbackPercent !== '0') {
-            $cashbackAmount = ((int)($report['price'] ?? 0) * (int)$cashbackPercent) / 100;
+            $cashbackAmount = (int) floor(((int)($report['price'] ?? 0) * (int)$cashbackPercent) / 100);
             $newBalance = (int)($balanceUser['Balance'] ?? 0) + $cashbackAmount;
             update('user', 'Balance', $newBalance, 'id', $balanceUser['id']);
             if (function_exists('sendmessage')) {

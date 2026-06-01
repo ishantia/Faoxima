@@ -34,7 +34,9 @@ function statusplisio($tx_id){
     return json_decode($response, true);
 }
 
-$list_service = mysqli_query($connect, "SELECT * FROM Payment_report WHERE payment_Status = 'Unpaid' AND Payment_Method = 'plisio'");
+list($rxW, $rxN) = function_exists('rx_cron_shard') ? rx_cron_shard() : [0, 1];
+$rxShard = ($rxN > 1) ? " AND MOD(id, $rxN) = $rxW " : "";
+$list_service = mysqli_query($connect, "SELECT * FROM Payment_report WHERE payment_Status = 'Unpaid' AND Payment_Method = 'plisio'$rxShard ORDER BY id ASC LIMIT 15");
 while ($row = mysqli_fetch_assoc($list_service)) {
 
     $reportStmt = $connect->prepare("SELECT * FROM Payment_report WHERE id_order = ? LIMIT 1");
@@ -47,9 +49,16 @@ while ($row = mysqli_fetch_assoc($list_service)) {
     if (!isset($Payment_report['dec_not_confirmed']) || $Payment_report['dec_not_confirmed'] == null) continue;
 
     $StatusPayment = statusplisio($Payment_report['id_order']);
-    $opStatus = $StatusPayment['data']['operations'][0]['status'] ?? null;
 
-    if ($opStatus === null || $opStatus === 'cancelled') {
+    // اگر پاسخِ API نامعتبر بود (timeout/خطای شبکه/JSON خراب)، وضعیت نامشخص است —
+    // این فاکتور را در این اجرا رد کن و هرگز به‌خاطرِ خطای موقت منقضی‌اش نکن.
+    // فقط با وضعیتِ صریحِ لغو/انقضا منقضی می‌کنیم.
+    if (!is_array($StatusPayment) || !isset($StatusPayment['data']['operations'][0]['status'])) {
+        continue;
+    }
+    $opStatus = $StatusPayment['data']['operations'][0]['status'];
+
+    if ($opStatus === 'cancelled' || $opStatus === 'expired') {
         $textexpire = "❌ تراکنش زیر بدلیل عدم پرداخت منقضی شد، لطفا وجهی بابت این تراکنش پرداخت نکنید\n\n🛒 کد سفارش: {$Payment_report['id_order']}\n💰 مبلغ:  {$Payment_report['price']} تومان";
         payment_mark_expired($Payment_report['id_order'], $textexpire);
         continue;

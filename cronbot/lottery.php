@@ -33,6 +33,16 @@ if (!$setting || !isset($setting['scorestatus'])) {
 }
 
 if (intval($setting['scorestatus']) == 1) {
+    // ادعای اتمیکِ یک‌باره: قرعه‌کشی باید فقط یک‌بار اجرا شود. این UPDATE هم‌زمان
+    // scorestatus را به ۰ برمی‌گرداند؛ اگر rowCount صفر باشد یعنی اجرای دیگری زودتر
+    // آن را برداشته → خارج شو. این هم باگِ «اجرا در هر تیکِ کرون» و هم «قرعه‌کشیِ
+    // چندباره/پرداختِ مضاعف هنگام kill قبل از ریستِ امتیازها» را رفع می‌کند.
+    $lotteryClaim = $pdo->prepare("UPDATE setting SET scorestatus = 0 WHERE scorestatus = 1");
+    $lotteryClaim->execute();
+    if ($lotteryClaim->rowCount() < 1) {
+        return;
+    }
+
     $otherreport = select("topicid", "idreport", "report", "otherreport", "select")['idreport'];
 
     $temp = [];
@@ -54,9 +64,10 @@ if (intval($setting['scorestatus']) == 1) {
     $stmt->execute();
 
     $count = 0;
+    $awarded = 0; // تعداد برنده‌های واقعاً شارژ‌شده — برای جلوگیری از ارسالِ گزارشِ خالی
     $textlotterygroup = "📌 ادمین عزیز کاربران زیر برنده قرعه کشی و حسابشان شارژ گردید.\n";
 
-    $textJson = json_decode(file_get_contents('../text.json'), true);
+    $textJson = json_decode(file_get_contents(__DIR__ . '/../text.json'), true);
     if (!is_array($textJson)) {
         error_log("text.json is not a valid JSON file.");
         exit;
@@ -96,15 +107,18 @@ if (intval($setting['scorestatus']) == 1) {
 
         $textlotterygroup .= "\nنام کاربری : @{$result['username']}\nآیدی عددی : {$result['id']}\nمبلغ : $balanceFormatted\nنفر : $rank\n---------------\n";
 
+        $awarded++;
         $count++;
     }
 
-    telegram('sendmessage', [
-        'chat_id'           => $setting['Channel_Report'],
-        'message_thread_id' => $otherreport,
-        'text'              => $textlotterygroup,
-        'parse_mode'        => "HTML",
-    ]);
+    if ($awarded > 0) {
+        telegram('sendmessage', [
+            'chat_id'           => $setting['Channel_Report'],
+            'message_thread_id' => $otherreport,
+            'text'              => $textlotterygroup,
+            'parse_mode'        => "HTML",
+        ]);
+    }
 
 
     update("user", "score", "0", null, null);

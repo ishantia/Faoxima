@@ -14,7 +14,9 @@ $paymentreports = $ctx['paymentreports'];
 $ManagePanel = $ctx['managePanel'];
 $textbotlang = languagechange('../text.json');
 
-$list_service = mysqli_query($connect, "SELECT * FROM Payment_report WHERE payment_Status = 'Unpaid' AND Payment_Method = 'Currency Rial 3' ORDER BY RAND() LIMIT 10");
+list($rxW, $rxN) = function_exists('rx_cron_shard') ? rx_cron_shard() : [0, 1];
+$rxShard = ($rxN > 1) ? " AND MOD(id, $rxN) = $rxW " : "";
+$list_service = mysqli_query($connect, "SELECT * FROM Payment_report WHERE payment_Status = 'Unpaid' AND Payment_Method = 'Currency Rial 3'$rxShard ORDER BY id ASC LIMIT 10");
 while ($Payment_report = mysqli_fetch_assoc($list_service)) {
 
     if ($Payment_report['payment_Status'] == 'paid') continue;

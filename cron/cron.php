@@ -109,13 +109,35 @@ $runtimeState = function_exists('loadCronRuntimeState') ? loadCronRuntimeState($
 
 
 $jobHours = [];
+// تعدادِ workerهای موازی برای کرون‌های پرکار. هر job که اینجا >1 باشد، به‌جای یک
+// درخواست، N درخواستِ ?worker=i&workers=N شلیک می‌شود (curl_multi همه را موازی می‌فرستد).
+// قابلِ تنظیم با ستون‌های setting (در صورت نبودِ ستون، پیش‌فرض استفاده می‌شود — بدون نیاز به migration).
+$rxBroadcastWorkers = 3; // sendmessage + notifications
+$rxPaymentWorkers   = 2; // pollerهای پرداخت (با درگاه‌ها ملایم‌تر)
+$jobWorkerCounts = [];
 try {
     $rxSettingRow = function_exists('select') ? select('setting', '*') : null;
     if (is_array($rxSettingRow)) {
         $jobHours['lottery']   = max(0, min(23, (int) ($rxSettingRow['lottery_hour']   ?? 0)));
         $jobHours['statusday'] = max(0, min(23, (int) ($rxSettingRow['statusday_hour'] ?? 0)));
+        if (isset($rxSettingRow['broadcast_workers'])) {
+            $rxBroadcastWorkers = max(1, min(8, (int) $rxSettingRow['broadcast_workers']));
+        }
+        if (isset($rxSettingRow['payment_workers'])) {
+            $rxPaymentWorkers = max(1, min(8, (int) $rxSettingRow['payment_workers']));
+        }
     }
 } catch (Throwable $e) {}
+// نکته: cryptocheck عمداً اینجا نیست — پاس‌های refund/retry آن read-modify-writeِ
+// غیراتمیک روی موجودی دارند و چند-workerِ نادرست می‌تواند refundِ مضاعف بسازد.
+// backlog آن هم کوچک است؛ تک‌worker می‌ماند.
+$jobWorkerCounts = [
+    'sendmessage'   => $rxBroadcastWorkers,
+    'notifications' => $rxBroadcastWorkers,
+    'plisio'        => $rxPaymentWorkers,
+    'iranpay1'      => $rxPaymentWorkers,
+    'croncard'      => $rxPaymentWorkers,
+];
 
 
 $now       = time();
@@ -241,7 +263,18 @@ if ($bootstrapLoaded && function_exists('getCronJobDefinitions')) {
             continue;
         }
 
-        $dueUrls[] = $buildCronUrl($definition['script']);
+        $rxN = (int) ($jobWorkerCounts[$key] ?? 1);
+        if ($rxN > 1) {
+            // چند workerِ موازی: N درخواستِ مجزا با worker/workers. هر worker
+            // بخشِ مجزایی از کار را برمی‌دارد (شاردینگ یا claim-lock در خودِ اسکریپت).
+            $rxBase = $buildCronUrl($definition['script']);
+            $rxSep  = (strpos($rxBase, '?') === false) ? '?' : '&';
+            for ($rxI = 0; $rxI < $rxN; $rxI++) {
+                $dueUrls[] = $rxBase . $rxSep . 'worker=' . $rxI . '&workers=' . $rxN;
+            }
+        } else {
+            $dueUrls[] = $buildCronUrl($definition['script']);
+        }
 
 
         if (function_exists('setCronJobLastRun')) {

@@ -70,7 +70,12 @@ class ServiceMonitor
     private function getActiveInvoices()
     {
         $time_hours = time() - 3600;
-        $QUERY = "SELECT * FROM invoice WHERE (Status = 'active' OR Status = 'end_of_time' OR Status = 'end_of_volume' OR Status = 'sendedwarn' OR Status = 'send_on_hold') AND name_product != 'سرویس تست' AND (time_cron <= '$time_hours' OR time_cron IS NULL) ORDER BY time_cron  LIMIT 30";
+        // شاردینگِ چند-worker: هر worker فقط ردیف‌هایی را می‌گیرد که id_invoice % N == W.
+        // مجموعه‌ها کاملاً مجزا هستند ⇒ هیچ فاکتوری دوبار پردازش نمی‌شود. ($w,$n اعدادِ صحیحِ
+        // محدودشده‌اند، پس درج مستقیمشان امن است.)
+        list($w, $n) = function_exists('rx_cron_shard') ? rx_cron_shard() : [0, 1];
+        $shard = ($n > 1) ? " AND MOD(id_invoice, $n) = $w " : "";
+        $QUERY = "SELECT * FROM invoice WHERE (Status = 'active' OR Status = 'end_of_time' OR Status = 'end_of_volume' OR Status = 'sendedwarn' OR Status = 'send_on_hold') AND name_product != 'سرویس تست' AND (time_cron <= '$time_hours' OR time_cron IS NULL)$shard ORDER BY time_cron  LIMIT 30";
         $stmt = $this->pdo->prepare($QUERY);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -138,7 +143,7 @@ class ServiceMonitor
         ][$userData['status']];
         $remainingVolume = formatBytes($userData['data_limit'] - $userData['used_traffic']);
         if ($result) {
-            update("invoice", "status", "removeTime", "username", $username);
+            update("invoice", "status", "removeTime", "id_invoice", $invoice['id_invoice']);
             $this->Panel->RemoveUser($invoice['Service_location'], $username);
             $message = "📌 کاربر گرامی بدلیل عدم تمدید، سرویس {$invoice['username']} از لیست سرویس های شما حذف گردید\n\n🌟 جهت تهیه سرویس جدید از بخش خرید سرویس اقدام فرمایید";
             $reportMessage = "📌 اطلاعیه کرون حذف\n\nنام کاربری سرویس :‌ <code>{$invoice['username']}</code>\nوضعیت سرویس : $statusText\nتعداد روز باقی مانده ‌:‌$daysRemaining\nحجم باقی مانده : $remainingVolume";
@@ -176,7 +181,7 @@ class ServiceMonitor
         ][$userData['status']];
         $remainingVolume = formatBytes($userData['data_limit'] - $userData['used_traffic']);
         if ($result) {
-            update("invoice", "status", "removevolume", "username", $username);
+            update("invoice", "status", "removevolume", "id_invoice", $invoice['id_invoice']);
             $this->Panel->RemoveUser($invoice['Service_location'], $username);
             $message = "📌 کاربر گرامی بدلیل عدم تمدید، سرویس $username از لیست سرویس های شما حذف گردید
 

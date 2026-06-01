@@ -29,24 +29,76 @@ if (!defined('RX_CRON_INIT_LOADED')) {
 if (!function_exists('rx_cron_boot')) {
 
 
-    function rx_cron_boot(string $jobName, int $maxAgeSeconds = 300): void
+    function rx_cron_boot(string $jobName, int $maxAgeSeconds = 120): void
     {
         $jobName = preg_replace('/[^A-Za-z0-9_\-]/', '', $jobName);
         if ($jobName === '') {
             return;
         }
-        $lockFile = __DIR__ . DIRECTORY_SEPARATOR . $jobName . '.lock';
-        if (is_file($lockFile)) {
-            $age = time() - (int) @filemtime($lockFile);
-            if ($age >= 0 && $age < $maxAgeSeconds) {
+        // قفل به‌ازای هر worker: اگر این job با چند worker موازی اجرا شود، هر worker
+        // قفلِ جدا دارد و گرنه همه روی یک قفل تصادم می‌کنند و فقط یکی اجرا می‌شود.
+        // worker=0 همان نامِ قبلی را دارد (سازگاریِ عقب‌رو).
+        $rxW = (int) ($_GET['worker'] ?? $_SERVER['BROADCAST_WORKER_ID'] ?? 0);
+        $rxW = max(0, min(15, $rxW));
+        $lockFile = __DIR__ . DIRECTORY_SEPARATOR . $jobName . ($rxW > 0 ? "_w{$rxW}" : '') . '.lock';
+
+        // قفلِ اتمیک با flock: بدون شرطِ TOCTOU، و مهم‌تر اینکه اگر هاست پراسس را
+        // (حتی با SIGKILL) بکُشد، سیستم‌عامل قفل را خودکار آزاد می‌کند — پس برخلافِ
+        // قفلِ مبتنی‌بر mtime، یک اجرای kill‌شده، اجراهای بعدی را تا انقضای TTL مسدود نمی‌کند.
+        static $heldHandles = [];   // نگه‌داشتنِ هندل تا پایانِ عمرِ پراسس (وگرنه قفل زود آزاد می‌شود)
+
+        $fh = @fopen($lockFile, 'c'); // ساخت در صورت نبود، بدون truncate
+        if ($fh === false) {
+            // اگر فایل‌سیستم flock را پشتیبانی نکرد، به روشِ قدیمیِ mtime برگرد (محافظِ آخر).
+            if (is_file($lockFile) && (time() - (int) @filemtime($lockFile)) < $maxAgeSeconds) {
                 exit;
             }
-            @unlink($lockFile);
+            @file_put_contents($lockFile, getmypid() . '|' . date('Y-m-d H:i:s'));
+            register_shutdown_function(static function () use ($lockFile) {
+                @unlink($lockFile);
+            });
+            return;
         }
-        @file_put_contents($lockFile, getmypid() . '|' . date('Y-m-d H:i:s'));
-        register_shutdown_function(static function () use ($lockFile) {
-            @unlink($lockFile);
+
+        if (!@flock($fh, LOCK_EX | LOCK_NB)) {
+            // اجرای دیگری همین حالا قفل را در دست دارد → این اجرا را رد کن.
+            @fclose($fh);
+            exit;
+        }
+
+        // قفل گرفته شد. شناسهٔ پراسس را برای دیباگ بنویس.
+        @ftruncate($fh, 0);
+        @fwrite($fh, getmypid() . '|' . date('Y-m-d H:i:s'));
+        @fflush($fh);
+        $heldHandles[] = $fh;
+
+        // فایلِ قفل را پاک نمی‌کنیم: حذفِ آن با fopenِ یک اجرای هم‌زمان مسابقه می‌دهد و
+        // می‌تواند اجازه دهد دو اجرا روی inodeهای متفاوت هم‌زمان قفل بگیرند. فقط flock را
+        // آزاد می‌کنیم؛ فایلِ کوچکِ تک‌به‌ازای‌هر‌job روی دیسک می‌ماند و مشکلی ایجاد نمی‌کند.
+        register_shutdown_function(static function () use ($fh) {
+            @flock($fh, LOCK_UN);
+            @fclose($fh);
         });
+    }
+}
+
+
+if (!function_exists('rx_cron_shard')) {
+
+    /**
+     * شناسهٔ شارد را برای اجرای چند-workerِ یک کرون برمی‌گرداند: [W, N]
+     *   W = شمارهٔ این worker (۰..N-1)، N = تعداد کلِ workerها.
+     * کرون با افزودنِ «AND MOD(<ستونِ آیدی عددی>, N) = W» به کوئریِ خود، مجموعه‌ای
+     * مجزا از ردیف‌ها می‌گیرد؛ پس هیچ ردیفی توسط دو worker پردازش نمی‌شود.
+     * نبودِ پارامترها ⇒ [0, 1] یعنی همان رفتارِ تک‌worker (سازگاریِ کامل).
+     */
+    function rx_cron_shard(): array
+    {
+        $n = (int) ($_GET['workers'] ?? $_SERVER['BROADCAST_WORKERS'] ?? 1);
+        $n = max(1, min(16, $n));
+        $w = (int) ($_GET['worker'] ?? $_SERVER['BROADCAST_WORKER_ID'] ?? 0);
+        $w = max(0, min($n - 1, $w));
+        return [$w, $n];
     }
 }
 

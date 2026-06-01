@@ -11,8 +11,8 @@ require_once __DIR__ . '/../function.php';
 $admin_ids = select("admin", "id_admin",null,null,"FETCH_COLUMN");
 $marzbanlist = select("marzban_panel", "*",null ,null ,"fetchAll");
 $setting = select("setting", "*");
-$status_cron = json_decode($setting['cron_status'],true);
-if(!$status_cron['uptime_panel'])return;
+$status_cron = json_decode($setting['cron_status'] ?? '', true);
+if (!is_array($status_cron) || empty($status_cron['uptime_panel'])) return;
 $inbounds = [];
 foreach($marzbanlist as $location){
     $parsed_url = parse_url($location['url_panel']);

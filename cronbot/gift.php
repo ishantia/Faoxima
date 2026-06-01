@@ -48,6 +48,7 @@ if(!is_file($queueFile))return;
 
 
 $userid = json_decode(file_get_contents($queueFile));
+if (!is_array($userid)) $userid = [];   // محافظ: json خراب/خالی نباید count را fatal کند
 if(is_file($giftFile)){
 $info = json_decode(file_get_contents($giftFile),true);
 }
@@ -81,7 +82,7 @@ $processed = 0;
 
 while (!empty($userid) && $processed < $batchSize) {
     $iduser = array_shift($userid);
-    file_put_contents($queueFile, json_encode(array_values($userid), JSON_UNESCAPED_UNICODE));
+    try {
     if (!isset($iduser->username)) {
         continue;
     }
@@ -198,6 +199,12 @@ while (!empty($userid) && $processed < $batchSize) {
 
     if ($hadPersistentError) {
         $logFailedUser($iduser->username);
+    }
+    } finally {
+        // حذفِ این کاربر از صف فقط پس از پردازشِ کاملِ او ثبت می‌شود (crash-safe):
+        // اگر وسطِ اعمالِ هدیه kill شویم، کاربر در صف می‌ماند و اجرای بعدی دوباره تلاش می‌کند
+        // (به‌جای اینکه برای همیشه گم شود — همان الگوی inflightِ sendmessage.php).
+        file_put_contents($queueFile, json_encode(array_values($userid), JSON_UNESCAPED_UNICODE));
     }
 }
 

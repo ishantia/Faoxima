@@ -7,11 +7,27 @@ error_reporting(E_ALL);
 
 
 $rxBackupLock = __DIR__ . '/backup.lock';
-if (is_file($rxBackupLock) && (time() - (int) @filemtime($rxBackupLock)) < 600) {
-    exit;
+// قفلِ اتمیک با flock؛ هنگام kill، سیستم‌عامل قفل را خودکار آزاد می‌کند و بکاپ‌های
+// بعدی تا ۱۰ دقیقه مسدود نمی‌مانند (برخلافِ قفلِ mtimeِ قبلی).
+$rxBackupFh = @fopen($rxBackupLock, 'c');
+if ($rxBackupFh === false) {
+    if (is_file($rxBackupLock) && (time() - (int) @filemtime($rxBackupLock)) < 600) { exit; }
+    @file_put_contents($rxBackupLock, getmypid() . '|' . date('Y-m-d H:i:s'));
+    register_shutdown_function(static function () use ($rxBackupLock) { @unlink($rxBackupLock); });
+} else {
+    if (!@flock($rxBackupFh, LOCK_EX | LOCK_NB)) {
+        @fclose($rxBackupFh);
+        exit;
+    }
+    @ftruncate($rxBackupFh, 0);
+    @fwrite($rxBackupFh, getmypid() . '|' . date('Y-m-d H:i:s'));
+    @fflush($rxBackupFh);
+    // فایلِ قفل را پاک نمی‌کنیم (حذف با اجرای هم‌زمان مسابقه می‌دهد)؛ فقط flock آزاد می‌شود.
+    register_shutdown_function(static function () use ($rxBackupFh) {
+        @flock($rxBackupFh, LOCK_UN);
+        @fclose($rxBackupFh);
+    });
 }
-@file_put_contents($rxBackupLock, getmypid() . '|' . date('Y-m-d H:i:s'));
-register_shutdown_function(static function () use ($rxBackupLock) { @unlink($rxBackupLock); });
 
 
 ignore_user_abort(true);
@@ -240,12 +256,26 @@ try {
     $backup_file_name = 'backup_' . date("Y-m-d") . '.sql';
     $zip_file_name = 'backup_' . date("Y-m-d") . '.zip';
     $dumpCreated = false;
-    $command = "mysqldump -h localhost -u {$usernamedb} -p'{$passworddb}' --no-tablespaces {$dbname} > {$backup_file_name}";
+    // escape برای جلوگیری از shell-injection؛ پسورد از طریق MYSQL_PWD تا در لیست پراسس‌ها دیده نشود.
+    // به فایل موقت بنویس و فقط در صورت موفقیت rename کن تا بکاپِ نیمه‌کاره (هنگام kill) ارسال نشود.
+    $tmpDump = $backup_file_name . '.tmp';
+    $command = sprintf(
+        'MYSQL_PWD=%s mysqldump -h localhost -u %s --no-tablespaces %s > %s',
+        escapeshellarg((string)$passworddb),
+        escapeshellarg((string)$usernamedb),
+        escapeshellarg((string)$dbname),
+        escapeshellarg($tmpDump)
+    );
     if (isExecAvailable()) {
         $output = [];
         $return_var = 0;
         exec($command, $output, $return_var);
-        $dumpCreated = ($return_var === 0 && file_exists($backup_file_name));
+        if ($return_var === 0 && file_exists($tmpDump) && filesize($tmpDump) > 0) {
+            @rename($tmpDump, $backup_file_name);
+            $dumpCreated = file_exists($backup_file_name) && filesize($backup_file_name) > 0;
+        } else {
+            @unlink($tmpDump);
+        }
         if (!$dumpCreated) {
             logMessage('ERROR', 'mysqldump command failed', [
                 'return_code' => $return_var,
