@@ -1369,8 +1369,8 @@ $iduser  در ربات  رفع مسدود گردید
     Editmessagetext($from_id, $message_id, $text_inline, json_encode(['inline_keyboard' => []]));
     step('home', $from_id);
 } elseif ($text == "🎁 ساخت کد تخفیف" && $adminrulecheck['rule'] == "administrator") {
-    nm_adminInstantReply($from_id, $textbotlang['Admin']['Discountsell']['GetCode'], $backadmin, 'HTML');
-    step('get_codesell', $from_id);
+    nm_adminInstantReply($from_id, "🌐 ساخت و مدیریت کد تخفیف و کد هدیه از طریق ربات غیرفعال شده است.\n\nلطفاً برای ساخت یا مدیریت کدهای تخفیف و هدیه به پنل تحت وب مراجعه کنید.", $shopkeyboard, 'HTML');
+    step('home', $from_id);
 } elseif ($user['step'] == "get_codesell") {
     if (!preg_match('/^[A-Za-z\d]+$/', $text)) {
         nm_adminInstantReply($from_id, $textbotlang['Admin']['Discount']['ErrorCode'], null, 'HTML');
@@ -1512,8 +1512,8 @@ $iduser  در ربات  رفع مسدود گردید
     nm_adminInstantReply($from_id, $textdiscount, $keyboardadmin, 'HTML');
     step('home', $from_id);
 } elseif ($text == "❌ حذف کد تخفیف" && $adminrulecheck['rule'] == "administrator") {
-    nm_adminInstantReply($from_id, $textbotlang['Admin']['Discount']['RemoveCode'], $json_list_Discount_list_admin_sell, 'HTML');
-    step('remove-Discountsell', $from_id);
+    nm_adminInstantReply($from_id, "🌐 ساخت و مدیریت کد تخفیف و کد هدیه از طریق ربات غیرفعال شده است.\n\nلطفاً برای ساخت یا مدیریت کدهای تخفیف و هدیه به پنل تحت وب مراجعه کنید.", $shopkeyboard, 'HTML');
+    step('home', $from_id);
 } elseif ($user['step'] == "remove-Discountsell") {
     if (!in_array($text, $SellDiscount)) {
         nm_adminInstantReply($from_id, $textbotlang['Admin']['Discount']['NotCode'], null, 'HTML');

@@ -1578,7 +1578,15 @@ $textonebuy
         sendmessage($from_id, "❌ مراحل خرید را مجددا از اول انجام دهید", $keyboard, 'HTML');
         return;
     }
-    if (function_exists('rxResolveProductForPanel')) {
+    $parts = explode("_", (string)$user['Processing_value_one']);
+    if (($parts[0] ?? '') === "customvolume") {
+        $info_product = [
+            'code_product' => 'customvolume',
+            'name_product' => $textbotlang['users']['customsellvolume']['title'],
+            'Volume_constraint' => $parts[2] ?? 0,
+            'Service_time' => $parts[1] ?? 0,
+        ];
+    } elseif (function_exists('rxResolveProductForPanel')) {
         $info_product = rxResolveProductForPanel($user['Processing_value_one'], $userdate['name_panel'], $user['agent'], $userdate['category'] ?? null, $userdate['monthproduct'] ?? null);
     } else {
         $stmt = $pdo->prepare("SELECT * FROM product WHERE code_product = :code_product AND (Location = :Location or Location = '/all') LIMIT 1");
@@ -1627,7 +1635,7 @@ $textonebuy
         sendmessage($from_id, $textbotlang['users']['Discount']['erorrlimit'], null, 'HTML');
         return;
     }
-    if ($Checkcodesql >= $SellDiscountlimit['useuser']) {
+    if (intval($SellDiscountlimit['useuser']) > 0 && $Checkcodesql >= intval($SellDiscountlimit['useuser'])) {
         $textoncode = "⭕️ این کد تنها {$SellDiscountlimit['useuser']}  بار قابل استفاده است";
         sendmessage($from_id, $textoncode, $keyboard, 'HTML');
         step('home', $from_id);

@@ -129,6 +129,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+    elseif ($action === 'edit') {
+        $id      = (int)($_POST['id'] ?? 0);
+        $code    = trim((string)($_POST['codeDiscount'] ?? ''));
+        $vtype   = (string)($_POST['type']            ?? 'percent');
+        $section = (string)($_POST['section']         ?? 'all');
+        $value   = (string)($_POST['price']           ?? '0');
+        $limit   = (int)($_POST['limitDiscount']      ?? 0);
+        $agent   = (string)($_POST['agent']           ?? 'allusers');
+        $first   = !empty($_POST['usefirst']) ? '1' : '0';
+        $oneper  = !empty($_POST['useuser'])  ? '1' : '0';
+        $target  = trim((string)($_POST['target_user'] ?? ''));
+        $expDays = (int)($_POST['expire_days'] ?? 0);
+
+        $errors = [];
+        if ($id <= 0) {
+            $errors[] = 'شناسه کد نامعتبر است.';
+        }
+        if ($code === '') {
+            $errors[] = 'کد تخفیف نمی‌تواند خالی باشد.';
+        } elseif (!preg_match('/^[A-Za-z0-9_\-]{2,40}$/', $code)) {
+            $errors[] = 'کد تخفیف فقط شامل حروف انگلیسی، عدد، خط تیره و آندرلاین (۲ تا ۴۰ کاراکتر).';
+        }
+        if (!in_array($vtype, ['percent', 'amount', 'free'], true)) {
+            $errors[] = 'نوع تخفیف نامعتبر است.';
+        }
+        if (!in_array($section, ['all', 'buy', 'extend', 'volume', 'time', 'charge'], true)) {
+            $errors[] = 'بخش کد نامعتبر است.';
+        }
+        $numericValue = (float)$value;
+        if ($vtype === 'percent') {
+            if ($numericValue <= 0 || $numericValue > 100) {
+                $errors[] = 'درصد تخفیف باید بین ۱ تا ۱۰۰ باشد.';
+            }
+        } elseif ($vtype === 'amount') {
+            if ($numericValue <= 0) {
+                $errors[] = 'مبلغ تخفیف باید بزرگ‌تر از صفر باشد.';
+            } elseif ($numericValue > 100000000) {
+                $errors[] = 'مبلغ تخفیف بیش از حد بزرگ است.';
+            }
+        } else {
+            $value = '0';
+        }
+        if ($limit < 0) {
+            $errors[] = 'سقف کل استفاده نمی‌تواند منفی باشد.';
+        }
+        if (!in_array($agent, ['allusers', 'f', 'n', 'n2'], true)) {
+            $errors[] = 'گروه هدف نامعتبر است.';
+        }
+        if ($target !== '' && !ctype_digit($target)) {
+            $errors[] = 'آیدی عددی کاربر هدف نامعتبر است.';
+        }
+        if (empty($errors)) {
+            try {
+                $dup = $pdo->prepare("SELECT 1 FROM DiscountSell WHERE codeDiscount = :c AND id <> :id LIMIT 1");
+                $dup->execute([':c' => $code, ':id' => $id]);
+                if ($dup->fetchColumn()) {
+                    $errors[] = 'این کد تخفیف از قبل ثبت شده است.';
+                }
+            } catch (\Throwable $e) {  }
+        }
+        if (!empty($errors)) {
+            $flash['err'] = '• ' . implode("<br>• ", array_map(fn($e) => htmlspecialchars($e, ENT_QUOTES, 'UTF-8'), $errors));
+        } else {
+            try {
+                $expiry = $expDays > 0 ? (string)(time() + $expDays * 86400) : '0';
+                $stmt = $pdo->prepare(
+                    "UPDATE DiscountSell
+                        SET codeDiscount = :c, price = :p, limitDiscount = :l, agent = :a,
+                            usefirst = :f, useuser = :u, time = :t, section = :sec,
+                            value_type = :vt, type = :sec2, target_user = :tg
+                      WHERE id = :id"
+                );
+                $stmt->execute([
+                    ':c'   => $code,
+                    ':p'   => $value,
+                    ':l'   => (string)$limit,
+                    ':a'   => $agent,
+                    ':f'   => $first,
+                    ':u'   => $oneper,
+                    ':t'   => $expiry,
+                    ':sec' => $section,
+                    ':sec2'=> $section,
+                    ':vt'  => $vtype,
+                    ':tg'  => ($target === '' ? null : $target),
+                    ':id'  => $id,
+                ]);
+                $flash['ok'] = 'کد تخفیف ویرایش شد.';
+            } catch (\Throwable $e) {
+                $flash['err'] = 'خطا: ' . $e->getMessage();
+            }
+        }
+    }
     elseif ($action === 'gift_add') {
         $code    = trim((string)($_POST['code'] ?? ''));
         $price   = (int)($_POST['gift_price'] ?? 0);
@@ -175,6 +267,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':ex' => $expiry,
                 ]);
                 $flash['ok'] = 'کد هدیه افزوده شد.';
+            } catch (\Throwable $e) {
+                $flash['err'] = 'خطا: ' . $e->getMessage();
+            }
+        }
+    }
+    elseif ($action === 'gift_edit') {
+        $id      = (int)($_POST['id'] ?? 0);
+        $code    = trim((string)($_POST['code'] ?? ''));
+        $price   = (int)($_POST['gift_price'] ?? 0);
+        $limit   = (int)($_POST['gift_limit'] ?? 0);
+        $target  = trim((string)($_POST['gift_target'] ?? ''));
+        $expDays = (int)($_POST['gift_expire_days'] ?? 0);
+
+        $errors = [];
+        if ($id <= 0) {
+            $errors[] = 'شناسه کد نامعتبر است.';
+        }
+        if ($code === '' || !preg_match('/^[A-Za-z0-9_\-]{2,40}$/', $code)) {
+            $errors[] = 'کد هدیه نامعتبر است (۲ تا ۴۰ کاراکتر، حروف/عدد/-/_).';
+        }
+        if ($price <= 0) {
+            $errors[] = 'مبلغ کد هدیه باید بزرگ‌تر از صفر باشد.';
+        }
+        if ($limit < 0) {
+            $errors[] = 'سقف استفاده نمی‌تواند منفی باشد.';
+        }
+        if ($target !== '' && !ctype_digit($target)) {
+            $errors[] = 'آیدی عددی کاربر هدف نامعتبر است.';
+        }
+        if (empty($errors)) {
+            try {
+                $dup = $pdo->prepare("SELECT 1 FROM Discount WHERE code = :c AND id <> :id LIMIT 1");
+                $dup->execute([':c' => $code, ':id' => $id]);
+                if ($dup->fetchColumn()) {
+                    $errors[] = 'این کد هدیه از قبل ثبت شده است.';
+                }
+            } catch (\Throwable $e) {  }
+        }
+        if (!empty($errors)) {
+            $flash['err'] = '• ' . implode("<br>• ", array_map(fn($e) => htmlspecialchars($e, ENT_QUOTES, 'UTF-8'), $errors));
+        } else {
+            try {
+                $expiry = $expDays > 0 ? (string)(time() + $expDays * 86400) : null;
+                $stmt = $pdo->prepare(
+                    "UPDATE Discount SET code = :c, price = :p, limituse = :l, target_user = :tg, expire_at = :ex WHERE id = :id"
+                );
+                $stmt->execute([
+                    ':c'  => $code,
+                    ':p'  => (string)$price,
+                    ':l'  => (string)$limit,
+                    ':tg' => ($target === '' ? null : $target),
+                    ':ex' => $expiry,
+                    ':id' => $id,
+                ]);
+                $flash['ok'] = 'کد هدیه ویرایش شد.';
             } catch (\Throwable $e) {
                 $flash['err'] = 'خطا: ' . $e->getMessage();
             }
@@ -349,6 +496,9 @@ function faoxima_d_label_section($s) {
                             $used  = (int)$d['usedDiscount'];
                             $remaining = $limit > 0 ? max(0, $limit - $used) : -1;
                             $targetUser = trim((string)($d['target_user'] ?? ''));
+                            $editAgent = in_array(($d['agent'] ?? ''), ['f','n','n2'], true) ? $d['agent'] : 'allusers';
+                            $editExpTs = (int)($d['time'] ?? 0);
+                            $editExpDays = ($editExpTs > time()) ? (int)ceil(($editExpTs - time()) / 86400) : 0;
                         ?>
                             <tr>
                                 <td data-label="کد"><code style="direction:ltr; background:var(--accent-soft); color:var(--accent); padding:4px 8px; border-radius:6px; font-weight:700;"><?php echo htmlspecialchars($d['codeDiscount'], ENT_QUOTES); ?></code></td>
@@ -377,6 +527,21 @@ function faoxima_d_label_section($s) {
                                 </td>
                                 <td data-label="عملیات" class="cell-actions">
                                     <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                                        <button type="button" class="btn btn-sm btn-soft-info" title="ویرایش"
+                                            data-id="<?php echo (int)$d['id']; ?>"
+                                            data-code="<?php echo htmlspecialchars($d['codeDiscount'], ENT_QUOTES); ?>"
+                                            data-vt="<?php echo htmlspecialchars($kind, ENT_QUOTES); ?>"
+                                            data-section="<?php echo htmlspecialchars($sectionVal, ENT_QUOTES); ?>"
+                                            data-price="<?php echo htmlspecialchars((string)$d['price'], ENT_QUOTES); ?>"
+                                            data-limit="<?php echo (int)$d['limitDiscount']; ?>"
+                                            data-agent="<?php echo htmlspecialchars($editAgent, ENT_QUOTES); ?>"
+                                            data-first="<?php echo $d['usefirst'] == '1' ? '1' : '0'; ?>"
+                                            data-useuser="<?php echo $d['useuser'] == '1' ? '1' : '0'; ?>"
+                                            data-target="<?php echo htmlspecialchars($targetUser, ENT_QUOTES); ?>"
+                                            data-exp="<?php echo (int)$editExpDays; ?>"
+                                            onclick="editDiscount(this)">
+                                            <?php echo icon('pen-to-square', 'svg-icon'); ?>
+                                        </button>
                                         <form method="POST" style="display:inline" onsubmit="return confirm('شمارنده استفاده این کد صفر شود؟');">
                                             <input type="hidden" name="_action" value="reset_usage">
                                             <input type="hidden" name="id" value="<?php echo (int)$d['id']; ?>">
@@ -423,6 +588,8 @@ function faoxima_d_label_section($s) {
                             $glimit = (int)($g['limituse'] ?? 0);
                             $gused  = (int)($g['limitused'] ?? 0);
                             $gtarget = trim((string)($g['target_user'] ?? ''));
+                            $gEditExpTs = (int)($g['expire_at'] ?? 0);
+                            $gEditExpDays = ($gEditExpTs > time()) ? (int)ceil(($gEditExpTs - time()) / 86400) : 0;
                         ?>
                             <tr>
                                 <td data-label="کد"><code style="direction:ltr; background:var(--accent-soft); color:var(--accent); padding:4px 8px; border-radius:6px; font-weight:700;"><?php echo htmlspecialchars((string)$g['code'], ENT_QUOTES); ?></code></td>
@@ -431,11 +598,23 @@ function faoxima_d_label_section($s) {
                                 <td data-label="تعداد استفاده"><?php echo $gused; ?><?php if ($glimit > 0): ?> / <?php echo $glimit; ?><?php endif; ?></td>
                                 <td data-label="اختصاصی"><?php echo $gtarget !== '' ? '<span class="badge badge-warning">کاربر ' . htmlspecialchars($gtarget, ENT_QUOTES) . '</span>' : '<span class="text-muted">عمومی</span>'; ?></td>
                                 <td data-label="عملیات" class="cell-actions">
-                                    <form method="POST" style="display:inline" onsubmit="return confirm('کد هدیه حذف شود؟');">
-                                        <input type="hidden" name="_action" value="gift_delete">
-                                        <input type="hidden" name="id" value="<?php echo (int)$g['id']; ?>">
-                                        <button type="submit" class="btn btn-sm btn-soft-danger"><?php echo icon('trash', 'svg-icon'); ?></button>
-                                    </form>
+                                    <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                                        <button type="button" class="btn btn-sm btn-soft-info" title="ویرایش"
+                                            data-id="<?php echo (int)$g['id']; ?>"
+                                            data-code="<?php echo htmlspecialchars((string)$g['code'], ENT_QUOTES); ?>"
+                                            data-price="<?php echo (int)($g['price'] ?? 0); ?>"
+                                            data-limit="<?php echo (int)($g['limituse'] ?? 0); ?>"
+                                            data-target="<?php echo htmlspecialchars($gtarget, ENT_QUOTES); ?>"
+                                            data-exp="<?php echo (int)$gEditExpDays; ?>"
+                                            onclick="editGift(this)">
+                                            <?php echo icon('pen-to-square', 'svg-icon'); ?>
+                                        </button>
+                                        <form method="POST" style="display:inline" onsubmit="return confirm('کد هدیه حذف شود؟');">
+                                            <input type="hidden" name="_action" value="gift_delete">
+                                            <input type="hidden" name="id" value="<?php echo (int)$g['id']; ?>">
+                                            <button type="submit" class="btn btn-sm btn-soft-danger"><?php echo icon('trash', 'svg-icon'); ?></button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; endif; ?>
@@ -576,6 +755,130 @@ function faoxima_d_label_section($s) {
     </div>
 </div>
 
+<div id="modal-edit-discount" class="modal-overlay">
+    <div class="modal-box" style="max-width: 560px;">
+        <div class="modal-head">
+            <span class="modal-head__title">ویرایش کد تخفیف</span>
+            <button type="button" class="modal-close" onclick="closeModal('modal-edit-discount')">&times;</button>
+        </div>
+        <form method="POST" action="discounts.php">
+            <input type="hidden" name="_action" value="edit">
+            <input type="hidden" name="id" id="ed_id">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">کد تخفیف</label>
+                    <input type="text" name="codeDiscount" id="ed_code" class="form-control" style="direction:ltr; font-family:'JetBrains Mono', monospace;" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">نوع تخفیف</label>
+                    <select name="type" id="ed_type" class="form-control" required onchange="updateEditValueHint(this.value)">
+                        <option value="percent">درصدی (٪)</option>
+                        <option value="amount">مبلغی (تومان)</option>
+                        <option value="free">رایگان (۱۰۰٪)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" id="ed_valueLabel">مقدار تخفیف (٪)</label>
+                    <input type="number" name="price" id="ed_price" class="form-control" required min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">سقف کل استفاده <small style="color:var(--text-muted)">(۰ = نامحدود)</small></label>
+                    <input type="number" name="limitDiscount" id="ed_limit" class="form-control" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">بخش کد</label>
+                    <select name="section" id="ed_section" class="form-control">
+                        <option value="all">همه بخش‌ها</option>
+                        <option value="buy">خرید سرویس</option>
+                        <option value="extend">تمدید سرویس</option>
+                        <option value="volume">حجم اضافه</option>
+                        <option value="time">زمان اضافه</option>
+                        <option value="charge">شارژ کیف پول</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">انقضا (روز) <small style="color:var(--text-muted)">(۰ = بدون انقضا)</small></label>
+                    <input type="number" name="expire_days" id="ed_exp" class="form-control" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">گروه هدف</label>
+                    <select name="agent" id="ed_agent" class="form-control">
+                        <option value="allusers">همه کاربران</option>
+                        <option value="f">فقط کاربر عادی</option>
+                        <option value="n">فقط نمایندگان</option>
+                        <option value="n2">فقط نمایندگان پیشرفته</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">کد اختصاصی کاربر <small style="color:var(--text-muted)">(آیدی عددی، اختیاری)</small></label>
+                    <input type="text" name="target_user" id="ed_target" class="form-control" style="direction:ltr">
+                </div>
+            </div>
+            <div class="form-group" style="display:flex; flex-direction:column; gap:8px;">
+                <label style="display:flex; align-items:center; gap:10px; font-size:13px; cursor:pointer;">
+                    <input type="checkbox" name="usefirst" id="ed_first" value="1">
+                    فقط برای خرید اول کاربر قابل استفاده باشد
+                </label>
+                <label style="display:flex; align-items:center; gap:10px; font-size:13px; cursor:pointer;">
+                    <input type="checkbox" name="useuser" id="ed_useuser" value="1">
+                    هر کاربر فقط یک بار بتواند استفاده کند
+                </label>
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-edit-discount')">انصراف</button>
+                <button type="submit" class="btn btn-primary btn-sm"><?php echo icon('pen-to-square', 'svg-icon svg-sm'); ?> ذخیره تغییرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-edit-gift" class="modal-overlay">
+    <div class="modal-box" style="max-width: 480px;">
+        <div class="modal-head">
+            <span class="modal-head__title">ویرایش کد هدیه</span>
+            <button type="button" class="modal-close" onclick="closeModal('modal-edit-gift')">&times;</button>
+        </div>
+        <form method="POST" action="discounts.php">
+            <input type="hidden" name="_action" value="gift_edit">
+            <input type="hidden" name="id" id="ed_g_id">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">کد هدیه</label>
+                    <input type="text" name="code" id="ed_g_code" class="form-control" style="direction:ltr;" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">مبلغ (تومان)</label>
+                    <input type="number" name="gift_price" id="ed_g_price" class="form-control" required min="1">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">سقف کل استفاده <small style="color:var(--text-muted)">(۰ = نامحدود)</small></label>
+                    <input type="number" name="gift_limit" id="ed_g_limit" class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">انقضا (روز) <small style="color:var(--text-muted)">(۰ = بدون انقضا)</small></label>
+                    <input type="number" name="gift_expire_days" id="ed_g_exp" class="form-control" min="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">کد اختصاصی کاربر <small style="color:var(--text-muted)">(آیدی عددی، اختیاری)</small></label>
+                <input type="text" name="gift_target" id="ed_g_target" class="form-control" style="direction:ltr">
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-edit-gift')">انصراف</button>
+                <button type="submit" class="btn btn-primary btn-sm"><?php echo icon('pen-to-square', 'svg-icon svg-sm'); ?> ذخیره تغییرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script src="js/datatable.js" defer>
 
 </script>
@@ -593,6 +896,38 @@ function updateValueHint(type) {
     if (type === 'percent') lbl.textContent = 'مقدار تخفیف (٪)';
     else if (type === 'amount') lbl.textContent = 'مقدار تخفیف (تومان)';
     else lbl.textContent = 'مقدار (استفاده‌نمی‌شود)';
+}
+
+function updateEditValueHint(type) {
+    var lbl = document.getElementById('ed_valueLabel');
+    if (!lbl) return;
+    if (type === 'percent') lbl.textContent = 'مقدار تخفیف (٪)';
+    else if (type === 'amount') lbl.textContent = 'مقدار تخفیف (تومان)';
+    else lbl.textContent = 'مقدار (استفاده‌نمی‌شود)';
+}
+function editDiscount(btn) {
+    document.getElementById('ed_id').value      = btn.getAttribute('data-id');
+    document.getElementById('ed_code').value    = btn.getAttribute('data-code');
+    document.getElementById('ed_type').value    = btn.getAttribute('data-vt');
+    document.getElementById('ed_section').value = btn.getAttribute('data-section');
+    document.getElementById('ed_price').value   = btn.getAttribute('data-price');
+    document.getElementById('ed_limit').value   = btn.getAttribute('data-limit');
+    document.getElementById('ed_agent').value   = btn.getAttribute('data-agent');
+    document.getElementById('ed_exp').value      = btn.getAttribute('data-exp');
+    document.getElementById('ed_target').value  = btn.getAttribute('data-target');
+    document.getElementById('ed_first').checked   = btn.getAttribute('data-first') === '1';
+    document.getElementById('ed_useuser').checked = btn.getAttribute('data-useuser') === '1';
+    updateEditValueHint(btn.getAttribute('data-vt'));
+    openModal('modal-edit-discount');
+}
+function editGift(btn) {
+    document.getElementById('ed_g_id').value     = btn.getAttribute('data-id');
+    document.getElementById('ed_g_code').value   = btn.getAttribute('data-code');
+    document.getElementById('ed_g_price').value  = btn.getAttribute('data-price');
+    document.getElementById('ed_g_limit').value  = btn.getAttribute('data-limit');
+    document.getElementById('ed_g_target').value = btn.getAttribute('data-target');
+    document.getElementById('ed_g_exp').value    = btn.getAttribute('data-exp');
+    openModal('modal-edit-gift');
 }
 </script>
 </body>

@@ -135,6 +135,15 @@ class CurlRequest {
             );
         }
 
+        $upstreamDownCodes = [502, 503, 504, 520, 521, 522, 523, 524, 525, 526, 527];
+        if (in_array((int)$httpCode, $upstreamDownCodes, true)) {
+            return [
+                'status' => $httpCode,
+                'body'   => $response,
+                'error'  => sprintf('Panel temporarily unavailable (HTTP %d).', (int)$httpCode),
+            ];
+        }
+
         return [
             'status' => $httpCode,
             'body' => $response

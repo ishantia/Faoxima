@@ -1831,14 +1831,7 @@ $textconnect
     $urlimage = "$from_id$randomString.png";
     $qrCode = createqrcode($subscriptionurl);
     file_put_contents($urlimage, $qrCode->getString());
-    if (!addBackgroundImage($urlimage, $qrCode, 'images.jpg')) {
-        $rxQrBgMarker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'rx_qr_bg_missing.flag';
-        if (!is_file($rxQrBgMarker) || (time() - (int) @filemtime($rxQrBgMarker)) > 86400) {
-            error_log("Unable to apply background image for QR code using path 'images.jpg'");
-            @touch($rxQrBgMarker);
-        }
-        unset($rxQrBgMarker);
-    }
+    addBackgroundImage($urlimage, $qrCode, 'images.jpg');
     telegram('sendphoto', [
         'chat_id' => $from_id,
         'photo' => new CURLFile($urlimage),
@@ -1931,14 +1924,7 @@ $textconnect
         $urlimage = "$from_id$randomString.png";
         $qrCode = createqrcode($subscriptionurl);
         file_put_contents($urlimage, $qrCode->getString());
-        if (!addBackgroundImage($urlimage, $qrCode, 'images.jpg')) {
-            $rxQrBgMarker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'rx_qr_bg_missing.flag';
-        if (!is_file($rxQrBgMarker) || (time() - (int) @filemtime($rxQrBgMarker)) > 86400) {
-            error_log("Unable to apply background image for QR code using path 'images.jpg'");
-            @touch($rxQrBgMarker);
-        }
-        unset($rxQrBgMarker);
-        }
+        addBackgroundImage($urlimage, $qrCode, 'images.jpg');
         telegram('sendphoto', [
             'chat_id' => $from_id,
             'photo' => new CURLFile($urlimage),
@@ -2088,14 +2074,7 @@ $textconnect
             $urlimage = "$from_id$randomString.png";
             $qrCode = createqrcode($DataUserOut['links'][$i]);
             file_put_contents($urlimage, $qrCode->getString());
-            if (!addBackgroundImage($urlimage, $qrCode, 'images.jpg')) {
-                $rxQrBgMarker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'rx_qr_bg_missing.flag';
-        if (!is_file($rxQrBgMarker) || (time() - (int) @filemtime($rxQrBgMarker)) > 86400) {
-            error_log("Unable to apply background image for QR code using path 'images.jpg'");
-            @touch($rxQrBgMarker);
-        }
-        unset($rxQrBgMarker);
-            }
+            addBackgroundImage($urlimage, $qrCode, 'images.jpg');
             telegram('sendphoto', [
                 'chat_id' => $from_id,
                 'photo' => new CURLFile($urlimage),
@@ -2110,14 +2089,7 @@ $textconnect
     $urlimage = "$from_id$randomString.png";
     $qrCode = createqrcode($DataUserOut['links'][$dataget[2]]);
     file_put_contents($urlimage, $qrCode->getString());
-    if (!addBackgroundImage($urlimage, $qrCode, 'images.jpg')) {
-        $rxQrBgMarker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'rx_qr_bg_missing.flag';
-        if (!is_file($rxQrBgMarker) || (time() - (int) @filemtime($rxQrBgMarker)) > 86400) {
-            error_log("Unable to apply background image for QR code using path 'images.jpg'");
-            @touch($rxQrBgMarker);
-        }
-        unset($rxQrBgMarker);
-    }
+    addBackgroundImage($urlimage, $qrCode, 'images.jpg');
     telegram('sendphoto', [
         'chat_id' => $from_id,
         'photo' => new CURLFile($urlimage),
@@ -2558,7 +2530,7 @@ $textconnect
         sendmessage($from_id, $textbotlang['users']['Discount']['erorrlimit'], null, 'HTML');
         return;
     }
-    if (intval($Checkcodesql) >= $SellDiscountlimit['useuser']) {
+    if (intval($SellDiscountlimit['useuser']) > 0 && intval($Checkcodesql) >= intval($SellDiscountlimit['useuser'])) {
         $textoncode = "⭕️ این کد تنها {$SellDiscountlimit['useuser']}  بار قابل استفاده است";
         sendmessage($from_id, $textoncode, $keyboard, 'HTML');
         step('home', $from_id);

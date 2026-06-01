@@ -5763,8 +5763,8 @@ $text_expie_agent
     }
     step('home', $from_id);
 } elseif ($text == "🎁 ساخت کد هدیه" && $adminrulecheck['rule'] == "administrator") {
-    nm_adminInstantReply($from_id, $textbotlang['Admin']['Discount']['GetCode'], $backadmin, 'HTML');
-    step('get_code', $from_id);
+    nm_adminInstantReply($from_id, "🌐 ساخت و مدیریت کد تخفیف و کد هدیه از طریق ربات غیرفعال شده است.\n\nلطفاً برای ساخت یا مدیریت کدهای تخفیف و هدیه به پنل تحت وب مراجعه کنید.", $shopkeyboard, 'HTML');
+    step('home', $from_id);
 } elseif ($user['step'] == "get_code") {
     if (!preg_match('/^[A-Za-z\d]+$/', $text)) {
         nm_adminInstantReply($from_id, $textbotlang['Admin']['Discount']['ErrorCode'], null, 'HTML');
@@ -5800,8 +5800,8 @@ $text_expie_agent
 🔴 محدودیت استفاده: {$giftRow['limituse']}";
     nm_adminInstantReply($from_id, $textgift, $keyboardadmin, 'HTML');
 } elseif ($text == "❌ حذف کد هدیه" && $adminrulecheck['rule'] == "administrator") {
-    nm_adminInstantReply($from_id, $textbotlang['Admin']['Discount']['RemoveCode'], $json_list_Discount_list_admin, 'HTML');
-    step('remove-Discount', $from_id);
+    nm_adminInstantReply($from_id, "🌐 ساخت و مدیریت کد تخفیف و کد هدیه از طریق ربات غیرفعال شده است.\n\nلطفاً برای ساخت یا مدیریت کدهای تخفیف و هدیه به پنل تحت وب مراجعه کنید.", $shopkeyboard, 'HTML');
+    step('home', $from_id);
 } elseif ($user['step'] == "remove-Discount") {
     if (!in_array($text, $code_Discount)) {
         nm_adminInstantReply($from_id, $textbotlang['Admin']['Discount']['NotCode'], null, 'HTML');

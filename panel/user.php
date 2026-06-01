@@ -60,6 +60,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_action'])) {
         header("Location: user.php?id=" . urlencode($targetUid));
         exit;
     }
+    if ($act === 'user_discount_edit' && $targetUid !== '') {
+        $id      = (int)($_POST['id'] ?? 0);
+        $code    = trim((string)($_POST['codeDiscount'] ?? ''));
+        $vtype   = (string)($_POST['value_type'] ?? 'percent');
+        $section = (string)($_POST['section'] ?? 'all');
+        $value   = (string)($_POST['price'] ?? '0');
+        $limit   = (int)($_POST['limitDiscount'] ?? 0);
+        if ($id > 0
+            && preg_match('/^[A-Za-z0-9_\-]{2,40}$/', $code)
+            && in_array($vtype, ['percent', 'amount', 'free'], true)
+            && in_array($section, ['all', 'buy', 'extend', 'volume', 'time', 'charge'], true)) {
+            if ($vtype === 'free') $value = '0';
+            try {
+                $dup = $pdo->prepare("SELECT 1 FROM DiscountSell WHERE codeDiscount = :c AND id <> :id LIMIT 1");
+                $dup->execute([':c' => $code, ':id' => $id]);
+                if (!$dup->fetchColumn()) {
+                    $st = $pdo->prepare(
+                        "UPDATE DiscountSell
+                            SET codeDiscount = :c, price = :p, limitDiscount = :l,
+                                section = :sec, type = :sec2, value_type = :vt
+                          WHERE id = :id AND target_user = :tg"
+                    );
+                    $st->execute([':c' => $code, ':p' => $value, ':l' => (string)$limit, ':sec' => $section, ':sec2' => $section, ':vt' => $vtype, ':id' => $id, ':tg' => $targetUid]);
+                }
+            } catch (\Throwable $e) {  }
+        }
+        header("Location: user.php?id=" . urlencode($targetUid));
+        exit;
+    }
     if ($act === 'user_gift_add' && $targetUid !== '') {
         $code  = trim((string)($_POST['code'] ?? ''));
         $price = (int)($_POST['gift_price'] ?? 0);
@@ -74,6 +103,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_action'])) {
                          VALUES (:c, :p, :l, '0', :tg, 'active')"
                     );
                     $st->execute([':c' => $code, ':p' => (string)$price, ':l' => (string)$limit, ':tg' => $targetUid]);
+                }
+            } catch (\Throwable $e) {  }
+        }
+        header("Location: user.php?id=" . urlencode($targetUid));
+        exit;
+    }
+    if ($act === 'user_gift_edit' && $targetUid !== '') {
+        $id    = (int)($_POST['id'] ?? 0);
+        $code  = trim((string)($_POST['code'] ?? ''));
+        $price = (int)($_POST['gift_price'] ?? 0);
+        $limit = (int)($_POST['gift_limit'] ?? 0);
+        if ($id > 0 && preg_match('/^[A-Za-z0-9_\-]{2,40}$/', $code) && $price > 0) {
+            try {
+                $dup = $pdo->prepare("SELECT 1 FROM Discount WHERE code = :c AND id <> :id LIMIT 1");
+                $dup->execute([':c' => $code, ':id' => $id]);
+                if (!$dup->fetchColumn()) {
+                    $st = $pdo->prepare(
+                        "UPDATE Discount SET code = :c, price = :p, limituse = :l WHERE id = :id AND target_user = :tg"
+                    );
+                    $st->execute([':c' => $code, ':p' => (string)$price, ':l' => (string)$limit, ':id' => $id, ':tg' => $targetUid]);
                 }
             } catch (\Throwable $e) {  }
         }
@@ -382,13 +431,25 @@ $agent_display = isset($agent_types[$user['agent']]) ? $agent_types[$user['agent
                                 <td data-label="مقدار"><?php echo $val; ?></td>
                                 <td data-label="بخش/کاربرد"><?php echo $__sectionFa[$sec]; ?></td>
                                 <td data-label="عملیات">
-                                    <form method="POST" style="display:inline" onsubmit="return confirm('این کد حذف شود؟');">
-                                        <input type="hidden" name="_csrf" value="<?php echo htmlspecialchars($_csrf, ENT_QUOTES, 'UTF-8'); ?>">
-                                        <input type="hidden" name="_action" value="user_code_delete">
-                                        <input type="hidden" name="kind" value="discount">
-                                        <input type="hidden" name="id" value="<?php echo (int)$c['id']; ?>">
-                                        <button type="submit" class="btn btn-sm btn-soft-danger"><?php echo icon('trash', 'svg-icon'); ?></button>
-                                    </form>
+                                    <div style="display:flex; gap:6px; justify-content:flex-end;">
+                                        <button type="button" class="btn btn-sm btn-soft-info" title="ویرایش"
+                                            data-id="<?php echo (int)$c['id']; ?>"
+                                            data-code="<?php echo htmlspecialchars($c['codeDiscount'], ENT_QUOTES); ?>"
+                                            data-vt="<?php echo htmlspecialchars($vt, ENT_QUOTES); ?>"
+                                            data-section="<?php echo htmlspecialchars($sec, ENT_QUOTES); ?>"
+                                            data-price="<?php echo htmlspecialchars((string)$c['price'], ENT_QUOTES); ?>"
+                                            data-limit="<?php echo (int)($c['limitDiscount'] ?? 0); ?>"
+                                            onclick="editUserDiscount(this)">
+                                            <?php echo icon('pen-to-square', 'svg-icon'); ?>
+                                        </button>
+                                        <form method="POST" style="display:inline" onsubmit="return confirm('این کد حذف شود؟');">
+                                            <input type="hidden" name="_csrf" value="<?php echo htmlspecialchars($_csrf, ENT_QUOTES, 'UTF-8'); ?>">
+                                            <input type="hidden" name="_action" value="user_code_delete">
+                                            <input type="hidden" name="kind" value="discount">
+                                            <input type="hidden" name="id" value="<?php echo (int)$c['id']; ?>">
+                                            <button type="submit" class="btn btn-sm btn-soft-danger"><?php echo icon('trash', 'svg-icon'); ?></button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach;
@@ -399,13 +460,23 @@ $agent_display = isset($agent_types[$user['agent']]) ? $agent_types[$user['agent
                                 <td data-label="مقدار"><?php echo number_format((int)($g['price'] ?? 0)); ?> تومان</td>
                                 <td data-label="بخش/کاربرد">شارژ کیف پول</td>
                                 <td data-label="عملیات">
-                                    <form method="POST" style="display:inline" onsubmit="return confirm('این کد حذف شود؟');">
-                                        <input type="hidden" name="_csrf" value="<?php echo htmlspecialchars($_csrf, ENT_QUOTES, 'UTF-8'); ?>">
-                                        <input type="hidden" name="_action" value="user_code_delete">
-                                        <input type="hidden" name="kind" value="gift">
-                                        <input type="hidden" name="id" value="<?php echo (int)$g['id']; ?>">
-                                        <button type="submit" class="btn btn-sm btn-soft-danger"><?php echo icon('trash', 'svg-icon'); ?></button>
-                                    </form>
+                                    <div style="display:flex; gap:6px; justify-content:flex-end;">
+                                        <button type="button" class="btn btn-sm btn-soft-info" title="ویرایش"
+                                            data-id="<?php echo (int)$g['id']; ?>"
+                                            data-code="<?php echo htmlspecialchars((string)$g['code'], ENT_QUOTES); ?>"
+                                            data-price="<?php echo (int)($g['price'] ?? 0); ?>"
+                                            data-limit="<?php echo (int)($g['limituse'] ?? 0); ?>"
+                                            onclick="editUserGift(this)">
+                                            <?php echo icon('pen-to-square', 'svg-icon'); ?>
+                                        </button>
+                                        <form method="POST" style="display:inline" onsubmit="return confirm('این کد حذف شود؟');">
+                                            <input type="hidden" name="_csrf" value="<?php echo htmlspecialchars($_csrf, ENT_QUOTES, 'UTF-8'); ?>">
+                                            <input type="hidden" name="_action" value="user_code_delete">
+                                            <input type="hidden" name="kind" value="gift">
+                                            <input type="hidden" name="id" value="<?php echo (int)$g['id']; ?>">
+                                            <button type="submit" class="btn btn-sm btn-soft-danger"><?php echo icon('trash', 'svg-icon'); ?></button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; endif; ?>
@@ -577,6 +648,102 @@ $agent_display = isset($agent_types[$user['agent']]) ? $agent_types[$user['agent
     </div>
 </div>
 
+<div id="modal-user-discount-edit" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-head">
+            <span class="modal-head__title">ویرایش کد تخفیف اختصاصی</span>
+            <button class="modal-close" onclick="closeModal('modal-user-discount-edit')">&times;</button>
+        </div>
+        <form method="POST" action="user.php?id=<?php echo urlencode((string)($user['id'] ?? '')); ?>">
+            <input type="hidden" name="_csrf" value="<?php echo htmlspecialchars($_csrf, ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="hidden" name="_action" value="user_discount_edit">
+            <input type="hidden" name="id" id="eu_d_id">
+            <div class="form-group">
+                <label class="form-label">کد تخفیف</label>
+                <input type="text" name="codeDiscount" id="eu_d_code" class="form-control" style="direction:ltr;" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">نوع تخفیف</label>
+                <select name="value_type" id="eu_d_vt" class="form-control">
+                    <option value="percent">درصدی</option>
+                    <option value="amount">مبلغی (تومان)</option>
+                    <option value="free">رایگان</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">بخش کد</label>
+                <select name="section" id="eu_d_section" class="form-control">
+                    <option value="all">همه بخش‌ها</option>
+                    <option value="buy">خرید</option>
+                    <option value="extend">تمدید</option>
+                    <option value="volume">حجم اضافه</option>
+                    <option value="time">زمان اضافه</option>
+                    <option value="charge">شارژ کیف پول</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">مقدار</label>
+                <input type="number" name="price" id="eu_d_price" class="form-control" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">سقف کل استفاده <small style="color:var(--text-muted)">(۰ = نامحدود)</small></label>
+                <input type="number" name="limitDiscount" id="eu_d_limit" class="form-control" min="0">
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-user-discount-edit')">انصراف</button>
+                <button type="submit" class="btn btn-primary btn-sm">ذخیره تغییرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-user-gift-edit" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-head">
+            <span class="modal-head__title">ویرایش کد هدیه اختصاصی</span>
+            <button class="modal-close" onclick="closeModal('modal-user-gift-edit')">&times;</button>
+        </div>
+        <form method="POST" action="user.php?id=<?php echo urlencode((string)($user['id'] ?? '')); ?>">
+            <input type="hidden" name="_csrf" value="<?php echo htmlspecialchars($_csrf, ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="hidden" name="_action" value="user_gift_edit">
+            <input type="hidden" name="id" id="eu_g_id">
+            <div class="form-group">
+                <label class="form-label">کد هدیه</label>
+                <input type="text" name="code" id="eu_g_code" class="form-control" style="direction:ltr;" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">مبلغ (تومان)</label>
+                <input type="number" name="gift_price" id="eu_g_price" class="form-control" min="1" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">سقف کل استفاده <small style="color:var(--text-muted)">(۰ = نامحدود)</small></label>
+                <input type="number" name="gift_limit" id="eu_g_limit" class="form-control" min="0">
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('modal-user-gift-edit')">انصراف</button>
+                <button type="submit" class="btn btn-primary btn-sm">ذخیره تغییرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+function editUserDiscount(btn) {
+    document.getElementById('eu_d_id').value      = btn.getAttribute('data-id');
+    document.getElementById('eu_d_code').value    = btn.getAttribute('data-code');
+    document.getElementById('eu_d_vt').value      = btn.getAttribute('data-vt');
+    document.getElementById('eu_d_section').value = btn.getAttribute('data-section');
+    document.getElementById('eu_d_price').value   = btn.getAttribute('data-price');
+    document.getElementById('eu_d_limit').value   = btn.getAttribute('data-limit');
+    openModal('modal-user-discount-edit');
+}
+function editUserGift(btn) {
+    document.getElementById('eu_g_id').value    = btn.getAttribute('data-id');
+    document.getElementById('eu_g_code').value  = btn.getAttribute('data-code');
+    document.getElementById('eu_g_price').value = btn.getAttribute('data-price');
+    document.getElementById('eu_g_limit').value = btn.getAttribute('data-limit');
+    openModal('modal-user-gift-edit');
+}
+</script>
 </body>
 </html>
 

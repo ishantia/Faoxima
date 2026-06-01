@@ -172,11 +172,6 @@ function addBackgroundImage($urlimage, $qrCodeResult, $backgroundPath)
     }
 
     if ($resolvedPath === null) {
-        $rxBgNotFoundMarker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'rx_qr_bg_notfound.flag';
-        if (!is_file($rxBgNotFoundMarker) || (time() - (int) @filemtime($rxBgNotFoundMarker)) > 86400) {
-            error_log("Background image not found for QR code generation (tried project root for {$basename}).");
-            @touch($rxBgNotFoundMarker);
-        }
         return false;
     }
 

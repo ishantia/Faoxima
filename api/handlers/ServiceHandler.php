@@ -23,7 +23,7 @@ final class ServiceHandler extends BaseHandler
 
         $payload = $this->buildPayloadFromInvoice($invoice);
         if ($payload === null) {
-            FaoximaResponse::fail(502, 'Service data unavailable');
+            FaoximaResponse::fail(200, 'اطلاعات سرویس در حال حاضر از پنل در دسترس نیست؛ لطفاً چند لحظه دیگر دوباره تلاش کنید.');
         }
 
         FaoximaResponse::ok($payload);
