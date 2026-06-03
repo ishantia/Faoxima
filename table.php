@@ -1288,6 +1288,7 @@ try {
         $connect->query("INSERT INTO shopSetting (Namevalue,value) VALUES ('backserviecstatus','on')");
         $connect->query("INSERT INTO shopSetting (Namevalue,value) VALUES ('chashbackextend','0')");
         $connect->query("INSERT INTO shopSetting (Namevalue,value) VALUES ('chashbackextend_agent','$agent_cashback')");
+        $connect->query("INSERT INTO shopSetting (Namevalue,value) VALUES ('brand_accent','#7c5cff')");
     } else {
         $connect->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('customvolmef','4000')");
         $connect->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('customvolmen','4000')");
@@ -1310,6 +1311,7 @@ try {
         $connect->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('brand_name','')");
         $connect->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('brand_mark','')");
         $connect->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('brand_logo','')");
+        $connect->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('brand_accent','#7c5cff')");
 
 
     }

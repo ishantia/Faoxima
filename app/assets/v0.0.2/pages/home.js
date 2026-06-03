@@ -40,10 +40,6 @@ export async function home(view) {
                 ${icon('user', 'class="ico ico-leading"')}
                 <span>حساب من</span>
             </a>
-            <a href="#/settings" class="btn btn-ghost btn-block">
-                ${icon('settings', 'class="ico ico-leading"')}
-                <span>تنظیمات</span>
-            </a>
         </div>
     `;
 

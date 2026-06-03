@@ -41,9 +41,11 @@ final class BrandHandler extends BaseHandler
         $name = trim(self::readSetting('brand_name'));
         $mark = trim(self::readSetting('brand_mark'));
         $logo = trim(self::readSetting('brand_logo'));
+        $accent = strtolower(trim(self::readSetting('brand_accent')));
 
         if ($name === '') $name = 'Faoxima';
         if ($mark === '') $mark = 'M';
+        if (!preg_match('/^#[0-9a-fA-F]{6}$/', $accent)) $accent = '#7c5cff';
 
         $logoUrl = '';
         if ($logo !== '') {
@@ -57,6 +59,7 @@ final class BrandHandler extends BaseHandler
             'name'     => $name,
             'mark'     => $mark,
             'logo_url' => $logoUrl,
+            'accent'   => $accent,
         ];
     }
 
@@ -79,6 +82,7 @@ final class BrandHandler extends BaseHandler
 
         $name = FaoximaInput::string($this->data, 'name');
         $mark = FaoximaInput::string($this->data, 'mark');
+        $accent = strtolower(trim(FaoximaInput::string($this->data, 'accent')));
 
         $name = trim(preg_replace('/\s+/', ' ', $name));
         $mark = trim($mark);
@@ -86,10 +90,20 @@ final class BrandHandler extends BaseHandler
         if (mb_strlen($name) > 40)  $name = mb_substr($name, 0, 40);
         if (mb_strlen($mark) > 4)   $mark = mb_substr($mark, 0, 4);
 
+        $hasData = is_array($this->data);
+
         if ($name !== '') {
             $this->upsertSetting('brand_name', $name);
         }
-        $this->upsertSetting('brand_mark', $mark);
+        if ($hasData && array_key_exists('mark', $this->data)) {
+            $this->upsertSetting('brand_mark', $mark);
+        }
+        if ($accent !== '') {
+            if (!preg_match('/^#[0-9a-fA-F]{6}$/', $accent)) {
+                FaoximaResponse::badRequest('accent must be a hex color like #7c5cff');
+            }
+            $this->upsertSetting('brand_accent', $accent);
+        }
 
         FaoximaResponse::ok(self::buildBrandPayload() + ['message' => 'برند با موفقیت ذخیره شد']);
     }

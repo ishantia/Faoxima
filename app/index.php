@@ -46,6 +46,7 @@ $brandAppVersion = trim((string)@file_get_contents(__DIR__ . '/version')) ?: '0.
 $brandName = 'Faoxima';
 $brandMark = 'M';
 $brandLogoUrl = '';
+$brandAccent = '';
 
 
 
@@ -57,6 +58,10 @@ if (is_file(__DIR__ . '/../config.php') && is_file(__DIR__ . '/../function.php')
             $nameRow = select('shopSetting', '*', 'Namevalue', 'brand_name', 'select');
             $markRow = select('shopSetting', '*', 'Namevalue', 'brand_mark', 'select');
             $logoRow = select('shopSetting', '*', 'Namevalue', 'brand_logo', 'select');
+            $accentRow = select('shopSetting', '*', 'Namevalue', 'brand_accent', 'select');
+            if (is_array($accentRow) && isset($accentRow['value']) && preg_match('/^#[0-9a-fA-F]{6}$/', (string)$accentRow['value'])) {
+                $brandAccent = strtolower((string)$accentRow['value']);
+            }
             if (is_array($nameRow) && isset($nameRow['value']) && $nameRow['value'] !== '') {
                 $brandName = (string)$nameRow['value'];
             }
@@ -89,6 +94,7 @@ $config = [
         'name'     => $brandName,
         'mark'     => $brandMark,
         'logo_url' => $brandLogoUrl,
+        'accent'   => $brandAccent,
     ],
 ];
 
@@ -144,8 +150,11 @@ $jsUrl       = htmlspecialchars($assetPrefix . 'assets/v0.0.2/app.js?v=' . $cach
             return 'rgb(' + Math.round(((n>>16)&255)*f) + ',' + Math.round(((n>>8)&255)*f) + ',' + Math.round((n&255)*f) + ')';
         }
         try {
-            var key = localStorage.getItem('faoxima.theme.accent') || 'purple';
-            var t = THEMES[key] || THEMES.gold;
+            function lighten(h,f){var m=/^#([0-9a-f]{6})$/i.exec(h);if(!m)return h;var n=parseInt(m[1],16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;r=Math.round(r+(255-r)*f);g=Math.round(g+(255-g)*f);b=Math.round(b+(255-b)*f);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+            var GA = <?php echo $brandAccent !== '' ? ("'" . $brandAccent . "'") : 'null'; ?>;
+            var key, t;
+            if (GA) { key = 'custom'; t = { c: GA, b: lighten(GA, 0.28) }; }
+            else { key = 'purple'; t = THEMES[key] || THEMES.gold; }
             var s = document.documentElement.style;
             s.setProperty('--gold', t.c);
             s.setProperty('--gold-bright', t.b);

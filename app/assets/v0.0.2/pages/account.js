@@ -93,12 +93,6 @@ export async function account(view) {
                 <span>سرویس‌های من</span>
             </a>
         </div>
-        <div class="row-spread mt-sm gap-sm">
-            <a href="#/settings" class="btn btn-ghost btn-block">
-                ${icon('settings', 'class="ico ico-leading"')}
-                <span>تنظیمات</span>
-            </a>
-        </div>
     `;
 }
 
