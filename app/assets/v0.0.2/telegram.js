@@ -30,7 +30,7 @@ export function ready() {
         if (typeof w.expand === 'function') w.expand();
         if (typeof w.disableVerticalSwipes === 'function') w.disableVerticalSwipes();
 
-        var __chrome = '#eaedf8';
+        var __chrome = '#0a0a14';
         if (typeof w.setHeaderColor === 'function') w.setHeaderColor(__chrome);
         if (typeof w.setBackgroundColor === 'function') w.setBackgroundColor(__chrome);
     } catch (_) {  }

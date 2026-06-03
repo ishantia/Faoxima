@@ -111,7 +111,8 @@ $jsUrl       = htmlspecialchars($assetPrefix . 'assets/v0.0.2/app.js?v=' . $cach
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#eaedf8" />
+    <meta name="theme-color" content="#0a0a14" />
+    <style>:root{color-scheme:dark}html,body{background-color:#0a0a14}</style>
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -160,10 +161,10 @@ $jsUrl       = htmlspecialchars($assetPrefix . 'assets/v0.0.2/app.js?v=' . $cach
             s.setProperty('--border-strong', rgba(t.c, 0.28));
             document.documentElement.dataset.theme = key;
 
-            var mode = 'light';
+            var mode = 'dark';
             document.documentElement.dataset.mode = mode;
             var mc = document.querySelector('meta[name="theme-color"]');
-            if (mc) mc.setAttribute('content', '#eaedf8');
+            if (mc) mc.setAttribute('content', '#0a0a14');
         } catch (e) {  }
     })();
 </script>

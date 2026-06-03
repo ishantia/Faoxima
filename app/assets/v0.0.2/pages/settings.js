@@ -35,12 +35,11 @@ export function applyTheme(themeKey) {
     root.dataset.theme = theme.key;
 }
 
-// App is light-only.
-function applyLightMode() {
-    document.documentElement.dataset.mode = 'light';
+function applyDarkMode() {
+    document.documentElement.dataset.mode = 'dark';
     try {
         const mc = document.querySelector('meta[name="theme-color"]');
-        if (mc) mc.setAttribute('content', '#eaedf8');
+        if (mc) mc.setAttribute('content', '#0a0a14');
     } catch (_) {  }
 }
 
@@ -50,7 +49,7 @@ export function loadSavedTheme() {
         key = localStorage.getItem(STORAGE_KEY) || 'purple';
     } catch (_) {  }
     applyTheme(key);
-    applyLightMode();
+    applyDarkMode();
     return key;
 }
 
