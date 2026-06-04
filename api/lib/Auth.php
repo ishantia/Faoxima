@@ -77,6 +77,73 @@ final class FaoximaAuth
     }
 
 
+    public static function validateContactResponse($rawData, string $botToken): array
+    {
+        if (!is_string($rawData)) {
+            throw new InvalidArgumentException('Contact data is missing or invalid');
+        }
+        $rawData = trim($rawData);
+        if ($rawData === '') {
+            throw new InvalidArgumentException('Contact data is missing or invalid');
+        }
+
+        parse_str($rawData, $data);
+        if (!is_array($data) || !isset($data['hash'])) {
+            throw new InvalidArgumentException('Contact data is missing required signature');
+        }
+
+        $receivedHash = (string)$data['hash'];
+        unset($data['hash']);
+
+        $checkArr = [];
+        foreach ($data as $key => $value) {
+            $checkArr[] = $key . '=' . self::normalize($value);
+        }
+        if ($checkArr === []) {
+            throw new InvalidArgumentException('Contact data payload is empty');
+        }
+        sort($checkArr, SORT_STRING);
+        $checkString = implode("\n", $checkArr);
+
+        $secrets = [
+            hash_hmac('sha256', $botToken, 'WebAppData', true),
+            $botToken,
+        ];
+        $valid = false;
+        foreach ($secrets as $secret) {
+            $calc = hash_hmac('sha256', $checkString, $secret);
+            if (hash_equals($calc, $receivedHash)) {
+                $valid = true;
+                break;
+            }
+        }
+        if (!$valid) {
+            throw new RuntimeException('Contact verification failed');
+        }
+
+        if (isset($data['auth_date'])) {
+            $authDate = (int)$data['auth_date'];
+            if ($authDate > 0 && (time() - $authDate) > 86400) {
+                throw new RuntimeException('Contact data has expired');
+            }
+        }
+
+        $contactRaw = $data['contact'] ?? null;
+        if (is_string($contactRaw)) {
+            $contact = json_decode($contactRaw, true);
+        } elseif (is_array($contactRaw)) {
+            $contact = $contactRaw;
+        } else {
+            $contact = null;
+        }
+        if (!is_array($contact) || (!isset($contact['user_id']) && !isset($contact['phone_number']))) {
+            throw new RuntimeException('Contact payload is missing or malformed');
+        }
+
+        return $contact;
+    }
+
+
     public static function collectInitDataCandidates(): array
     {
         $candidates = [];

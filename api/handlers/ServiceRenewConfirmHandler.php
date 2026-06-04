@@ -331,6 +331,17 @@ final class ServiceRenewConfirmHandler extends BaseHandler
             update('user', 'score', $newScore, 'id', $this->user['id']);
         }
 
+        $this->reportSuccess(
+            "✅ <b>تمدید سرویس</b>\n" .
+            "▫️آیدی کاربر : {$this->user['id']}\n" .
+            "▫️نام کاربری سرویس : {$invoice['username']}\n" .
+            "▫️محصول : {$product['name_product']}\n" .
+            "▫️حجم : " . (int)$product['Volume_constraint'] . " گیگ\n" .
+            "▫️زمان : " . (int)$product['Service_time'] . " روز\n" .
+            "▫️مبلغ : " . $finalPrice . " تومان\n" .
+            "▫️پنل : {$panel['name_panel']}"
+        );
+
         FaoximaLogger::debug('Inline renewal completed', [
             'user_id'   => $this->user['id'],
             'username'  => $invoice['username'],
@@ -427,6 +438,30 @@ final class ServiceRenewConfirmHandler extends BaseHandler
                 'parse_mode'        => 'HTML',
             ]);
         } catch (Throwable $e) {  }
+    }
+
+    private function reportSuccess(string $text): void
+    {
+        $channel = (string)($this->setting['Channel_Report'] ?? '');
+        if ($channel === '') return;
+        $row = select('topicid', 'idreport', 'report', 'buyreport', 'select');
+        $topic = is_array($row) ? (string)($row['idreport'] ?? '') : '';
+        $reply = json_encode([
+            'inline_keyboard' => [[
+                ['text' => '👤 مدیریت کاربر', 'callback_data' => 'manageuser_' . $this->user['id']],
+            ]],
+        ]);
+        try {
+            telegram('sendmessage', [
+                'chat_id'           => $channel,
+                'message_thread_id' => $topic,
+                'text'              => $text,
+                'parse_mode'        => 'HTML',
+                'reply_markup'      => $reply,
+            ]);
+        } catch (Throwable $e) {
+            FaoximaLogger::warn('renew success report failed', ['err' => $e->getMessage()]);
+        }
     }
 }
 

@@ -1,5 +1,12 @@
 <?php
 
+if (!function_exists('rx_auth_skip_user')) {
+    function rx_auth_skip_user($user)
+    {
+        return false;
+    }
+}
+
 function deleteFolder($folderPath)
 {
     if (!is_dir($folderPath))
@@ -32,11 +39,7 @@ function sendMessageService($panel_info, $config, $sub_link, $username_service, 
     if (!check_active_btn($setting['keyboardmain'], "text_help"))
         $reply_markup = null;
     $user_id = $user_id == null ? $from_id : $user_id;
-    // Send the photo (Info Card / QR) whenever a usable sublink exists — the QR is
-    // built from the sublink anyway (a single link covering all configs). Only fall
-    // back to plain text when there is NO sublink AND the panel returns ≠1 individual
-    // configs. Without this, custom-volume services (which return 0 individual configs,
-    // only a sublink) were delivered as plain text instead of the Info Card / QR.
+
     $rxHasSubLink = ((($panel_info['sublink'] ?? '') == "onsublink") && is_string($sub_link) && trim($sub_link) !== '');
     $STATUS_SEND_MESSAGE_PHOTO = (!$rxHasSubLink && $panel_info['config'] == "onconfig" && count($config) != 1) ? false : true;
     $out_put_qrcode = "";
@@ -51,12 +54,10 @@ function sendMessageService($panel_info, $config, $sub_link, $username_service, 
     }
     if ($STATUS_SEND_MESSAGE_PHOTO) {
 
-
         $infoCardSent = false;
         if (function_exists('getInfoCardStatus') && getInfoCardStatus()) {
             $cardPath = nm_renderInfoCardForInvoice($panel_info, $username_service, $invoice_id, $user_id);
             if ($cardPath !== null) {
-
 
                 $cardKeyboard = nm_appendInfoCardQrButton($reply_markup, $invoice_id);
                 telegram('sendphoto', [
@@ -350,7 +351,6 @@ function nmStockEnsureSchema()
 
 if (!function_exists('nm_replyOrEdit')) {
 
-
 function nm_replyOrEdit($chatId, $text, $keyboard = null, $parseMode = 'HTML')
 {
     global $message_id, $callback_query_id;
@@ -369,7 +369,6 @@ function nm_replyOrEdit($chatId, $text, $keyboard = null, $parseMode = 'HTML')
         if ($isInlineKbd) {
             try {
                 $rx_edit_result = Editmessagetext($chatId, $message_id, $text, $keyboard, $parseMode);
-
 
                 if (is_array($rx_edit_result) && !empty($rx_edit_result['ok'])) {
                     return true;
@@ -447,16 +446,10 @@ if (!function_exists('rx_agentGroupKeyboard')) {
 
 if (!function_exists('nm_adminInstantReply')) {
 
-
 function nm_adminInstantReply($chatId, $text, $keyboard = null, $parseMode = 'HTML')
 {
     global $message_id, $callback_query_id;
 
-    // If a prior call in THIS request already edited/deleted this message_id,
-    // a second call must NOT try to delete it again — that's the bug where
-    // "مدیریت کاربر" briefly showed user details and then wiped them, leaving
-    // only the "select option" prompt. We track consumed message_ids in the
-    // same global that bootstrap_1.php uses for its own pre-handler delete.
     $alreadyHandled = !empty($message_id)
                       && isset($GLOBALS['rx_admin_instant_deleted'])
                       && $GLOBALS['rx_admin_instant_deleted'] === $message_id;
@@ -471,18 +464,12 @@ function nm_adminInstantReply($chatId, $text, $keyboard = null, $parseMode = 'HT
     }
     $rx_edit_failed = false;
 
-    // Don't try to edit a message we already deleted/edited earlier in this
-    // request — Telegram would either return "message to edit not found" or
-    // (worse) we'd overwrite a different in-flight edit.
     if ($isCallback && $isInlineKbd && !$alreadyHandled && function_exists('Editmessagetext')) {
         try {
             $rx_edit_result = Editmessagetext($chatId, $message_id, $text, $keyboard, $parseMode);
 
-
             if (is_array($rx_edit_result) && !empty($rx_edit_result['ok'])) {
-                // Mark this message_id as consumed so any subsequent
-                // nm_adminInstantReply call in the same request skips the
-                // delete branch and just appends a new message instead.
+
                 $GLOBALS['rx_admin_instant_deleted'] = $message_id;
 
                 if (!empty($callback_query_id) && function_exists('telegram')) {
@@ -513,7 +500,6 @@ function nm_adminInstantReply($chatId, $text, $keyboard = null, $parseMode = 'HT
         }
     }
 
-
     if ($rx_edit_failed) {
         if (!empty($callback_query_id) && function_exists('telegram')) {
             try {
@@ -525,7 +511,6 @@ function nm_adminInstantReply($chatId, $text, $keyboard = null, $parseMode = 'HT
         }
         return sendmessage($chatId, $text, $keyboard, $parseMode);
     }
-
 
     if ($isCallback) {
         if (!empty($message_id) && !$alreadyHandled && function_exists('deletemessage')) {
@@ -542,15 +527,6 @@ function nm_adminInstantReply($chatId, $text, $keyboard = null, $parseMode = 'HT
         }
         return sendmessage($chatId, $text, $keyboard, $parseMode);
     }
-
-
-    // (Removed) Unconditional delete of admin's typed input message.
-    // This previously wiped values like discount code / gift code amount /
-    // forced-join channel link the admin had just typed, making the chat
-    // history confusing. Bot prompts and admin inputs now both stay visible.
-    // The callback branch above still deletes inline-button-bearing messages
-    // when transitioning to a reply-keyboard menu — that's intentional UX
-    // (you don't want stale buttons stacking up).
 
     return sendmessage($chatId, $text, $keyboard, $parseMode);
 }}
@@ -596,12 +572,6 @@ function nmStockLog($stockId, $userId, $invoiceId, $action, $payload = null)
     } catch (Throwable $e) { error_log('nmStockLog failed: ' . $e->getMessage()); }
 }
 
-/**
- * Import subscription links WITHOUT any single config (Image request: "لینک خالی").
- * Each non-empty line must be an http(s) URL. The link is stored as both the
- * stock item's content and its sub_link, so delivery shows it as a subscription
- * and the QR encodes the link.
- */
 function nmStockImportLinkOnly($panelCode, $productCode, $rawText, $fallbackVolume = null, $shelfId = null)
 {
     global $pdo;
@@ -720,7 +690,6 @@ function nmStockReserveByShelfMatch(array $panel, array $product, $userId, $invo
 
     try {
 
-
         $stmt = $pdo->prepare("SELECT s.* FROM nm_config_stock s INNER JOIN nm_stock_shelves sh ON sh.id=s.shelf_id WHERE s.status='active' AND sh.status='active' AND s.codepanel IN (" . implode(',', $panelWhereSql) . ") AND (s.codeproduct=:product_code_stock_where OR sh.codeproduct=:product_code_shelf_where OR sh.product_name=:product_name_where OR (ABS(sh.volume_gb - :volume_where) < 0.001 AND sh.service_days=:days_where)) ORDER BY (s.codeproduct=:product_code_stock_order OR sh.codeproduct=:product_code_shelf_order) DESC, (sh.product_name=:product_name_order) DESC, (ABS(sh.volume_gb - :volume_order) < 0.001 AND sh.service_days=:days_order) DESC, FIELD(s.codepanel, " . implode(',', $panelOrderSql) . "), s.id ASC LIMIT 1");
         $stmt->execute($params);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -807,7 +776,6 @@ function nmStockHasAvailableForProduct(array $panel, array $product)
     $panelParamsS = [];
     $panelParamsSrc = [];
     $panelParamsSt = [];
-
 
     $params = [
         ':code_stock' => $productCode,

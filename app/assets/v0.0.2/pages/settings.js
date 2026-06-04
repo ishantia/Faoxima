@@ -42,6 +42,15 @@ function hexLighten(hex, f) {
     return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
+function onAccent(hex) {
+    const m = /^#([0-9a-f]{6})$/i.exec(normalizeHex(hex) || '');
+    if (!m) return '#ffffff';
+    const n = parseInt(m[1], 16);
+    const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    const L = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+    return L > 0.45 ? '#14121d' : '#ffffff';
+}
+
 export function applyTheme(themeKeyOrHex) {
     const hex = normalizeHex(themeKeyOrHex);
     let color, bright, key;
@@ -64,6 +73,7 @@ export function applyTheme(themeKeyOrHex) {
     root.style.setProperty('--accent-ink',   hexDarken(color, 0.5));
     root.style.setProperty('--border',        hexToRgba(color, 0.12));
     root.style.setProperty('--border-strong', hexToRgba(color, 0.28));
+    root.style.setProperty('--on-accent', onAccent(color));
     root.dataset.theme = key;
     return color;
 }

@@ -80,6 +80,22 @@ export async function verify() {
         return body.token;
     }
 
+    if (res.ok && body && body.status === false && body.gate === 'phone_required') {
+        throw new ApiError(body.msg || 'برای ادامه، شمارهٔ موبایل خود را تأیید کنید.', {
+            status: res.status,
+            code: 'PHONE_REQUIRED',
+            data: body,
+        });
+    }
+
+    if (res.ok && body && body.status === false && body.gate === 'force_join') {
+        throw new ApiError(body.msg || 'برای استفاده از مینی‌اپ، ابتدا در کانال‌های زیر عضو شوید.', {
+            status: res.status,
+            code: 'FORCE_JOIN',
+            data: body,
+        });
+    }
+
     let msg;
     let code = null;
 
@@ -103,6 +119,60 @@ export async function verify() {
         : (text ? { rawBody: text.length > 500 ? text.slice(0, 500) + '…' : text } : null);
 
     throw new ApiError(msg, { status: res.status, code, data });
+}
+
+export async function submitPhone(contactResponse) {
+    const sdkLoaded = await waitForSDK(4000);
+    if (!sdkLoaded) {
+        throw new ApiError('Telegram SDK failed to load.', { status: 0, code: 'NO_SDK' });
+    }
+
+    let initData = await waitForInitData(1500);
+    if (!initData) initData = getInitData();
+    if (!initData) {
+        throw new ApiError('initData unavailable. Open this page from Telegram.', { status: 0, code: 'NO_INIT_DATA' });
+    }
+
+    if (typeof contactResponse !== 'string' || contactResponse === '') {
+        throw new ApiError('اطلاعات شماره دریافت نشد.', { status: 0, code: 'NO_CONTACT' });
+    }
+
+    const url = `${API_URL}/phone.php`;
+    let res;
+    try {
+        res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': initData,
+            },
+            body: JSON.stringify({ initData, contact_response: contactResponse }),
+        });
+    } catch (err) {
+        throw new ApiError('اتصال به سرور برقرار نشد.', { status: 0, code: 'NETWORK' });
+    }
+
+    const { body, text, parseError } = await readEnvelope(res);
+
+    if (res.ok && body && body.status === true && body.token) {
+        setToken(body.token);
+        return body.token;
+    }
+
+    let msg;
+    if (body && typeof body.msg === 'string' && body.msg !== '') {
+        msg = body.msg;
+    } else if (parseError) {
+        msg = `پاسخ سرور قابل خواندن نبود (HTTP ${res.status}).`;
+    } else {
+        msg = `تأیید شماره ناموفق بود (${res.status}).`;
+    }
+
+    const data = body !== null
+        ? body
+        : (text ? { rawBody: text.length > 500 ? text.slice(0, 500) + '…' : text } : null);
+
+    throw new ApiError(msg, { status: res.status, code: 'PHONE_SUBMIT_FAILED', data });
 }
 
 export async function call(action, { method = 'GET', params = {}, body = null, retry = true } = {}) {

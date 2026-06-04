@@ -55,7 +55,6 @@ if (is_array($keyboard_check) && preg_match('/[\x{600}-\x{6FF}\x{FB50}-\x{FDFF}]
     update("setting", "keyboardmain", $keyboardmain, null, null);
 }
 
-
 if (!checktelegramip())
     die("Unauthorized access");
 
@@ -172,7 +171,6 @@ if (!is_array($admin_ids)) {
 }
 $admin_ids_str = array_map('strval', $admin_ids);
 
-
 if (
     isset($from_id)
     && intval($from_id) !== 0
@@ -187,7 +185,6 @@ if (
         $rxAsGateStmt->execute();
         $rxAsGateRow = $rxAsGateStmt->fetch(PDO::FETCH_ASSOC);
 
-
         if (is_array($rxAsGateRow)) {
             $rxAsGateMutedUntil = (int)($rxAsGateRow['antispam_muted_until'] ?? 0);
         } else {
@@ -195,11 +192,9 @@ if (
         }
     } catch (\Throwable $rxAsGateErr) {
 
-
         $rxAsGateMutedUntil = (int)($user['antispam_muted_until'] ?? 0);
     }
     if ($rxAsGateMutedUntil > 0 && time() < $rxAsGateMutedUntil) {
-
 
         if (!empty($callback_query_id)) {
             try {
@@ -367,10 +362,6 @@ if (function_exists('rx_resolveInlineButtonText') && isset($datain) && is_string
     }
 }
 
-// Restore premium emoji prefix stripped from reply-keyboard button text.
-// applyPremiumEmojiToKeyboard saves the stripped->original mapping to
-// rx_reply_button_map.json. Here we look it up before routing runs so that
-// comparisons like ($text == "🔐 خرید اشتراک") continue to work unchanged.
 if (
     function_exists('rx_restorePremiumReplyText')
     && isset($setting['inlinebtnmain']) && $setting['inlinebtnmain'] !== 'oninline'
@@ -380,9 +371,6 @@ if (
     $text = rx_restorePremiumReplyText($text);
 }
 
-
-
-
 if (
     function_exists('stripReplyStyleEmoji')
     && is_string($text) && $text !== ''
@@ -390,13 +378,6 @@ if (
 ) {
     $text = stripReplyStyleEmoji($text);
 }
-
-
-
-
-
-
-
 
 if (
     is_string($datain) && $datain !== ''
@@ -429,7 +410,6 @@ if ($user['User_Status'] == "block" && !in_array($from_id, $admin_ids)) {
     return;
 }
 
-
 $timebot = time();
 $rxAntispamStatus = (string)($setting['antispam_status'] ?? '0');
 if ($rxAntispamStatus === '1' && !in_array((string)$from_id, $admin_ids_str, true) && !in_array((string)($user['agent'] ?? 'f'), ['n', 'n2'], true)) {
@@ -443,7 +423,6 @@ if ($rxAntispamStatus === '1' && !in_array((string)$from_id, $admin_ids_str, tru
     $rxAsMuteSeconds = (int)($setting['antispam_mute_seconds'] ?? 5);
     if ($rxAsMuteSeconds < 1)     { $rxAsMuteSeconds = 1; }
     if ($rxAsMuteSeconds > 86400) { $rxAsMuteSeconds = 86400; }
-
 
     $rxAsShouldDrop = false;
     $rxAsAtomicOk   = false;
@@ -462,7 +441,6 @@ if ($rxAntispamStatus === '1' && !in_array((string)$from_id, $admin_ids_str, tru
 
         if (!is_array($rxAsRow)) {
 
-
             $pdo->commit();
             $rxAsTxOpened = false;
             $rxAsAtomicOk = true;
@@ -477,10 +455,8 @@ if ($rxAntispamStatus === '1' && !in_array((string)$from_id, $admin_ids_str, tru
 
             if ($rxAsMutedUntil > 0 && $timebot < $rxAsMutedUntil) {
 
-
                 $rxAsShouldDrop = true;
             } elseif ($rxAsMutedUntil > 0 && $timebot >= $rxAsMutedUntil) {
-
 
                 $rxAsNewMutedUntil = 0;
                 $rxAsNewWinStart   = $timebot;
@@ -515,7 +491,6 @@ if ($rxAntispamStatus === '1' && !in_array((string)$from_id, $admin_ids_str, tru
             $pdo->commit();
             $rxAsTxOpened = false;
 
-
             $user['antispam_window_start'] = (string)$rxAsNewWinStart;
             $user['antispam_window_count'] = (string)$rxAsNewWinCount;
             $user['antispam_muted_until']  = (string)$rxAsNewMutedUntil;
@@ -530,13 +505,11 @@ if ($rxAntispamStatus === '1' && !in_array((string)$from_id, $admin_ids_str, tru
         }
     } catch (\Throwable $rxAsTxErr) {
 
-
         if ($rxAsTxOpened) {
             try { $pdo->rollBack(); } catch (\Throwable $rxAsRbErr) {  }
         }
         $rxAsAtomicOk = false;
     }
-
 
     if (!$rxAsAtomicOk) {
         $rxAsWinStart   = (int)($user['antispam_window_start']  ?? 0);
@@ -571,7 +544,6 @@ if ($rxAntispamStatus === '1' && !in_array((string)$from_id, $admin_ids_str, tru
     }
 
     if ($rxAsShouldDrop) {
-
 
         if (!empty($callback_query_id)) {
             try {
@@ -621,7 +593,6 @@ if ($rxAntispamStatus === '1' && !in_array((string)$from_id, $admin_ids_str, tru
         }
     }
 }
-
 
 if (strpos($text, "/start ") !== false && $user['step'] != "gettextSystemMessage") {
     $affiliatesid = explode(" ", $text)[1];
@@ -685,7 +656,7 @@ if (strpos($text, "/start ") !== false && $user['step'] != "gettextSystemMessage
         $text = $affiliatesid;
     }
 }
-if (intval($user['verify']) == 0 && !in_array($from_id, $admin_ids) && $setting['verifystart'] == "onverify") {
+if (intval($user['verify']) == 0 && !in_array($from_id, $admin_ids) && $setting['verifystart'] == "onverify" && !rx_auth_skip_user($user)) {
     $textverify = "⚠️ حساب شما احراز هویت نشده است پیام  شما  به ادمین ارسال شده
     در صورت پیگیری  سریع تر می توانید به آیدی زیر پیام دهید
     @{$setting['id_support']}";
@@ -693,7 +664,6 @@ if (intval($user['verify']) == 0 && !in_array($from_id, $admin_ids) && $setting[
     return;
 }
 ;
-
 
 if ($setting['roll_Status'] == "rolleon" && $user['roll_Status'] == 0 && ($text != "✅ قوانین را می پذیرم" and $datain != "acceptrule") && !in_array($from_id, $admin_ids)) {
     sendmessage($from_id, $datatextbot['text_roll'], $confrimrolls, 'html');
@@ -705,7 +675,6 @@ if ($text == "✅ قوانین را می پذیرم" or $datain == "acceptrule")
     $confrim = true;
     update("user", "roll_Status", $confrim, "id", $from_id);
 }
-
 
 if ($setting['Bot_Status'] == "botstatusoff" && !in_array($from_id, $admin_ids)) {
     sendmessage($from_id, $datatextbot['text_bot_off'], null, 'html');
@@ -841,6 +810,9 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     sendmessage($from_id, $textbotlang['users']['number']['active'], json_encode(['inline_keyboard' => [], 'remove_keyboard' => true]), 'html');
     sendmessage($from_id, $datatextbot['text_start'], $keyboard, 'html');
     update("user", "number", $user_phone, "id", $from_id);
+    if ($setting['verifystart'] == "onverify") {
+        update("user", "verify", "1", "id", $from_id);
+    }
     step('home', $from_id);
 } elseif ($text == $datatextbot['text_Purchased_services'] || $datain == "backorder" || $text == "/services") {
     $stmt = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :id_user AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold')");
@@ -910,8 +882,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         sendmessage($from_id, $textbotlang['users']['sell']['service_sell'], $keyboard_json, 'html');
     }
 
-    // [حذف شد] قبلاً اینجا برای کل لیست سرویس‌ها کارت اطلاعات می‌فرستاد که اسپم می‌شد.
-    // کاربر فقط وقتی روی یک سرویس کلیک می‌کنه کارت اون رو می‌گیره (در fetch تک‌سرویس).
+
 } elseif ($datain == 'next_page') {
     $numpage = select("invoice", "id_user", "id_user", $from_id, "count");
     $page = $user['pagenumber'];
@@ -976,7 +947,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     $keyboard_json = json_encode($keyboardlists);
     update("user", "pagenumber", $next_page, "id", $from_id);
     Editmessagetext($from_id, $message_id, $textbotlang['users']['sell']['service_sell'], $keyboard_json);
-    // [حذف شد] ارسال خودکار کارت اطلاعات برای کل لیست — باعث اسپم می‌شد.
+
 } elseif ($datain == 'previous_page') {
     $numpage = select("invoice", "id_user", "id_user", $from_id, "count");
     $page = $user['pagenumber'];
@@ -1041,7 +1012,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     $keyboard_json = json_encode($keyboardlists);
     update("user", "pagenumber", $previous_page, "id", $from_id);
     Editmessagetext($from_id, $message_id, $textbotlang['users']['sell']['service_sell'], $keyboard_json);
-    // [حذف شد] ارسال خودکار کارت اطلاعات برای کل لیست — باعث اسپم می‌شد.
+
 } elseif ($datain == "notusernameme") {
     sendmessage($from_id, $textbotlang['users']['stateus']['SendUsername'], $backuser, 'html');
     step('getusernameinfo', $from_id);
@@ -1113,7 +1084,6 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     $timeDiff = $DataUserOut['expire'] - time();
     $day = $DataUserOut['expire'] ? floor($timeDiff / 86400) . $textbotlang['users']['stateus']['day'] : $textbotlang['users']['stateus']['Unlimited'];
 
-
     $keyboardinfo = [
         'inline_keyboard' => [
             [
@@ -1163,7 +1133,7 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
 } elseif (function_exists('nmMaybeHandleStockCallback') && nmMaybeHandleStockCallback($datain ?? '', $from_id, $message_id ?? null, $callback_query_id ?? null)) {
     return;
 } elseif (preg_match('/^quickview_(\w+)/', $datain, $dataget) || preg_match('/^product_(\w+)/', $datain, $dataget) || preg_match('/updateproduct_(\w+)/', $datain, $dataget) || $user['step'] == "getuseragnetservice" || $datain == "productcheckdata") {
-    // [quickview branch] اگه با quickview_ شروع شده، کارت اطلاعات + 2 دکمه می‌فرستیم و return می‌کنیم.
+
     if (is_string($datain) && strpos($datain, 'quickview_') === 0) {
         $id_invoice_qv = $dataget[1];
         $stmtQv = $pdo->prepare("SELECT * FROM invoice WHERE id_invoice = :i AND id_user = :u LIMIT 1");
@@ -1213,11 +1183,11 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
             step('home', $from_id);
             return;
         }
-        // ساخت کارت ممکن نبود → به رفتار قدیمی fallback می‌کنیم (handler product_ از همین بلوک)
+
         $datain = "product_" . $id_invoice_qv;
         $dataget = [$datain, $id_invoice_qv];
     }
-    // ادامه‌ی منطق قبلی برای product_/updateproduct_/getuseragnetservice/productcheckdata:
+
     if ($user['step'] == "getuseragnetservice") {
         $username = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
         $sql = "SELECT * FROM invoice WHERE (username LIKE CONCAT('%', :username, '%') OR note  LIKE CONCAT('%', :notes, '%') OR Volume LIKE CONCAT('%',:Volume, '%') OR Service_time LIKE CONCAT('%',:Service_time, '%')) AND id_user = :id_user AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold')";
@@ -1672,6 +1642,9 @@ $nameconfig";
                 $_rx_svc_styles = $_rx_all_kbd_s['service'];
             }
         }
+        if (function_exists('rx_getKeyboardDefaultStyles') && (!function_exists('rx_kb_use_defaults') || rx_kb_use_defaults())) {
+            $_rx_svc_styles = $_rx_svc_styles + rx_getKeyboardDefaultStyles('service');
+        }
         $tempArray = [];
         $keyboardsetting = ['inline_keyboard' => []];
         foreach ($keyboarddate as $_rx_svc_key => $keyboardtext) {
@@ -1804,7 +1777,6 @@ $textconnect
     return;
 } elseif (preg_match('/^infocard_qr_(\w+)$/', $datain, $dataget)) {
 
-
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
     if (is_array($nameloc) && (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
@@ -1861,7 +1833,6 @@ $textconnect
     if ($nameloc == false)
         return;
     if (function_exists('nmStopIfServicePanelBlocked') && nmStopIfServicePanelBlocked($nameloc, $from_id, null)) return;
-
 
     if (function_exists('nmMaybeShowStockInvoiceDetails') && nmMaybeShowStockInvoiceDetails($from_id, $message_id ?? null, $nameloc)) {
         step('home', $from_id);
@@ -1944,7 +1915,6 @@ $textconnect
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
 
-
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
             rx_log_event('INVOICE_OWNERSHIP_DENIED', 'Handler removeauto on non-owned invoice', [
@@ -1984,7 +1954,6 @@ $textconnect
     } else {
         $id_invoice = $dataget[1];
         $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
-
 
         if (is_array($nameloc) && (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
             if (function_exists('rx_log_event')) {
@@ -2172,7 +2141,6 @@ $textconnect
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
 
-
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
             rx_log_event('INVOICE_OWNERSHIP_DENIED', 'Handler confirmaccountdisable on non-owned invoice', [
@@ -2204,7 +2172,6 @@ $textconnect
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
 
-
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
             rx_log_event('INVOICE_OWNERSHIP_DENIED', 'Handler extend on non-owned invoice', [
@@ -2223,7 +2190,6 @@ $textconnect
         sendmessage($from_id, "❌ امکان تمدید در این پنل وجود ندارد", null, 'html');
         return;
     }
-
 
     if (function_exists('nmStockForInvoice') && nmStockForInvoice($nameloc)) {
         if (function_exists('nmMaybeHandleStockCallback')) {
@@ -2759,7 +2725,6 @@ $textconnect
     }
     $Balance_Low_user = $user['Balance'] - $pricelastextend;
 
-
     if (intval($pricelastextend) > 0) {
         if (($user['agent'] ?? '') === 'n2') {
             $stmtExtendDeduct = $pdo->prepare("UPDATE user SET Balance = Balance - :delta WHERE id = :uid");
@@ -2858,7 +2823,6 @@ $textconnect
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
 
-
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
             rx_log_event('INVOICE_OWNERSHIP_DENIED', 'Handler changelink on non-owned invoice', [
@@ -2891,7 +2855,6 @@ $textconnect
 } elseif (preg_match('/confirmchange_(\w+)/', $datain, $dataget)) {
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
-
 
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
@@ -2944,7 +2907,6 @@ $textconnect
 } elseif (preg_match('/Extra_volume_(\w+)/', $datain, $dataget)) {
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
-
 
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
@@ -3283,7 +3245,6 @@ $textconnect
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
 
-
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
             rx_log_event('INVOICE_OWNERSHIP_DENIED', 'Handler confirmchangeloccha on non-owned invoice', [
@@ -3468,7 +3429,6 @@ $textconnect
 💠 حجم سرویس : $RemainingVolume
 ⏳ زمان انقضا :  $expirationDate | $day
 
-
 🔗 لینک اشتراک شما:
 
 <code>$output_config_link</code>";
@@ -3562,7 +3522,6 @@ $textconnect
 } elseif (preg_match('/confirmdisorders-(\w+)/', $datain, $dataget)) {
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
-
 
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
@@ -3661,7 +3620,6 @@ $textconnect
 } elseif (preg_match('/Extra_time_(\w+)/', $datain, $dataget)) {
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
-
 
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
@@ -3975,7 +3933,6 @@ $textconnect
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
 
-
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
             rx_log_event('INVOICE_OWNERSHIP_DENIED', 'Handler removeserviceuser on non-owned invoice', [
@@ -4094,7 +4051,6 @@ $textconnect
 
 📌 یک درخواست حذف سرویس  توسط کاربر برای شما ارسال شده است. لطفا بررسی کرده و در صورت درست بودن و موافقت تایید کنید.
 
-
 📊 اطلاعات سرویس کاربر :
 آیدی عددی کاربر : $from_id
 نام کاربری کاربر : @$username
@@ -4109,7 +4065,6 @@ $textconnect
 ♾ حجم سرویس : $LastTraffic
 🪫 حجم باقی مانده : $RemainingVolume
 📅 فعال تا تاریخ : $expirationDate ($day)
-
 
 <b>❌ ادمین گرامی توجه داشته باشید دکمه حذف سرویس که میزنید ربات خودکار حساب میکند و احتمال اشتباه وجود دارد پیشنهاد می شود از  حذف دستی  استفاده نمایید</b>
 
@@ -4132,7 +4087,6 @@ $textconnect
 } elseif (preg_match('/transfer_(\w+)/', $datain, $dataget)) {
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
-
 
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
@@ -4186,7 +4140,6 @@ $textconnect
     $id_invoice = $dataget[1];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
 
-
     if (!is_array($nameloc) || (string)($nameloc['id_user'] ?? '') !== (string)$from_id) {
         if (function_exists('rx_log_event')) {
             rx_log_event('INVOICE_OWNERSHIP_DENIED', 'Handler confrimtransfers on non-owned invoice', [
@@ -4225,11 +4178,11 @@ $textconnect
         return;
     }
     if ($locationproduct != 1) {
-        if ($setting['get_number'] == "onAuthenticationphone" && $user['step'] != "get_number" && $user['number'] == "none") {
+        if ((($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && $user['step'] != "get_number" && $user['number'] == "none" && !rx_auth_skip_user($user)) {
             sendmessage($from_id, $textbotlang['users']['number']['Confirming'], $request_contact, 'HTML');
             step('get_number', $from_id);
         }
-        if ($user['number'] == "none" && $setting['get_number'] == "onAuthenticationphone")
+        if ($user['number'] == "none" && (($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && !rx_auth_skip_user($user))
             return;
         if ($user['limit_usertest'] <= 0 && !in_array($from_id, $admin_ids)) {
             sendmessage($from_id, $textbotlang['users']['usertest']['limitwarning'], $keyboard_buy, 'html');

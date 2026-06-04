@@ -31,6 +31,51 @@ function qrUrl(payload, size = 280) {
     return `${apiUrl}/qr.php?s=${size}&d=${enc}&v=${v}`;
 }
 
+function configName(c, i) {
+    const s = String(c || '');
+    const h = s.indexOf('#');
+    if (h >= 0 && h < s.length - 1) {
+        const raw = s.slice(h + 1);
+        try { return decodeURIComponent(raw) || ('کانفیگ ' + (i + 1)); }
+        catch (_) { return raw || ('کانفیگ ' + (i + 1)); }
+    }
+    return 'کانفیگ ' + (i + 1);
+}
+
+function configListHtml(configs) {
+    return '<div class="cfg-list" style="display:flex;flex-direction:column;gap:10px">' + configs.map((c, i) => `
+        <div class="cfg-item">
+            <button type="button" class="cfg-toggle btn btn-ghost btn-block" data-i="${i}" style="display:flex;justify-content:space-between;align-items:center;text-align:start;gap:8px">
+                <span>${icon('config', 'class="ico ico-sm"')} ${escapeHtml(configName(c, i))}</span>
+                <span class="muted" style="font-size:12px;white-space:nowrap">${icon('download', 'class="ico ico-sm"')} دریافت کانفیگ</span>
+            </button>
+            <div class="cfg-detail" data-i="${i}" style="display:none;margin:8px 0 12px">
+                <div class="qr-block"><img class="qr-img" data-qr="${escapeHtml(c)}" alt="QR" /></div>
+                <div class="codeblock">${escapeHtml(c)}<button class="copy-btn" data-copy="${escapeHtml(c)}">${icon('copy', 'class="ico ico-sm"')} کپی</button></div>
+            </div>
+        </div>`).join('') + '</div>';
+}
+
+function bindConfigList($scope) {
+    if (!$scope) return;
+    $scope.querySelectorAll('.cfg-toggle').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const item = btn.closest('.cfg-item');
+            const detail = item ? item.querySelector('.cfg-detail') : null;
+            if (!detail) return;
+            const isOpen = detail.style.display !== 'none';
+            document.querySelectorAll('.cfg-detail').forEach((d) => { d.style.display = 'none'; });
+            if (isOpen) return;
+            const img = detail.querySelector('.qr-img');
+            if (img && !img.getAttribute('src') && img.dataset.qr) {
+                img.setAttribute('src', qrUrl(img.dataset.qr));
+            }
+            detail.style.display = 'block';
+            try { hapticImpact('light'); } catch (_) {}
+        });
+    });
+}
+
 function fmtNum(n) {
     return Number(n || 0).toLocaleString('fa-IR');
 }
@@ -194,9 +239,15 @@ function renderBody($body, info, username, reload) {
     if (outputs.length === 0) {
         $cfgHost.innerHTML = `<div class="muted center mono" style="font-size:12px">کانفیگی برای نمایش وجود ندارد</div>`;
     } else {
-        $cfgHost.innerHTML = outputs.map((o) => renderOutput(o)).join('');
+        const shownOutputs = disabled.has('config')
+            ? outputs.filter((o) => String(o?.type || '').toLowerCase() !== 'config')
+            : outputs;
+        $cfgHost.innerHTML = shownOutputs.length === 0
+            ? `<div class="muted center mono" style="font-size:12px">کانفیگی برای نمایش وجود ندارد</div>`
+            : shownOutputs.map((o) => renderOutput(o)).join('');
     }
 
+    bindConfigList($body);
     $body.querySelectorAll('.copy-btn').forEach((btn) => {
         btn.addEventListener('click', async () => {
             const txt = btn.dataset.copy || '';
@@ -321,16 +372,9 @@ async function showConfigSection($body, info, username) {
             return;
         }
 
-        const firstConfig = configs[0] || '';
         $cfg.innerHTML = `
             <p class="section-title">${icon('config')} کانفیگ‌ها (${configs.length})</p>
-            ${firstConfig ? `<div class="qr-block">
-                <img class="qr-img" src="${escapeHtml(qrUrl(firstConfig))}" alt="QR" loading="lazy" />
-                <p class="muted center mono" style="font-size:11px;margin-top:6px">QR کانفیگ اول</p>
-            </div>` : ''}
-            ${configs.map((c) => `
-                <div class="codeblock" style="margin-bottom:8px">${escapeHtml(c)}<button class="copy-btn" data-copy="${escapeHtml(c)}">${icon('copy', 'class="ico ico-sm"')} کپی</button></div>
-            `).join('')}
+            ${configListHtml(configs)}
         `;
 
 
@@ -341,6 +385,7 @@ async function showConfigSection($body, info, username) {
                 toast(ok ? 'کپی شد' : 'خطا در کپی', ok ? 'success' : 'error');
             });
         });
+        bindConfigList($cfg);
 
         scrollToConfig($body);
     } catch (err) {
@@ -772,6 +817,9 @@ function renderRenewConfirm($panel, opts, choice, username, reload) {
     const $label = $btn.querySelector('.rc-label');
 
     $btn.addEventListener('click', async () => {
+        const shownAmount = $host.querySelector('#rc-amount')?.textContent || `${fmtNum(basePrice)} تومان`;
+        const sure = await showConfirm(`آیا از تمدید سرویس «${choice.name}» با مبلغ ${shownAmount} مطمئن هستید؟`);
+        if (!sure) return;
         const old = $label.textContent;
         $btn.disabled = true;
         $label.textContent = 'در حال انجام…';
@@ -799,7 +847,8 @@ function renderRenewConfirm($panel, opts, choice, username, reload) {
                             <p class="muted mono mt-sm" style="font-size:12px">موجودی جدید: ${fmtNum(obj.balance_after)} تومان</p>
                         </div>
                     </div>`;
-                setTimeout(() => reload(), 800);
+                $host.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => reload(), 2200);
                 return;
             }
             if (obj.kind === 'requires_payment') {
@@ -1036,6 +1085,8 @@ async function renderExtraPanel($panel, info, username, kind, reload) {
             toast(`مقدار باید بین ${minA} و ${maxA} ${unitLabel} باشد`, 'warn', 4000);
             return;
         }
+        const sure = await showConfirm(`آیا از افزودن ${fmtNum(a)} ${unitLabel} با مبلغ ${$total.textContent} مطمئن هستید؟`);
+        if (!sure) return;
         const old = $label.textContent;
         $btn.disabled = true;
         $label.textContent = 'در حال انجام…';
@@ -1055,7 +1106,8 @@ async function renderExtraPanel($panel, info, username, kind, reload) {
                         <h3>${escapeHtml(obj.message || 'انجام شد')}</h3>
                         <p class="muted mono mt-sm" style="font-size:12px">موجودی جدید: ${fmtNum(obj.balance_after || 0)} تومان</p>
                     </div>`;
-                setTimeout(() => reload(), 800);
+                $host.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => reload(), 2200);
                 return;
             }
             if (obj.kind === 'requires_payment') {
@@ -1378,20 +1430,13 @@ function renderOutput(o) {
 
     if (type === 'config') {
         const items = Array.isArray(o.value) ? o.value : String(o.value || '').split('\n').filter(Boolean);
-
-
-        const firstConfig = items[0] || '';
+        if (items.length === 0) return '';
         return `
-            <p class="section-title">${icon('config')} کانفیگ‌ها</p>
-            ${firstConfig ? `<div class="qr-block">
-                <img class="qr-img" src="${escapeHtml(qrUrl(firstConfig))}" alt="QR" loading="lazy" />
-                <p class="muted center mono" style="font-size:11px;margin-top:6px">QR کانفیگ اول</p>
-            </div>` : ''}
-            ${items.map((c) => `
-                <div class="codeblock" style="margin-bottom:8px">${escapeHtml(c)}<button class="copy-btn" data-copy="${escapeHtml(c)}">${icon('copy', 'class="ico ico-sm"')} کپی</button></div>
-            `).join('')}
+            <p class="section-title">${icon('config')} کانفیگ‌ها (${items.length})</p>
+            ${configListHtml(items)}
         `;
     }
+
 
     if (type === 'file') {
         return `

@@ -97,10 +97,22 @@ if (is_file($__schemaLib) && is_readable($__schemaLib)) {
 
 
         var color = localStorage.getItem('faoxima_color') || 'blue';
-        var theme = 'dark';
         var html = document.documentElement;
-        if (!html.getAttribute('data-color')) html.setAttribute('data-color', color);
-        if (!html.getAttribute('data-theme')) html.setAttribute('data-theme', theme);
+        var s = html.style;
+        var PRESET = { red:'#ef4444', blue:'#3b82f6', purple:'#a855f7', yellow:'#facc15', orange:'#f97316', green:'#22c55e' };
+        function fg(r,g,b){ function lin(v){ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); } var L=0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b); return L>0.45?'#14121d':'#ffffff'; }
+        var hex;
+        if (PRESET[color]) { hex = PRESET[color]; html.setAttribute('data-color', color); }
+        else {
+            var m=/^#?([0-9a-f]{6})$/i.exec(color);
+            if (m) { hex='#'+m[1].toLowerCase(); var n=parseInt(m[1],16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+                s.setProperty('--accent',hex); s.setProperty('--accent-soft','rgba('+r+','+g+','+b+',0.15)');
+                s.setProperty('--accent-mid','rgba('+r+','+g+','+b+',0.35)'); s.setProperty('--accent-glow','rgba('+r+','+g+','+b+',0.5)');
+                html.setAttribute('data-color','custom'); }
+            else { hex=PRESET.blue; html.setAttribute('data-color','blue'); }
+        }
+        var pn=parseInt(hex.slice(1),16); s.setProperty('--accent-fg', fg((pn>>16)&255,(pn>>8)&255,pn&255));
+        html.setAttribute('data-theme','dark');
     } catch (e) {  }
 })();
 </script>
@@ -143,14 +155,10 @@ if (is_file($__schemaLib) && is_readable($__schemaLib)) {
                 <small>مدیر کل</small>
             </div>
 
-            <div class="theme-swatches no-close" title="رنگ تم">
-                <span class="swatch" data-color="red"    title="قرمز"></span>
-                <span class="swatch" data-color="blue"   title="آبی"></span>
-                <span class="swatch" data-color="purple" title="بنفش"></span>
-                <span class="swatch" data-color="yellow" title="زرد"></span>
-                <span class="swatch" data-color="orange" title="نارنجی"></span>
-                <span class="swatch" data-color="green"  title="سبز"></span>
-            </div>
+            <a href="appearance.php" class="menu-item">
+                <svg class="svg-icon svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 3.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H8a1.65 1.65 0 0 0 1-1.51V2a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V8a1.65 1.65 0 0 0 1.51 1H22a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span>تنظیمات</span>
+            </a>
 
             <hr>
 

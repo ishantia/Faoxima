@@ -148,3 +148,24 @@ export function openBot(botUsername) {
     try { window.location.href = url; } catch (_) {}
 }
 
+
+export function requestContact() {
+    return new Promise((resolve, reject) => {
+        const w = (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) || null;
+        if (!w || typeof w.requestContact !== 'function') {
+            reject(new Error('requestContact_unsupported'));
+            return;
+        }
+        try {
+            w.requestContact((sent, evt) => {
+                if (sent && evt && evt.response) {
+                    resolve({ response: evt.response, responseUnsafe: evt.responseUnsafe || null });
+                } else {
+                    reject(new Error(sent ? 'no_contact_response' : 'cancelled'));
+                }
+            });
+        } catch (e) {
+            reject(e);
+        }
+    });
+}

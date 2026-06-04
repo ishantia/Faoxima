@@ -108,7 +108,8 @@ let _serviceModulePromise = null;
 function loadServicePage() {
     if (_serviceModulePromise) return _serviceModulePromise;
     const cfg = (typeof window !== 'undefined' && window.__APP_CONFIG__) || {};
-    const ver = (cfg.version || cfg.cacheBust || Date.now()).toString();
+    const hardR = (typeof location !== 'undefined') ? new URLSearchParams(location.search).get('_r') : null;
+    const ver = (hardR || cfg.version || cfg.cacheBust || Date.now()).toString();
 
 
     const url = new URL('./pages/service.js', import.meta.url);

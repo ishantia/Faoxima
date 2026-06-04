@@ -63,12 +63,67 @@ export async function verify() {
     try { body = await res.json(); } catch (_) {  }
 
     if (!res.ok || !body || !body.status) {
+        if (body && body.status === false && body.gate) {
+            throw new ApiError(body.msg || 'access gate', { status: res.status, data: body, code: 'GATE' });
+        }
         const msg = (body && body.msg) || `Verification failed (${res.status})`;
         throw new ApiError(msg, { status: res.status, data: body });
     }
 
     setToken(body.token);
     return body.token;
+}
+
+
+async function postWithInitData(endpoint, extra = {}) {
+    const sdkLoaded = await waitForSDK(4000);
+    if (!sdkLoaded) throw new ApiError('Telegram SDK failed to load.', { status: 0, code: 'NO_SDK' });
+
+    let initData = await waitForInitData(1500);
+    if (!initData) initData = getInitData();
+    if (!initData) throw new ApiError('initData unavailable. Open this page from Telegram.', { status: 0, code: 'NO_INIT_DATA' });
+
+    const url = `${API_URL}/${endpoint}`;
+    let res;
+    try {
+        res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData },
+            body: JSON.stringify({ initData, ...extra }),
+        });
+    } catch (err) {
+        throw new ApiError('اتصال به سرور برقرار نشد.', { status: 0, code: 'NETWORK' });
+    }
+
+    let body = null;
+    try { body = await res.json(); } catch (_) {  }
+    return { res, body };
+}
+
+export async function recheckJoin() {
+    const { res, body } = await postWithInitData('checkjoin.php');
+    if (res.ok && body && body.status) {
+        setToken(body.token);
+        return { ok: true, token: body.token };
+    }
+    if (body && body.status === false && body.gate) {
+        return { ok: false, gate: body.gate, data: body };
+    }
+    const msg = (body && body.msg) || `Request failed (${res.status})`;
+    throw new ApiError(msg, { status: res.status, data: body });
+}
+
+export async function submitContact(contactResponse) {
+    const { res, body } = await postWithInitData('phone.php', { contact_response: contactResponse });
+    if (res.ok && body && body.status) {
+        setToken(body.token);
+        return { ok: true, token: body.token };
+    }
+    if (body && body.status === false && body.gate) {
+        return { ok: false, gate: body.gate, data: body };
+    }
+    const msg = (body && body.msg) || `Request failed (${res.status})`;
+    throw new ApiError(msg, { status: res.status, data: body });
 }
 
 

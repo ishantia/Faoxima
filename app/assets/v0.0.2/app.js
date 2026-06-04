@@ -1,7 +1,7 @@
 window.__FAOXIMA_APP_STARTED__ = true;
 
 import * as Telegram from './telegram.js';
-import { verify } from './api.js';
+import { verify, submitPhone } from './api.js';
 import { start as startRouter } from './router.js';
 import { getToken, clearToken } from './state.js';
 import { loadSavedTheme } from './pages/settings.js';
@@ -9,7 +9,6 @@ import { loadBrandFromServer } from './brand.js';
 import { icon } from './icons.js';
 
 window.__FAOXIMA_MODULES_OK__ = true;
-
 
 try { loadSavedTheme(); } catch (_) {  }
 
@@ -143,12 +142,6 @@ function showAccessError(err) {
 
         const retry = document.getElementById('retry-btn');
         if (retry) retry.addEventListener('click', () => {
-            // Telegram's in-app WebView (tdesktop especially) serves index.php
-            // and assets from disk cache on a plain location.reload(), so a
-            // failed verification stays "stuck" on the screen even after the
-            // server is fixed. __hardReload (in app/index.php) drops caches,
-            // service workers, and bumps a `_r=...` query param to force a
-            // fresh fetch of every resource.
             if (typeof window.__hardReload === 'function') {
                 window.__hardReload();
                 return;
@@ -189,6 +182,156 @@ function applyStartParam() {
     } catch (_) {  }
 }
 
+function showPhonePrompt({ title, body, primaryLabel, onPrimary, secondaryLabel, onSecondary }) {
+    const view = document.getElementById('view');
+    if (!view) return;
+    view.innerHTML = `
+        <div class="empty">
+            ${icon('phone', 'class="ico ico-xxl"')}
+            <h3>${escapeHtml(title)}</h3>
+            <p class="muted">${escapeHtml(body)}</p>
+            <button class="btn btn-primary mt-md" id="phone-primary-btn">${escapeHtml(primaryLabel)}</button>
+            ${secondaryLabel ? `<button class="btn mt-sm" id="phone-secondary-btn">${escapeHtml(secondaryLabel)}</button>` : ''}
+        </div>
+    `;
+    const primary = document.getElementById('phone-primary-btn');
+    if (primary && typeof onPrimary === 'function') {
+        primary.addEventListener('click', onPrimary);
+    }
+    const secondary = document.getElementById('phone-secondary-btn');
+    if (secondary && typeof onSecondary === 'function') {
+        secondary.addEventListener('click', onSecondary);
+    }
+}
+
+function handleForceJoinGate(gateErr) {
+    const gate = (gateErr && gateErr.data) || {};
+    const channels = Array.isArray(gate.channels) ? gate.channels : [];
+    const headMsg = gate.msg || 'برای استفاده از مینی‌اپ، ابتدا در کانال‌های زیر عضو شوید.';
+
+    const view = document.getElementById('view');
+    if (!view) return;
+
+    const itemsHtml = channels.map((ch, i) => {
+        const title = escapeHtml(String((ch && ch.title) || ('کانال ' + (i + 1))));
+        return `
+            <button class="btn btn-block mt-sm join-channel-btn" data-idx="${i}">
+                ${icon('send', 'class="ico"')}
+                <span>${title}</span>
+            </button>
+        `;
+    }).join('');
+
+    view.innerHTML = `
+        <div class="empty">
+            ${icon('users', 'class="ico ico-xxl"')}
+            <h3>عضویت اجباری</h3>
+            <p class="muted">${escapeHtml(headMsg)}</p>
+            <div class="mt-md" style="width:100%">${itemsHtml}</div>
+            <button class="btn btn-primary mt-md" id="join-recheck-btn">عضو شدم، بررسی مجدد</button>
+        </div>
+    `;
+
+    const btns = view.querySelectorAll('.join-channel-btn');
+    for (let i = 0; i < btns.length; i++) {
+        btns[i].addEventListener('click', () => {
+            const idx = parseInt(btns[i].getAttribute('data-idx'), 10);
+            const ch = channels[idx];
+            if (ch && ch.link) {
+                Telegram.openChannel(ch.link);
+            }
+        });
+    }
+
+    const recheck = document.getElementById('join-recheck-btn');
+    if (recheck) {
+        recheck.addEventListener('click', () => {
+            showInitialSkeleton();
+            bootstrap().catch((e) => {
+                logErr((e && e.message) || String(e), 'force-join-recheck', (e && e.stack) || '');
+                showAccessError(e);
+            });
+        });
+    }
+}
+
+async function handlePhoneGate(gateErr) {
+    const gate = (gateErr && gateErr.data) || {};
+    const wantIran = !!gate.iran;
+
+    if (!Telegram.supportsContactRequest()) {
+        const botUsername = Telegram.getBotUsername();
+        showPhonePrompt({
+            title: 'احراز هویت الزامی است',
+            body: botUsername
+                ? 'نسخهٔ تلگرام شما از تأیید شماره داخل مینی‌اپ پشتیبانی نمی‌کند. لطفاً از داخل ربات شمارهٔ خود را تأیید کنید.'
+                : 'نسخهٔ تلگرام شما از تأیید شماره داخل مینی‌اپ پشتیبانی نمی‌کند. لطفاً تلگرام را به‌روزرسانی کنید یا از داخل ربات شمارهٔ خود را تأیید کنید.',
+            primaryLabel: botUsername ? 'باز کردن ربات' : 'تلاش مجدد',
+            onPrimary: () => {
+                if (botUsername) {
+                    Telegram.openBot(botUsername + '?start=verify');
+                } else if (typeof window.__hardReload === 'function') {
+                    window.__hardReload();
+                } else {
+                    location.reload();
+                }
+            },
+        });
+        return false;
+    }
+
+    let contactResponse;
+    try {
+        contactResponse = await Telegram.requestContact();
+    } catch (err) {
+        const reason = (err && err.message) || '';
+        if (reason === 'UNSUPPORTED') {
+            return handlePhoneGate(gateErr);
+        }
+        showPhonePrompt({
+            title: 'احراز هویت الزامی است',
+            body: wantIran
+                ? 'برای دسترسی به خدمات این مینی‌اپ، باید شمارهٔ موبایل ایران خود را تأیید کنید.'
+                : 'برای دسترسی به خدمات این مینی‌اپ، باید شمارهٔ موبایل خود را تأیید کنید.',
+            primaryLabel: 'تأیید شماره موبایل',
+            onPrimary: () => {
+                showInitialSkeleton();
+                bootstrap().catch((e) => {
+                    logErr((e && e.message) || String(e), 'phone-gate-retry', (e && e.stack) || '');
+                    showAccessError(e);
+                });
+            },
+        });
+        return false;
+    }
+
+    try {
+        await submitPhone(contactResponse);
+    } catch (err) {
+        logErr((err && err.message) || 'phone submit failed', 'phone-gate-submit', (err && err.stack) || '', {
+            code: err && err.code, status: err && err.status, data: err && err.data,
+        });
+        const msg = (err && err.message) || 'تأیید شماره ناموفق بود.';
+        await Telegram.showAlert(msg);
+        showPhonePrompt({
+            title: 'تأیید شماره ناموفق بود',
+            body: msg,
+            primaryLabel: 'تلاش مجدد',
+            onPrimary: () => {
+                showInitialSkeleton();
+                bootstrap().catch((e) => {
+                    logErr((e && e.message) || String(e), 'phone-gate-retry', (e && e.stack) || '');
+                    showAccessError(e);
+                });
+            },
+        });
+        return false;
+    }
+
+    Telegram.hapticNotify('success');
+    return true;
+}
+
 async function bootstrap() {
     showInitialSkeleton();
 
@@ -216,11 +359,21 @@ async function bootstrap() {
     try {
         await verify();
     } catch (err) {
-        logErr((err && err.message) || 'verify failed', 'bootstrap-verify', (err && err.stack) || '', {
-            code: err && err.code, status: err && err.status, data: err && err.data,
-        });
-        showAccessError(err);
-        return;
+        if (err && err.code === 'FORCE_JOIN') {
+            handleForceJoinGate(err);
+            return;
+        } else if (err && err.code === 'PHONE_REQUIRED') {
+            const passed = await handlePhoneGate(err);
+            if (!passed) {
+                return;
+            }
+        } else {
+            logErr((err && err.message) || 'verify failed', 'bootstrap-verify', (err && err.stack) || '', {
+                code: err && err.code, status: err && err.status, data: err && err.data,
+            });
+            showAccessError(err);
+            return;
+        }
     }
 
     try {
@@ -229,7 +382,6 @@ async function bootstrap() {
         logErr(err.message || 'router start failed', 'bootstrap-start', err.stack || '');
         showAccessError(err);
     }
-
 
     loadBrandFromServer().catch(() => {});
 }

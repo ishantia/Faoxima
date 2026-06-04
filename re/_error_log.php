@@ -114,39 +114,3 @@ register_shutdown_function(function() {
         rx_log_event('HTTP_5XX', 'Request finished with server error status', ['status' => $status]);
     }
 });
-
-
-if (!defined('RX_DEBUG_TRACE_ACTIVE')) {
-    define('RX_DEBUG_TRACE_ACTIVE', true);
-
-    $GLOBALS['__rx_debug_raw_body'] = @file_get_contents('php://input');
-
-    register_shutdown_function(function () {
-        $status = function_exists('http_response_code') ? (int) http_response_code() : 0;
-        $fatal  = error_get_last();
-        $hasFatal = is_array($fatal) && in_array(
-            $fatal['type'] ?? 0,
-            [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR],
-            true
-        );
-
-        if ($status < 400 && !$hasFatal) {
-            return;
-        }
-
-        if ($status === 409 || $status === 422) {
-            return;
-        }
-
-        $body = $GLOBALS['__rx_debug_raw_body'] ?? '';
-        $bodyTrunc = is_string($body) ? substr($body, 0, 2000) : '';
-        rx_log_event('REQUEST_FAILED', 'request did not return 2xx/3xx', [
-            'status'    => $status,
-            'ip'        => $_SERVER['REMOTE_ADDR'] ?? '-',
-            'tg_secret' => isset($_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN']) ? 'present' : '-',
-            'body_len'  => is_string($body) ? strlen($body) : 0,
-            'body'      => str_replace(["\r", "\n"], ' ', $bodyTrunc),
-        ]);
-    });
-}
-

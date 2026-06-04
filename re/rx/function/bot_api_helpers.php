@@ -69,10 +69,7 @@ function savedata($type, $namefiled, $valuefiled)
     } elseif ($type == "save") {
         $userdata = select("user", "*", "id", $from_id, "select");
         $raw = $userdata['Processing_value'] ?? null;
-        // Processing_value can legitimately be a scalar sentinel like "0" or "none"
-        // (set by /start, back-button handlers, etc.). json_decode on a scalar
-        // returns the same scalar, and writing $scalar[$key]=$value is a silent
-        // no-op in PHP — which would lose every key. Coerce to array.
+
         $dataperevieos = (is_string($raw) && $raw !== '') ? json_decode($raw, true) : null;
         if (!is_array($dataperevieos)) {
             $dataperevieos = [];
@@ -141,7 +138,6 @@ function addBackgroundImage($urlimage, $qrCodeResult, $backgroundPath)
         return false;
     }
 
-
     $projectRoot = defined('REFACTORED_LEGACY_ROOT') ? REFACTORED_LEGACY_ROOT : dirname(__DIR__, 3);
 
     $basename = is_string($backgroundPath) && $backgroundPath !== ''
@@ -200,14 +196,12 @@ function addBackgroundImage($urlimage, $qrCodeResult, $backgroundPath)
     $backgroundWidth = imagesx($backgroundImage);
     $backgroundHeight = imagesy($backgroundImage);
 
-
     $targetRatio  = 0.55;
     $shorterSide  = min($backgroundWidth, $backgroundHeight);
     $targetQrSize = (int) round($shorterSide * $targetRatio);
     if ($targetQrSize < 120) {
         $targetQrSize = min(120, $shorterSide);
     }
-
 
     if ($qrCodeWidth !== $targetQrSize || $qrCodeHeight !== $targetQrSize) {
         $resizedQr = imagecreatetruecolor($targetQrSize, $targetQrSize);
@@ -227,18 +221,15 @@ function addBackgroundImage($urlimage, $qrCodeResult, $backgroundPath)
         }
     }
 
-
     $padding    = (int) round($targetQrSize * 0.10);
     $boxSize    = $targetQrSize + ($padding * 2);
     $boxX       = (int) (($backgroundWidth  - $boxSize) / 2);
     $boxY       = (int) (($backgroundHeight - $boxSize) / 2);
 
-
     $boxClipX  = max(0, $boxX);
     $boxClipY  = max(0, $boxY);
     $boxClipW  = min($boxSize, $backgroundWidth  - $boxClipX);
     $boxClipH  = min($boxSize, $backgroundHeight - $boxClipY);
-
 
     $bgBackup = imagecreatetruecolor($boxClipW, $boxClipH);
     if ($bgBackup !== false) {
@@ -250,11 +241,9 @@ function addBackgroundImage($urlimage, $qrCodeResult, $backgroundPath)
 
         imagecopy($glass, $backgroundImage, 0, 0, $boxClipX, $boxClipY, $boxClipW, $boxClipH);
 
-
         for ($i = 0; $i < 22; $i++) {
             @imagefilter($glass, IMG_FILTER_GAUSSIAN_BLUR);
         }
-
 
         $totalLum = 0;
         $samples  = 5;
@@ -273,7 +262,6 @@ function addBackgroundImage($urlimage, $qrCodeResult, $backgroundPath)
         }
         $avgLum = $totalLum / ($samples * $samples);
 
-
         if     ($avgLum < 70)  { $opacity = 55; $bBoost = 16; $tintR = 255; $tintG = 255; $tintB = 255; $needInnerLine = false; }
         elseif ($avgLum < 130) { $opacity = 45; $bBoost = 12; $tintR = 255; $tintG = 255; $tintB = 255; $needInnerLine = false; }
         elseif ($avgLum < 190) { $opacity = 38; $bBoost = 8;  $tintR = 255; $tintG = 255; $tintB = 255; $needInnerLine = false; }
@@ -284,13 +272,11 @@ function addBackgroundImage($urlimage, $qrCodeResult, $backgroundPath)
             @imagefilter($glass, IMG_FILTER_BRIGHTNESS, $bBoost);
         }
 
-
         $overlay = imagecreatetruecolor($boxClipW, $boxClipH);
         $oTint   = imagecolorallocate($overlay, $tintR, $tintG, $tintB);
         imagefill($overlay, 0, 0, $oTint);
         imagecopymerge($glass, $overlay, 0, 0, 0, 0, $boxClipW, $boxClipH, $opacity);
         imagedestroy($overlay);
-
 
         if ($needInnerLine) {
 
@@ -299,7 +285,6 @@ function addBackgroundImage($urlimage, $qrCodeResult, $backgroundPath)
                 imagerectangle($glass, 2, 2, $boxClipW - 3, $boxClipH - 3, $inner);
             }
         }
-
 
         $radius = (int) round(min($boxClipW, $boxClipH) * 0.10);
         if ($radius > 4 && $bgBackup !== false) {
@@ -323,7 +308,6 @@ function addBackgroundImage($urlimage, $qrCodeResult, $backgroundPath)
             }
         }
 
-
         imagecopy($backgroundImage, $glass, $boxClipX, $boxClipY, 0, 0, $boxClipW, $boxClipH);
         imagedestroy($glass);
     } else {
@@ -337,7 +321,6 @@ function addBackgroundImage($urlimage, $qrCodeResult, $backgroundPath)
         );
     }
     if ($bgBackup !== false) { imagedestroy($bgBackup); }
-
 
     $x = (int) (($backgroundWidth  - $qrCodeWidth)  / 2);
     $y = (int) (($backgroundHeight - $qrCodeHeight) / 2);
@@ -589,10 +572,6 @@ function addCronIfNotExists($cronCommand)
 
     $logContext = implode('; ', $commands);
 
-    // On cPanel / shared hosting, shell_exec is typically disabled and the
-    // crontab binary is not on the open_basedir / safe-mode PATH. The admin
-    // already registers the single cron entry through the cPanel UI, so we
-    // silently no-op here instead of polluting error_log on every save.
     if (!isShellExecAvailable()) {
         return true;
     }
@@ -646,18 +625,15 @@ function activecron()
 {
     global $domainhosts;
 
-    // اگر domainhosts خالی بود، از HTTP_HOST سرور استفاده می‌کنیم
     if (empty($domainhosts)) {
         $domainhosts = $_SERVER['HTTP_HOST'] ?? '';
     }
 
-    // اگر هنوز خالی بود، کرون نمی‌سازیم
     if (empty($domainhosts)) {
         error_log('activecron: $domainhosts is empty, skipping cron setup.');
         return false;
     }
 
-    // فقط یک کرون جاب مجاز است — همیشه و فقط cron/cron.php
     $cronCommands = [
         "*/1 * * * * curl -s https://$domainhosts/cron/cron.php > /dev/null 2>&1",
     ];
@@ -925,7 +901,6 @@ function publickey()
 function languagechange($path_dir)
 {
 
-
     $rx_candidates = [];
     if (is_string($path_dir) && $path_dir !== '') {
         $rx_candidates[] = $path_dir;
@@ -955,7 +930,6 @@ function languagechange($path_dir)
         return [];
     }
 
-
     $rx_setting = null;
     if (function_exists('select')) {
         try {
@@ -972,7 +946,6 @@ function languagechange($path_dir)
             $rx_lang_key = 'ru';
         }
     }
-
 
     if (isset($rx_decoded[$rx_lang_key]) && is_array($rx_decoded[$rx_lang_key])) {
         return $rx_decoded[$rx_lang_key];
@@ -1037,6 +1010,12 @@ function check_active_btn($keyboard, $text_var)
         }
     }
     return $status;
+}
+
+function rx_usertest_panel_active()
+{
+    $count = select("marzban_panel", "*", "TestAccount", "ONTestAccount", "count");
+    return is_numeric($count) && (int)$count > 0;
 }
 function CreatePaymentNv($invoice_id, $amount)
 {

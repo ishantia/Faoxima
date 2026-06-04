@@ -10,11 +10,11 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         sendmessage($from_id, $textbotlang['users']['usertest']['limitwarning'], $keyboard_buy, 'html');
         return;
     }
-    if ($setting['get_number'] == "onAuthenticationphone" && $user['step'] != "get_number" && $user['number'] == "none") {
+    if ((($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && $user['step'] != "get_number" && $user['number'] == "none" && !rx_auth_skip_user($user)) {
         sendmessage($from_id, $textbotlang['users']['number']['Confirming'], $request_contact, 'HTML');
         step('get_number', $from_id);
     }
-    if ($user['number'] == "none" && $setting['get_number'] == "onAuthenticationphone")
+    if ($user['number'] == "none" && (($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && !rx_auth_skip_user($user))
         return;
     $locationproduct = select("marzban_panel", "*", "TestAccount", "ONTestAccount", "count");
     if ($locationproduct == 1) {
@@ -389,7 +389,6 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         return;
     }
 
-
     if ((string) ($trakingdetail['idsupport'] ?? '') !== (string) $from_id) {
         if (function_exists('rx_log_event')) {
             rx_log_event('SUPPORT_REPLY_FORBIDDEN', 'Non-support user attempted to reply to ticket', [
@@ -415,7 +414,6 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         step("home", $from_id);
         return;
     }
-
 
     if ((string) ($trakingdetail['idsupport'] ?? '') !== (string) $from_id) {
         sendmessage($from_id, "❌ شما به این تیکت دسترسی ندارید.", null, 'HTML');
@@ -539,7 +537,6 @@ https://t.me/$usernamebot?start={$user['codeInvitation']}";
     $text_account = "
 🗂 اطلاعات حساب کاربری شما :
 
-
 🪪 شناسه کاربری: <code>$from_id</code>
 👤 نام: <code>$first_name</code>
 👨‍👩‍👦 کد معرف شما : <code>{$user['codeInvitation']}</code>
@@ -563,11 +560,11 @@ $textinvite
     step('home', $from_id);
     return;
 } elseif (($text == $datatextbot['text_sell'] || $datain == "buy" || $datain == "buyback" || $text == "/buy" || $text == "buy") && $statusnote) {
-    if ($setting['get_number'] == "onAuthenticationphone" && $user['step'] != "get_number" && $user['number'] == "none") {
+    if ((($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && $user['step'] != "get_number" && $user['number'] == "none" && !rx_auth_skip_user($user)) {
         sendmessage($from_id, $textbotlang['users']['number']['Confirming'], $request_contact, 'HTML');
         step('get_number', $from_id);
     }
-    if ($user['number'] == "none" && $setting['get_number'] == "onAuthenticationphone")
+    if ($user['number'] == "none" && (($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && !rx_auth_skip_user($user))
         return;
     if (!check_active_btn($setting['keyboardmain'], "text_sell")) {
         sendmessage($from_id, "❌ این دکمه غیرفعال می باشد", null, 'HTML');
@@ -593,11 +590,11 @@ $textinvite
         sendmessage($from_id, $textbotlang['Admin']['managepanel']['nullpanel'], null, 'HTML');
         return;
     }
-    if ($setting['get_number'] == "onAuthenticationphone" && $user['step'] != "get_number" && $user['number'] == "none") {
+    if ((($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && $user['step'] != "get_number" && $user['number'] == "none" && !rx_auth_skip_user($user)) {
         sendmessage($from_id, $textbotlang['users']['number']['Confirming'], $request_contact, 'HTML');
         step('get_number', $from_id);
     }
-    if ($user['number'] == "none" && $setting['get_number'] == "onAuthenticationphone")
+    if ($user['number'] == "none" && (($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && !rx_auth_skip_user($user))
         return;
 
     if (mysqli_num_rows($locationproduct) == 1) {
@@ -755,10 +752,9 @@ $textinvite
     $countinovoice = $stmt->rowCount();
     if ($marzban_list_get['limit_panel'] != "unlimited") {
         if ($countinovoice >= $marzban_list_get['limit_panel']) {
-            // If this panel has an emergency fallback configured (and enabled),
-            // skip the hard cap here — the create-user step (≈line 1330) will
-            // automatically route the order to the emergency panel when the
-            // main one rejects it. Same for national-net inventory mode.
+
+
+
             $hasEmergencyFallback =
                 (function_exists('nmPanelEmergencyEnabled') && nmPanelEmergencyEnabled($marzban_list_get)
                     && trim((string)($marzban_list_get['emergency_source_panel'] ?? '')) !== '')
@@ -801,10 +797,9 @@ $textinvite
         return;
     }
     if (function_exists('nmPanelNationalEnabled') && (nmPanelNationalEnabled($marzban_list_get) || nmPanelEmergencyEnabled($marzban_list_get))) {
-        // Only force the category picker when the shop actually sells via
-        // categories AND there is at least one matching category; otherwise the
-        // list would be empty. Fall through to the normal product-listing logic
-        // below so national-net mode behaves like the regular (working) flow.
+
+
+
         if (!function_exists('nmHasSellableCategories') || nmHasSellableCategories($location, $user['agent'])) {
             $back = isset($userdate['nameconfig']) ? "buybacktow" : "buyback";
             Editmessagetext($from_id, $message_id, "📌 دسته بندی خود را انتخاب نمایید!", KeyboardCategory($location, $user['agent'], $back));
@@ -861,9 +856,8 @@ $textinvite
     $categorynames = is_array($categoryRow) && isset($categoryRow['remark']) ? $categoryRow['remark'] : $categoryId;
     $userdate = json_decode($user['Processing_value'], true);
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $userdate['name_panel'], "select");
-    // Match products that reference this category by remark OR id OR name/title
-    // (mirrors KeyboardCategory/nmSellableCategoryRows) so a category that was
-    // shown in the list always yields its products.
+
+
     $catValues = function_exists('nmCategoryLookupValues') ? nmCategoryLookupValues($categorynames) : [];
     foreach ([$categorynames, $categoryId] as $extra) { if (trim((string)$extra) !== '') $catValues[] = (string)$extra; }
     $catValues = array_values(array_unique(array_filter(array_map('strval', $catValues), static function ($v) { return trim($v) !== ''; })));
@@ -903,9 +897,8 @@ $textinvite
     $userdate = json_decode($user['Processing_value'], true);
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $userdate['name_panel'], "select");
     if (function_exists('nmPanelNationalEnabled') && (nmPanelNationalEnabled($marzban_list_get) || nmPanelEmergencyEnabled($marzban_list_get))) {
-        // Show the category picker only when the shop sells via categories and
-        // at least one matching category exists; otherwise fall through to the
-        // normal time-based product listing so the list isn't empty.
+
+
         if (!function_exists('nmHasSellableCategories') || nmHasSellableCategories($marzban_list_get['name_panel'], $user['agent'])) {
             Editmessagetext($from_id, $message_id, "📌 دسته بندی خود را انتخاب نمایید!", KeyboardCategory($marzban_list_get['name_panel'], $user['agent'], "location_{$marzban_list_get['code_panel']}"));
             return;
@@ -1126,7 +1119,6 @@ $textinvite
         '{name_product}' => $info_product['name_product'],
         '{Service_time}' => $info_product['Service_time'],
 
-
         '{note}' => $info_product['note'] ?? '',
         '{price}' => $info_product_price_product,
         '{Volume}' => $info_product['Volume_constraint'],
@@ -1197,7 +1189,6 @@ $textinvite
         step('home', $from_id);
         return;
     }
-
 
     if (!array_key_exists('category', $info_product)) {
         $info_product['category'] = '';
@@ -1418,7 +1409,6 @@ $textinvite
     sendmessage($from_id, $textbotlang['users']['selectoption'], $keyboard, 'HTML');
     if (intval($priceproduct) != 0) {
 
-
         if (($user['agent'] ?? '') === 'n2') {
             $stmtBuyDeduct = $pdo->prepare("UPDATE user SET Balance = Balance - :delta WHERE id = :uid");
         } else {
@@ -1461,7 +1451,6 @@ $textinvite
                     $scorenew = $user_Balance['score'] + 2;
                     update("user", "score", $scorenew, "id", $user['affiliates']);
                 }
-
 
                 $stmtAffComm1 = $pdo->prepare("UPDATE user SET Balance = Balance + :delta WHERE id = :uid");
                 $stmtAffComm1->bindValue(':delta', (int) round($result), PDO::PARAM_INT);
@@ -1737,11 +1726,11 @@ $textonebuy
         sendmessage($from_id, $textbotlang['Admin']['managepanel']['nullpanel'], null, 'HTML');
         return;
     }
-    if ($setting['get_number'] == "onAuthenticationphone" && $user['step'] != "get_number" && $user['number'] == "none") {
+    if ((($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && $user['step'] != "get_number" && $user['number'] == "none" && !rx_auth_skip_user($user)) {
         sendmessage($from_id, $textbotlang['users']['number']['Confirming'], $request_contact, 'HTML');
         step('get_number', $from_id);
     }
-    if ($user['number'] == "none" && $setting['get_number'] == "onAuthenticationphone")
+    if ($user['number'] == "none" && (($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && !rx_auth_skip_user($user))
         return;
 
     if ($datain == "kharidanbuh") {
@@ -2220,11 +2209,11 @@ $textonebuy
     update("user", "Processing_value_tow", "0", "id", $from_id);
     update("user", "Processing_value_four", "0", "id", $from_id);
     step('home', $from_id);
-    if ($setting['get_number'] == "onAuthenticationphone" && $user['step'] != "get_number" && $user['number'] == "none") {
+    if ((($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && $user['step'] != "get_number" && $user['number'] == "none" && !rx_auth_skip_user($user)) {
         sendmessage($from_id, $textbotlang['users']['number']['Confirming'], $request_contact, 'HTML');
         step('get_number', $from_id);
     }
-    if ($user['number'] == "none" && $setting['get_number'] == "onAuthenticationphone")
+    if ($user['number'] == "none" && (($setting['get_number'] == "onAuthenticationphone") || ($setting['iran_number'] == "onAuthenticationiran")) && !rx_auth_skip_user($user))
         return;
     $minbalance = number_format(json_decode(select("PaySetting", "*", "NamePay", "minbalance", "select")['ValuePay'], true)[$user['agent']]);
     $maxbalance = number_format(json_decode(select("PaySetting", "*", "NamePay", "maxbalance", "select")['ValuePay'], true)[$user['agent']]);
@@ -3275,9 +3264,7 @@ $textonebuy
 💰 مبلغ فاکتور : $price_format تومان
 📊 قیمت دلار: $USD تومان تا این لحظه
 
-
 <blockquote>⚠️ پس از پرداخت، در صورتی که مبلغ تراکنش به‌درستی واریز شده باشد، موجودی شما حداکثر تا ۱۵ دقیقه آینده به‌صورت خودکار شارژ خواهد شد.</blockquote>
-
 
 جهت پرداخت از دکمه زیر استفاده👇🏻";
         $gethelp = select("PaySetting", "ValuePay", "NamePay", "helpnowpayment", "select")['ValuePay'];
@@ -3363,11 +3350,9 @@ $textonebuy
 🛒 کد پیگیری:  <code>$randomString</code>
 💲 مبلغ تراکنش به تومان  : <code>$pricetoman</code>
 
-
 💢 لطفا به این نکات قبل از پرداخت توجه کنید 👇
 
 ❌ این تراکنش به مدت ۲۴ ساعت اعتبار دارد پس از آن امکان پرداخت این تراکنش امکان ندارد.
-
 
 ✅ در صورت مشکل میتوانید با پشتیبانی در ارتباط باشید";
         $gethelp = select("PaySetting", "ValuePay", "NamePay", "helpiranpay1", "select")['ValuePay'];
@@ -3609,7 +3594,6 @@ $textonebuy
 🛒 کد پیگیری:  <code>$randomString</code>
 💲 مبلغ تراکنش به تومان  : <code>$pricetoman</code> تومان
 
-
 💢 لطفا به این نکات قبل از پرداخت توجه کنید 👇
 
 ❌ این تراکنش به مدت یک روز اعتبار دارد پس از آن امکان پرداخت این تراکنش امکان ندارد.
@@ -3630,7 +3614,6 @@ $textonebuy
         step("getvoocherx", $from_id);
         savedata("clear", "id_payment", $randomString);
     } elseif ($datain == "digitaltron") {
-
 
         $mainbalancedigitaltron = select("PaySetting", "ValuePay", "NamePay", "minbalancedigitaltron", "select")['ValuePay'];
         $maxbalancedigitaltron = select("PaySetting", "ValuePay", "NamePay", "maxbalancedigitaltron", "select")['ValuePay'];
@@ -3761,7 +3744,6 @@ $textonebuy
         if ($styleBack) $btnInvoiceBack['style'] = $styleBack;
         $invoiceKbRows[] = [$btnInvoiceBack];
         $invoiceKb = json_encode(['inline_keyboard' => $invoiceKbRows], JSON_UNESCAPED_UNICODE);
-
 
         $resp = null;
         $fancyQrPath = null;

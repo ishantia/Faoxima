@@ -1667,6 +1667,21 @@ function phoneRows(string $mKey, array $btns): array {
             .sw { width:38px; height:38px; }
             .swatches { gap:9px; }
         }
+            .s-tabs-outer,
+        .g-tabs,
+        .m-desc,
+        .btn-card {
+            backdrop-filter:blur(16px) saturate(200%) brightness(1.14);
+            -webkit-backdrop-filter:blur(16px) saturate(200%) brightness(1.14);
+        }
+        .m-desc,
+        .btn-card {
+            background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.04) 45%,rgba(255,255,255,.02) 100%),var(--surface-2);
+            border:1px solid rgba(255,255,255,.42);
+            box-shadow:0 14px 34px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.6),inset 0 -1px 0 rgba(255,255,255,.16);
+        }
+        .s-tabs-outer,
+        .g-tabs { border-color:rgba(255,255,255,.34); }
     </style>
 </head>
 <body>
@@ -1852,6 +1867,10 @@ echo json_encode([
                 var fv = f[key];
                 if (typeof fv === 'string' && fv !== '') return fv;
             }
+            var c = document.getElementById('card-' + menu + '-' + key);
+            if (c && c.dataset && typeof c.dataset.autoStyle === 'string' && c.dataset.autoStyle !== '') {
+                return c.dataset.autoStyle;
+            }
         }
         return 'default';
     }
@@ -1864,6 +1883,8 @@ echo json_encode([
             var menu = id.substring(0, sepIdx);
             var key  = id.substring(sepIdx + 1);
             var effective = effectiveStyleFor(menu, key);
+            var up = (styles[menu] && !Array.isArray(styles[menu]) && typeof styles[menu][key] === 'string' && styles[menu][key] !== '') ? styles[menu][key] : '';
+            card.classList.toggle('is-auto', (up === '' && effective !== 'default'));
             var prev = card.querySelector('.btn-prev');
             if (prev) prev.dataset.style = effective;
             var ph = document.getElementById('phb-' + menu + '-' + key);

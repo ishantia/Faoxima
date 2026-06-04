@@ -2,7 +2,6 @@
 
 require_once 'config.php';
 
-
 if (!isset($from_id))           { $from_id = 0; }
 if (!isset($datain))            { $datain = ''; }
 if (!isset($text))              { $text = ''; }
@@ -11,8 +10,6 @@ if (!isset($callback_query_id)) { $callback_query_id = ''; }
 if (!isset($username))          { $username = ''; }
 if (!isset($first_name))        { $first_name = ''; }
 
-// Bail early if DB is not configured — prevents a cascade of null->prepare() fatals
-// and lets the bot return cleanly instead of 500ing.
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     if (function_exists('rx_log_event')) {
         rx_log_event('DB_UNAVAILABLE', 'Keyboard layouts loaded with no PDO; skipping DB-dependent setup.', [
@@ -106,7 +103,6 @@ if (!function_exists('rx_keyboardToInline')) {
     }
 }
 
-
 $stmt = $pdo->prepare("SHOW TABLES LIKE 'textbot'");
 $stmt->execute();
 $result = $stmt->fetchAll();
@@ -197,6 +193,26 @@ $keyboardLayout = json_decode($setting['keyboardmain'], true);
 $keyboardRows = [];
 if (is_array($keyboardLayout) && isset($keyboardLayout['keyboard']) && is_array($keyboardLayout['keyboard'])) {
     $keyboardRows = $keyboardLayout['keyboard'];
+}
+
+if (!empty($keyboardRows) && function_exists('rx_usertest_panel_active') && !rx_usertest_panel_active()) {
+    $rxFilteredRows = [];
+    foreach ($keyboardRows as $rxRow) {
+        if (!is_array($rxRow)) {
+            continue;
+        }
+        $rxNewRow = [];
+        foreach ($rxRow as $rxBtn) {
+            if (is_array($rxBtn) && isset($rxBtn['text']) && $rxBtn['text'] === 'text_usertest') {
+                continue;
+            }
+            $rxNewRow[] = $rxBtn;
+        }
+        if (!empty($rxNewRow)) {
+            $rxFilteredRows[] = $rxNewRow;
+        }
+    }
+    $keyboardRows = $rxFilteredRows;
 }
 
 if ($setting['inlinebtnmain'] == "oninline" && !empty($keyboardRows)) {
@@ -294,20 +310,20 @@ if ($setting['inlinebtnmain'] == "oninline" && !empty($keyboardRows)) {
 
 $_rx_acc_styles  = [];
 $_rx_pay_styles  = [];
-$_rx_payrcpt_styles = []; // pay_receipt: receipt/wallet/card copy inline buttons
+$_rx_payrcpt_styles = [];
 $_rx_adm_styles  = [];
 $_rx_set_styles  = [];
 $_rx_shp_styles  = [];
 $_rx_nav_styles  = [];
 $_rx_rol_styles  = [];
 $_rx_gw_styles   = [];
-$_rx_svc_styles  = []; // service management inline buttons
-$_rx_feat_styles  = []; // admin features submenu
-$_rx_chan_styles  = []; // admin channel submenu
-$_rx_helpa_styles = []; // admin help submenu
-$_rx_cat_styles   = []; // admin category submenu
-$_rx_prod_styles  = []; // admin products submenu
-$_rx_pedit_styles = []; // admin product edit reply keyboard (change_product)
+$_rx_svc_styles  = [];
+$_rx_feat_styles  = [];
+$_rx_chan_styles  = [];
+$_rx_helpa_styles = [];
+$_rx_cat_styles   = [];
+$_rx_prod_styles  = [];
+$_rx_pedit_styles = [];
 if (!empty($setting['keyboard_styles_all'])) {
     $_rx_all_kbs = json_decode($setting['keyboard_styles_all'], true);
     if (is_array($_rx_all_kbs)) {
@@ -330,12 +346,6 @@ if (!empty($setting['keyboard_styles_all'])) {
     }
 }
 
-
-
-
-
-
-
 if (function_exists('rx_getKeyboardDefaultStyles') && (!function_exists('rx_kb_use_defaults') || rx_kb_use_defaults())) {
     $_rx_adm_styles   = $_rx_adm_styles   + rx_getKeyboardDefaultStyles('admin_main');
     $_rx_set_styles   = $_rx_set_styles   + rx_getKeyboardDefaultStyles('admin_settings');
@@ -347,6 +357,9 @@ if (function_exists('rx_getKeyboardDefaultStyles') && (!function_exists('rx_kb_u
     $_rx_helpa_styles = $_rx_helpa_styles + rx_getKeyboardDefaultStyles('admin_help');
     $_rx_cat_styles   = $_rx_cat_styles   + rx_getKeyboardDefaultStyles('admin_category');
     $_rx_prod_styles  = $_rx_prod_styles  + rx_getKeyboardDefaultStyles('admin_products');
+    $_rx_acc_styles   = $_rx_acc_styles   + rx_getKeyboardDefaultStyles('account');
+    $_rx_pay_styles   = $_rx_pay_styles   + rx_getKeyboardDefaultStyles('payment');
+    $_rx_nav_styles   = $_rx_nav_styles   + rx_getKeyboardDefaultStyles('user_nav');
 }
 if (!function_exists('rx_kb_style')) {
     function rx_kb_style(array $btn, string $key, array $styles): array {
@@ -354,7 +367,6 @@ if (!function_exists('rx_kb_style')) {
             $btn['style'] = $styles[$key];
             return $btn;
         }
-
 
         if (!isset($btn['style']) && function_exists('rx_kb_guess_style_from_text') && isset($btn['text'])
             && (!function_exists('rx_kb_use_defaults') || rx_kb_use_defaults())) {
@@ -370,20 +382,7 @@ if (!function_exists('rx_kb_style')) {
     }
 }
 if (!function_exists('rx_kb_encode')) {
-    /**
-     * Encode an admin/sub-menu keyboard following the user's `inlinebtnmain` setting:
-     *
-     *   inlinebtnmain == 'oninline'  → INLINE keyboard (glass buttons, colours + premium emoji icons)
-     *   inlinebtnmain != 'oninline'  → REPLY keyboard (`processKeyboardStyles` strips inline-only
-     *                                  fields; `applyPremiumEmojiToKeyboard` skips reply so the
-     *                                  text emoji stays visible and `style` passes through.)
-     *
-     * Hardcoded `json_encode(['inline_keyboard' => ...])` keyboards in other files
-     * (e.g. mini-app instruction, confirmation dialogs) are NOT affected — they
-     * always stay inline regardless of this setting.
-     *
-     * Pass `$forceInline=true` to force inline even when glass mode is off.
-     */
+
     function rx_kb_encode(array $rows, $forceInline = null): string {
         global $setting;
         $useInline = ($forceInline !== null)
@@ -392,7 +391,6 @@ if (!function_exists('rx_kb_encode')) {
         if ($useInline) {
             return json_encode(['inline_keyboard' => $rows], JSON_UNESCAPED_UNICODE);
         }
-
 
         return json_encode(['keyboard' => $rows, 'resize_keyboard' => true], JSON_UNESCAPED_UNICODE);
     }

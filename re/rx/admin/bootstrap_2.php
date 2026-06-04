@@ -1,6 +1,130 @@
 <?php
 
-// ─────────────────────────────────────────────────────────────────────────────
+if (!function_exists('rx_featCategoryRows')) {
+    function rx_featCategoryRows($cat)
+    {
+        global $textbotlang, $setting, $status_cron,
+            $name_status, $name_status_role, $Authenticationphone, $Authenticationiran,
+            $statusverify, $statusverifybyuser, $authScopeBtn, $authScopeVal, $statusinline,
+            $name_status_username, $name_status_notifnewuser, $name_status_showagent,
+            $statuspvsupport, $statusnameconfig, $statusnotef,
+            $statusnamebulk, $btnstatuscategory, $keyboard_config_text, $status_copy_cart,
+            $statusDebtsettlement, $statuslimitchangeloc, $infocardColorEmoji, $infocardStatusText,
+            $infocardStatusValue, $btnstatuslinkapp,
+            $wheel_luck, $statusfirstwheel, $wheelagent, $score, $Lotteryagent, $refralstatus, $statusDice,
+            $cronteststatustext, $cronuptime_nodestatustext, $cronuptime_panelstatustext,
+            $crondaystatustext, $cronon_holdtext, $cronvolumestatustext,
+            $cronremovestatustext, $cronremovevolumestatustext;
+
+        if ($cat === 'bot') {
+            return [
+                [['text' => $textbotlang['Admin']['Status']['subject'], 'callback_data' => "subject"],
+                 ['text' => $textbotlang['Admin']['Status']['statussubject'], 'callback_data' => "subjectde"]],
+                [['text' => $name_status, 'callback_data' => "editstsuts-statusbot-{$setting['Bot_Status']}"],
+                 ['text' => $textbotlang['Admin']['Status']['stautsbot'], 'callback_data' => "statusbot"]],
+                [['text' => $name_status_role, 'callback_data' => "editstsuts-role-{$setting['roll_Status']}"],
+                 ['text' => $textbotlang['Admin']['Status']['stautsrolee'], 'callback_data' => "stautsrolee"]],
+                [['text' => $Authenticationphone, 'callback_data' => "editstsuts-get_number-{$setting['get_number']}"],
+                 ['text' => $textbotlang['Admin']['Status']['Authenticationphone'], 'callback_data' => "Authenticationphone"]],
+                [['text' => $Authenticationiran, 'callback_data' => "editstsuts-Authenticationiran-{$setting['iran_number']}"],
+                 ['text' => $textbotlang['Admin']['Status']['Authenticationiran'], 'callback_data' => "Authenticationiran"]],
+                [['text' => $statusverify, 'callback_data' => "editstsuts-verifystart-{$setting['verifystart']}"],
+                 ['text' => "🔒 احراز هویت", 'callback_data' => "verify"]],
+                [['text' => $statusverifybyuser, 'callback_data' => "editstsuts-verifybyuser-{$setting['verifybucodeuser']}"],
+                 ['text' => "🔑 احراز هویت با لینک", 'callback_data' => "verifybyuser"]],
+                [['text' => $authScopeBtn, 'callback_data' => "editstsuts-authscope-{$authScopeVal}"]],
+                [['text' => $statusinline, 'callback_data' => "editstsuts-inlinebtnmain-{$setting['inlinebtnmain']}"],
+                 ['text' => $textbotlang['Admin']['Status']['inlinebtns'], 'callback_data' => "inlinebtnmain"]],
+            ];
+        } elseif ($cat === 'users') {
+            return [
+                [['text' => $name_status_username, 'callback_data' => "editstsuts-usernamebtn-{$setting['NotUser']}"],
+                 ['text' => $textbotlang['Admin']['Status']['statususernamebtn'], 'callback_data' => "usernamebtn"]],
+                [['text' => $name_status_notifnewuser, 'callback_data' => "editstsuts-notifnew-{$setting['statusnewuser']}"],
+                 ['text' => $textbotlang['Admin']['Status']['statusnotifnewuser'], 'callback_data' => "statusnewuser"]],
+                [['text' => $name_status_showagent, 'callback_data' => "editstsuts-showagent-{$setting['statusagentrequest']}"],
+                 ['text' => $textbotlang['Admin']['Status']['statusshowagent'], 'callback_data' => "statusnewuser"]],
+                [['text' => $statuspvsupport, 'callback_data' => "editstsuts-statussupportpv-{$setting['statussupportpv']}"],
+                 ['text' => "👤 پشتیبانی در پیوی", 'callback_data' => "statussupportpv"]],
+                [['text' => $statusnameconfig, 'callback_data' => "editstsuts-statusnamecustom-{$setting['statusnamecustom']}"],
+                 ['text' => "📨 یادداشت کانفیگ", 'callback_data' => "statusnamecustom"]],
+                [['text' => $statusnotef, 'callback_data' => "editstsuts-statusnamecustomf-{$setting['statusnoteforf']}"],
+                 ['text' => "📨 یادداشت کاربر عادی", 'callback_data' => "statusnamecustomf"]],
+            ];
+        } elseif ($cat === 'shop') {
+            return [
+                [['text' => $statusnamebulk, 'callback_data' => "editstsuts-bulkbuy-{$setting['bulkbuy']}"],
+                 ['text' => "🛍 وضعیت خرید عمده", 'callback_data' => "bulkbuy"]],
+                [['text' => $btnstatuscategory, 'callback_data' => "editstsuts-btn_status_category-{$setting['categoryhelp']}"],
+                 ['text' => "📗 دسته بندی آموزش", 'callback_data' => "btn_status_category"]],
+                [['text' => $keyboard_config_text, 'callback_data' => "editstsuts-keyconfig-{$setting['status_keyboard_config']}"],
+                 ['text' => "🔗 کیبورد کانفیگی", 'callback_data' => "keyconfig"]],
+                [['text' => $status_copy_cart, 'callback_data' => "editstsuts-compycart-{$setting['statuscopycart']}"],
+                 ['text' => "💳 کپی شماره کارت", 'callback_data' => "copycart"]],
+                [['text' => $statusDebtsettlement, 'callback_data' => "editstsuts-Debtsettlement-{$setting['Debtsettlement']}"],
+                 ['text' => "💎 تسویه بدهی", 'callback_data' => "Debtsettlement"]],
+                [['text' => "⚙️ تنظیمات", 'callback_data' => "changeloclimit"],
+                 ['text' => $statuslimitchangeloc, 'callback_data' => "editstsuts-changeloc-{$setting['statuslimitchangeloc']}"],
+                 ['text' => "🌍 محدودیت تغییر لوکیشن", 'callback_data' => "changeloc"]],
+                [['text' => "{$infocardColorEmoji} انتخاب رنگ", 'callback_data' => "infocard_color_menu"],
+                 ['text' => $infocardStatusText, 'callback_data' => "editstsuts-infocard-{$infocardStatusValue}"],
+                 ['text' => "📊 کارت مشخصات سرویس", 'callback_data' => "infocard_status"]],
+                [['text' => "⚙️ تنظیمات", 'callback_data' => "linkappsetting"],
+                 ['text' => $btnstatuslinkapp, 'callback_data' => "editstsuts-linkappstatus-{$setting['linkappstatus']}"],
+                 ['text' => "🔗 لینک دانلود برنامه", 'callback_data' => "linkappstatus"]],
+            ];
+        } elseif ($cat === 'lottery') {
+            return [
+                [['text' => "⚙️ تنظیمات", 'callback_data' => "gradonhshans"],
+                 ['text' => $wheel_luck, 'callback_data' => "editstsuts-wheel_luck-{$setting['wheelـluck']}"],
+                 ['text' => "🎲 گردونه شانس", 'callback_data' => "wheel_luck"]],
+                [['text' => $statusfirstwheel, 'callback_data' => "editstsuts-wheelagentfirst-{$setting['statusfirstwheel']}"],
+                 ['text' => "🎲 گردونه شانس خرید اول", 'callback_data' => "wheelagentfirst"]],
+                [['text' => $wheelagent, 'callback_data' => "editstsuts-wheelagent-{$setting['wheelagent']}"],
+                 ['text' => "🎲 گردونه شانس نمایندگان", 'callback_data' => "wheelagent"]],
+                [['text' => "⚙️ تنظیمات", 'callback_data' => "scoresetting"],
+                 ['text' => $score, 'callback_data' => "editstsuts-score-{$setting['scorestatus']}"],
+                 ['text' => "🎁 قرعه کشی شبانه", 'callback_data' => "score"]],
+                [['text' => $Lotteryagent, 'callback_data' => "editstsuts-Lotteryagent-{$setting['Lotteryagent']}"],
+                 ['text' => "🎁 قرعه کشی نمایندگان", 'callback_data' => "Lotteryagent"]],
+                [['text' => "⚙️ تنظیمات", 'callback_data' => "settingaffiliatesf"],
+                 ['text' => $refralstatus, 'callback_data' => "editstsuts-affiliatesstatus-{$setting['affiliatesstatus']}"],
+                 ['text' => "🎁 زیرمجموعه", 'callback_data' => "affiliatesstatus"]],
+                [['text' => $statusDice, 'callback_data' => "editstsuts-Dice-{$setting['Dice']}"],
+                 ['text' => "🎰 نمایش تاس", 'callback_data' => "Dice"]],
+            ];
+        } elseif ($cat === 'crons') {
+            return [
+                [['text' => $cronteststatustext, 'callback_data' => "editstsuts-crontest-{$status_cron['test']}"],
+                 ['text' => "🔓 کرون تست", 'callback_data' => "none"]],
+                [['text' => $cronuptime_nodestatustext, 'callback_data' => "editstsuts-uptime_node-{$status_cron['uptime_node']}"],
+                 ['text' => "🎛 آپتایم نود", 'callback_data' => "none"]],
+                [['text' => $cronuptime_panelstatustext, 'callback_data' => "editstsuts-uptime_panel-{$status_cron['uptime_panel']}"],
+                 ['text' => "🎛 آپتایم پنل", 'callback_data' => "none"]],
+                [['text' => "⚙️ زمان هشدار", 'callback_data' => "settimecornday"],
+                 ['text' => $crondaystatustext, 'callback_data' => "editstsuts-cronday-{$status_cron['day']}"],
+                 ['text' => "🕚 کرون زمان", 'callback_data' => "none"]],
+                [['text' => "⚙️ زمان اولین اتصال", 'callback_data' => "setting_on_holdcron"],
+                 ['text' => $cronon_holdtext, 'callback_data' => "editstsuts-on_hold-{$status_cron['on_hold']}"],
+                 ['text' => "🕚 کرون اولین اتصال", 'callback_data' => "none"]],
+                [['text' => "⚙️ حجم هشدار", 'callback_data' => "settimecornvolume"],
+                 ['text' => $cronvolumestatustext, 'callback_data' => "editstsuts-cronvolume-{$status_cron['volume']}"],
+                 ['text' => "🔋 کرون حجم", 'callback_data' => "none"]],
+                [['text' => "⚙️ زمان حذف", 'callback_data' => "settimecornremove"],
+                 ['text' => $cronremovestatustext, 'callback_data' => "editstsuts-notifremove-{$status_cron['remove']}"],
+                 ['text' => "❌ کرون حذف", 'callback_data' => "none"]],
+                [['text' => "⚙️ زمان حذف", 'callback_data' => "settimecornremovevolume"],
+                 ['text' => $cronremovevolumestatustext, 'callback_data' => "editstsuts-notifremove_volume-{$status_cron['remove_volume']}"],
+                 ['text' => "❌ کرون حذف حجم", 'callback_data' => "none"]],
+                [['text' => "⚙️ مدیریت", 'callback_data' => "cronjobs_settings"],
+                 ['text' => "⏱ نمایش لیست", 'callback_data' => "cronjobs_settings"],
+                 ['text' => "زمان‌بندی کرون‌ها", 'callback_data' => "none"]],
+            ];
+        }
+        return [];
+    }
+}
+
 if (in_array($text, $textadmin) || $datain == "admin") {
     if ($datain == "admin")
         deletemessage($from_id, $message_id);
@@ -66,7 +190,6 @@ if (in_array($text, $textadmin) || $datain == "admin") {
     }
     $currentStep = isset($user['step']) ? (string) $user['step'] : '';
     step('home', $from_id);
-
 
     if (in_array($currentStep, ['premium_emoji_get_char', 'premium_emoji_get_id', 'premium_emoji_edit_id'], true)) {
         if (function_exists('rxRenderPremiumEmojiPanel')) {
@@ -209,12 +332,6 @@ if (in_array($text, $textadmin) || $datain == "admin") {
             return;
         }
 
-        // ── Finance steps ──────────────────────────────────────────────────────
-        // NOTE: `getpricecashback` was here but it belongs to the SHOP menu
-        // ("🎁 کش بک تمدید" lives under $shopkeyboard, not the finance menu).
-        // Routing it to the finance menu via sendAdminFinanceMenu made the
-        // back-to-previous-menu button jump the user to the wrong parent.
-        // It's been moved to $discountSteps below, which returns $shopkeyboard.
         $financeSteps = [
             'marchent_tronseller', 'marchent_floypay', 'urlpaymenttron', 'cryptowallet_set',
             'admin_nav_finance', 'maxbalance', 'minbalance', 'CartDirect', 'showcardallusers',
@@ -230,7 +347,6 @@ if (in_array($text, $textadmin) || $datain == "admin") {
             return;
         }
 
-        // ── Finance steps mapped to specific payment keyboard ─────────────────
         $financeSpecificMap = [
             'getmainiranpay3' => $trnado,    'getmaaxiranpay3' => $trnado,
             'gethelpiranpay3' => $trnado,    'getcashiranpay3' => $trnado,
@@ -249,9 +365,6 @@ if (in_array($text, $textadmin) || $datain == "admin") {
             return;
         }
 
-        // ── Discount steps → shop menu ─────────────────────────────────────────
-        // (Also covers cashback-extension steps: `getpricecashback` step-1
-        // and `getagent` step-2 both live under shop menu → "کش بک تمدید".)
         $discountSteps = [
             'getdiscont', 'getfirstdiscount', 'getlimitcode', 'getlimitcodedis',
             'getlocdiscount', 'getproductdiscount', 'gettimediscount', 'gettypeagentoflist',
@@ -267,7 +380,6 @@ if (in_array($text, $textadmin) || $datain == "admin") {
             return;
         }
 
-        // ── Text/Help editing steps → textbot keyboard ─────────────────────────
         $textEditSteps = [
             'text_Add_Balance', 'text_Discount', 'text_Tariff_list', 'text_affiliates',
             'text_afterpaytext', 'text_afterpaytextibsng', 'text_aftertesttext',
@@ -283,7 +395,6 @@ if (in_array($text, $textadmin) || $datain == "admin") {
             return;
         }
 
-        // ── Help menu steps → keyboardhelpadmin ────────────────────────────────
         $helpSteps = [
             'changecategoryhelp', 'changedeshelp', 'changemedia', 'changenamehelp',
             'add_name_help', 'getcatgoryhelp', 'remove_help', 'getconfigtext',
@@ -294,7 +405,6 @@ if (in_array($text, $textadmin) || $datain == "admin") {
             return;
         }
 
-        // ── Settings steps → setting_panel ─────────────────────────────────────
         $settingsSteps = [
             'getnamepanelconfig', 'getusernameconfig', 'addchannelid',
             'idsupportset', 'limit_usertest_allusers', 'get_codesell',
@@ -304,7 +414,6 @@ if (in_array($text, $textadmin) || $datain == "admin") {
             return;
         }
 
-        // ── User management steps → keyboardadmin ──────────────────────────────
         $userSteps = [
             'accountwallet', 'add_dec', 'addbalancemanual', 'addbalanceuser',
             'addbalanceusercurrent', 'adddecriptionblock', 'getuserhide',
@@ -324,7 +433,6 @@ if (in_array($text, $textadmin) || $datain == "admin") {
             return;
         }
 
-        // ── Guard steps → guard settings ───────────────────────────────────────
         $guardSteps = [
             'guard_edit_api_key', 'guard_service_selection_edit', 'guard_service_selection_new',
             'guard_settings_auto_delete', 'guard_settings_auto_renew',
@@ -335,7 +443,6 @@ if (in_array($text, $textadmin) || $datain == "admin") {
             return;
         }
 
-        // ── Stock/NM steps → stock management keyboard (not shop) ──────────────
         $nmSteps = [
             'nm_delete_stock_action', 'nm_delete_stock_select_shelf', 'nm_edit_shelf_select',
             'nm_select_emergency_panel', 'nm_shelf_category', 'nm_shelf_name',
@@ -625,7 +732,6 @@ if (in_array($text, $textadmin) || $datain == "admin") {
 📅 <b>درآمد پیش‌بینی‌شده ماهانه:</b> <code>$monthe_buy</code> تومان
 📊 <b>درصد تمدید از فروش:</b> <code>$percent_of_extend</code>٪
 
-
 👨‍💼 <b>تعداد کل نمایندگان:</b> <code>$agentsum</code> نفر
 🔹 <b>نمایندگان نوع N:</b> <code>$agentsumn</code> نفر
 🔸 <b>نمایندگان نوع N2:</b> <code>$agentsumn2</code> نفر
@@ -688,7 +794,6 @@ $paycount
     $countextendday = $stmt->rowCount();
     $statisticsall = "
 🕐 <b>آمار ۱ ساعت گذشته</b>
-
 
 🛍 تعداد سفارشات : $count_order عدد
 💸 جمع مبلغ سفارشات  : $sum_order تومان
@@ -1639,7 +1744,6 @@ $paycount
     $userdata = json_decode($user['Processing_value'], true);
     $randomString = bin2hex(random_bytes(2));
 
-
     $rx_panel_version_flag = '0';
     if (isset($userdata['type']) && $userdata['type'] === 'pasargard') {
         $rx_panel_version_flag = '1';
@@ -1806,7 +1910,6 @@ $paycount
 
 elseif ($datain == "systemsms") {
 
-
     $broadcastStatus = function_exists('nm_getBroadcastStatus') ? nm_getBroadcastStatus() : null;
     if ($broadcastStatus !== null) {
         Editmessagetext(
@@ -1818,7 +1921,6 @@ elseif ($datain == "systemsms") {
         );
         return;
     }
-
 
     if (!is_file('cronbot/users.json')) {
         @file_put_contents('cronbot/users.json', json_encode([]));
@@ -1844,7 +1946,6 @@ elseif ($datain == "systemsms") {
     ]);
     Editmessagetext($from_id, $message_id, $textbotlang['users']['selectoption'], $listbtn);
 } elseif ($datain == "broadcast_status_refresh") {
-
 
     $broadcastStatus = function_exists('nm_getBroadcastStatus') ? nm_getBroadcastStatus() : null;
     if ($broadcastStatus === null) {
@@ -1889,7 +1990,6 @@ elseif ($datain == "systemsms") {
     }
     return;
 } elseif (preg_match('/^typeservice-(\w+)/', $datain, $dataget)) {
-
 
     $broadcastStatus = function_exists('nm_getBroadcastStatus') ? nm_getBroadcastStatus() : null;
     if ($broadcastStatus !== null) {
@@ -2198,10 +2298,8 @@ $textday
         ]
     ]);
 
-
     @ini_set('memory_limit', '1G');
     @set_time_limit(300);
-
 
     if (!function_exists('nm_writeBroadcastQueueFromJson')) {
         function nm_writeBroadcastQueueFromJson($jsonStr) {
@@ -2229,7 +2327,6 @@ $textday
             @unlink('cronbot/users.json');
             @unlink('cronbot/users.txt');
             @rename($tmp, 'cronbot/users.txt');
-
 
             $arr = null;
             unset($arr);
@@ -2493,7 +2590,6 @@ elseif ($text == "📝 تنظیم متن ربات" && $adminrulecheck['rule'] ==
         $rxPemRawText = is_string($text) ? trim($text) : '';
         $rxPemSticker = $update['message']['sticker'] ?? null;
 
-
         $rxPemBase = '';
         if ($rxPemRawText !== '') {
             $rxPemBase = $rxPemRawText;
@@ -2508,9 +2604,7 @@ elseif ($text == "📝 تنظیم متن ربات" && $adminrulecheck['rule'] ==
             return;
         }
 
-
         update("user", "Processing_value", $rxPemBase, "id", $from_id);
-
 
         nm_adminInstantReply($from_id, "✅ <b>ایموجی پایه ذخیره شد:</b> {$rxPemBase}\n\n📌 حالا <b>ایموجی پرمیوم متناظر</b> را ارسال کنید.\n\nربات خودکار آیدی آن را تشخیص می‌دهد و این دو را به هم متصل می‌کند ✨\n\n💡 می‌توانید ایموجی پرمیوم را به هر شکلی بفرستید: متن، استیکر، Forward یا Reply.", json_encode([
             'inline_keyboard' => [[['text' => "🔙 لغو", 'callback_data' => "premium_emoji_settings"]]]
@@ -2537,7 +2631,6 @@ elseif ($text == "📝 تنظیم متن ربات" && $adminrulecheck['rule'] ==
             return;
         }
 
-
         $rxPemTableOk = true;
         try {
             $rxPemCheck = $pdo->query("SHOW TABLES LIKE 'premium_emojis'");
@@ -2551,9 +2644,7 @@ elseif ($text == "📝 تنظیم متن ربات" && $adminrulecheck['rule'] ==
             return;
         }
 
-
         $rxPemCid = '';
-
 
         $rxPemEntities = $update['message']['entities'] ?? $update['message']['caption_entities'] ?? [];
         if (is_array($rxPemEntities)) {
@@ -2565,7 +2656,6 @@ elseif ($text == "📝 تنظیم متن ربات" && $adminrulecheck['rule'] ==
             }
         }
 
-
         if ($rxPemCid === '') {
             $rxPemSticker = $update['message']['sticker'] ?? null;
             if (is_array($rxPemSticker) && ($rxPemSticker['type'] ?? '') === 'custom_emoji'
@@ -2573,7 +2663,6 @@ elseif ($text == "📝 تنظیم متن ربات" && $adminrulecheck['rule'] ==
                 $rxPemCid = (string)$rxPemSticker['custom_emoji_id'];
             }
         }
-
 
         if ($rxPemCid === '') {
             $rxPemReply = $update['message']['reply_to_message'] ?? null;
@@ -2597,7 +2686,6 @@ elseif ($text == "📝 تنظیم متن ربات" && $adminrulecheck['rule'] ==
                 }
             }
         }
-
 
         if ($rxPemCid === '' && is_string($text)) {
             $rxPemCandidate = trim($text);
@@ -2623,7 +2711,6 @@ elseif ($text == "📝 تنظیم متن ربات" && $adminrulecheck['rule'] ==
             ]), 'HTML');
             return;
         }
-
 
         $rxPemNow = time();
         $rxPemAlreadyExists = false;
@@ -3350,6 +3437,11 @@ $caption";
         'onverify' => $textbotlang['Admin']['Status']['statuson'],
         'offverify' => $textbotlang['Admin']['Status']['statusoff']
     ][$setting['verifybucodeuser']];
+    $authScopeVal = (string)($setting['auth_scope'] ?? 'all');
+    if ($authScopeVal === '') { $authScopeVal = 'all'; }
+    $authScopeBtn = ($authScopeVal === 'newonly')
+        ? "👥 محدوده احراز هویت: فقط کاربران جدید"
+        : "👥 محدوده احراز هویت: همه کاربران";
     $score = [
         '1' => $textbotlang['Admin']['Status']['statuson'],
         '0' => $textbotlang['Admin']['Status']['statusoff']
@@ -3486,7 +3578,6 @@ $caption";
     if ($rxAsMuteSecondsVal < 1)     { $rxAsMuteSecondsVal = 1; }
     if ($rxAsMuteSecondsVal > 86400) { $rxAsMuteSecondsVal = 86400; }
 
-
     $rxFeatView = 'main';
     $rxDatainStr = (string)($datain ?? '');
     if ($rxDatainStr === 'featcat_bot')       $rxFeatView = 'bot';
@@ -3495,7 +3586,6 @@ $caption";
     elseif ($rxDatainStr === 'featcat_lottery') $rxFeatView = 'lottery';
     elseif ($rxDatainStr === 'featcat_crons') $rxFeatView = 'crons';
     elseif ($rxDatainStr === 'featcat_antispam') $rxFeatView = 'antispam';
-
 
     $rxBackRow = [['text' => "🔙 بازگشت", 'callback_data' => 'featcat_main']];
 
@@ -3513,120 +3603,26 @@ $caption";
         ];
         $rxFeatTitle = "📌 <b>وضعیت قابلیت‌ها</b>\n\nاز کدام دسته از قابلیت‌ها می‌خواهید استفاده کنید؟\n\n💡 برای تنظیمات هر بخش، روی دکمه دسته بزنید.";
     } elseif ($rxFeatView === 'bot') {
-        $rxFeatKb = [
-            [['text' => $textbotlang['Admin']['Status']['subject'], 'callback_data' => "subject"],
-             ['text' => $textbotlang['Admin']['Status']['statussubject'], 'callback_data' => "subjectde"]],
-            [['text' => $name_status, 'callback_data' => "editstsuts-statusbot-{$setting['Bot_Status']}"],
-             ['text' => $textbotlang['Admin']['Status']['stautsbot'], 'callback_data' => "statusbot"]],
-            [['text' => $name_status_role, 'callback_data' => "editstsuts-role-{$setting['roll_Status']}"],
-             ['text' => $textbotlang['Admin']['Status']['stautsrolee'], 'callback_data' => "stautsrolee"]],
-            [['text' => $Authenticationphone, 'callback_data' => "editstsuts-Authenticationphone-{$setting['get_number']}"],
-             ['text' => $textbotlang['Admin']['Status']['Authenticationphone'], 'callback_data' => "Authenticationphone"]],
-            [['text' => $Authenticationiran, 'callback_data' => "editstsuts-Authenticationiran-{$setting['iran_number']}"],
-             ['text' => $textbotlang['Admin']['Status']['Authenticationiran'], 'callback_data' => "Authenticationiran"]],
-            [['text' => $statusverify, 'callback_data' => "editstsuts-verifystart-{$setting['verifystart']}"],
-             ['text' => "🔒 احراز هویت", 'callback_data' => "verify"]],
-            [['text' => $statusverifybyuser, 'callback_data' => "editstsuts-verifybyuser-{$setting['verifybucodeuser']}"],
-             ['text' => "🔑 احراز هویت با لینک", 'callback_data' => "verifybyuser"]],
-            [['text' => $statusinline, 'callback_data' => "editstsuts-inlinebtnmain-{$setting['inlinebtnmain']}"],
-             ['text' => $textbotlang['Admin']['Status']['inlinebtns'], 'callback_data' => "inlinebtnmain"]],
-            $rxBackRow,
-        ];
+        $rxFeatKb = rx_featCategoryRows('bot');
+        $rxFeatKb[] = $rxBackRow;
         $rxFeatTitle = "🤖 <b>آپشن‌های اصلی ربات</b>\n\nقابلیت‌های اصلی ربات را در اینجا تنظیم کنید.";
     } elseif ($rxFeatView === 'users') {
-        $rxFeatKb = [
-            [['text' => $name_status_username, 'callback_data' => "editstsuts-usernamebtn-{$setting['NotUser']}"],
-             ['text' => $textbotlang['Admin']['Status']['statususernamebtn'], 'callback_data' => "usernamebtn"]],
-            [['text' => $name_status_notifnewuser, 'callback_data' => "editstsuts-notifnew-{$setting['statusnewuser']}"],
-             ['text' => $textbotlang['Admin']['Status']['statusnotifnewuser'], 'callback_data' => "statusnewuser"]],
-            [['text' => $name_status_showagent, 'callback_data' => "editstsuts-showagent-{$setting['statusagentrequest']}"],
-             ['text' => $textbotlang['Admin']['Status']['statusshowagent'], 'callback_data' => "statusnewuser"]],
-            [['text' => $statuspvsupport, 'callback_data' => "editstsuts-statussupportpv-{$setting['statussupportpv']}"],
-             ['text' => "👤 پشتیبانی در پیوی", 'callback_data' => "statussupportpv"]],
-            [['text' => $statusnameconfig, 'callback_data' => "editstsuts-statusnamecustom-{$setting['statusnamecustom']}"],
-             ['text' => "📨 یادداشت کانفیگ", 'callback_data' => "statusnamecustom"]],
-            [['text' => $statusnotef, 'callback_data' => "editstsuts-statusnamecustomf-{$setting['statusnoteforf']}"],
-             ['text' => "📨 یادداشت کاربر عادی", 'callback_data' => "statusnamecustomf"]],
-            $rxBackRow,
-        ];
+        $rxFeatKb = rx_featCategoryRows('users');
+        $rxFeatKb[] = $rxBackRow;
         $rxFeatTitle = "👥 <b>کاربران و پشتیبانی</b>\n\nقابلیت‌های مربوط به کاربران، اعلان‌ها و پشتیبانی را اینجا تنظیم کنید.";
     } elseif ($rxFeatView === 'shop') {
-        $rxFeatKb = [
-            [['text' => $statusnamebulk, 'callback_data' => "editstsuts-bulkbuy-{$setting['bulkbuy']}"],
-             ['text' => "🛍 وضعیت خرید عمده", 'callback_data' => "bulkbuy"]],
-            [['text' => $btnstatuscategory, 'callback_data' => "editstsuts-btn_status_category-{$setting['categoryhelp']}"],
-             ['text' => "📗 دسته بندی آموزش", 'callback_data' => "btn_status_category"]],
-            [['text' => $keyboard_config_text, 'callback_data' => "editstsuts-keyconfig-{$setting['status_keyboard_config']}"],
-             ['text' => "🔗 کیبورد کانفیگی", 'callback_data' => "keyconfig"]],
-            [['text' => $status_copy_cart, 'callback_data' => "editstsuts-compycart-{$setting['statuscopycart']}"],
-             ['text' => "💳 کپی شماره کارت", 'callback_data' => "copycart"]],
-            [['text' => $statusDebtsettlement, 'callback_data' => "editstsuts-Debtsettlement-{$setting['Debtsettlement']}"],
-             ['text' => "💎 تسویه بدهی", 'callback_data' => "Debtsettlement"]],
-            [['text' => "⚙️ تنظیمات", 'callback_data' => "changeloclimit"],
-             ['text' => $statuslimitchangeloc, 'callback_data' => "editstsuts-changeloc-{$setting['statuslimitchangeloc']}"],
-             ['text' => "🌍 محدودیت تغییر لوکیشن", 'callback_data' => "changeloc"]],
-            [['text' => "{$infocardColorEmoji} انتخاب رنگ", 'callback_data' => "infocard_color_menu"],
-             ['text' => $infocardStatusText, 'callback_data' => "editstsuts-infocard-{$infocardStatusValue}"],
-             ['text' => "📊 کارت مشخصات سرویس", 'callback_data' => "infocard_status"]],
-            [['text' => "⚙️ تنظیمات", 'callback_data' => "linkappsetting"],
-             ['text' => $btnstatuslinkapp, 'callback_data' => "editstsuts-linkappstatus-{$setting['linkappstatus']}"],
-             ['text' => "🔗 لینک دانلود برنامه", 'callback_data' => "linkappstatus"]],
-            $rxBackRow,
-        ];
+        $rxFeatKb = rx_featCategoryRows('shop');
+        $rxFeatKb[] = $rxBackRow;
         $rxFeatTitle = "🛍 <b>فروش و خدمات</b>\n\nقابلیت‌های فروشگاه، کانفیگ و خدمات جانبی را اینجا تنظیم کنید.";
     } elseif ($rxFeatView === 'lottery') {
-        $rxFeatKb = [
-            [['text' => "⚙️ تنظیمات", 'callback_data' => "gradonhshans"],
-             ['text' => $wheel_luck, 'callback_data' => "editstsuts-wheel_luck-{$setting['wheelـluck']}"],
-             ['text' => "🎲 گردونه شانس", 'callback_data' => "wheel_luck"]],
-            [['text' => $statusfirstwheel, 'callback_data' => "editstsuts-wheelagentfirst-{$setting['statusfirstwheel']}"],
-             ['text' => "🎲 گردونه شانس خرید اول", 'callback_data' => "wheelagentfirst"]],
-            [['text' => $wheelagent, 'callback_data' => "editstsuts-wheelagent-{$setting['wheelagent']}"],
-             ['text' => "🎲 گردونه شانس نمایندگان", 'callback_data' => "wheelagent"]],
-            [['text' => "⚙️ تنظیمات", 'callback_data' => "scoresetting"],
-             ['text' => $score, 'callback_data' => "editstsuts-score-{$setting['scorestatus']}"],
-             ['text' => "🎁 قرعه کشی شبانه", 'callback_data' => "score"]],
-            [['text' => $Lotteryagent, 'callback_data' => "editstsuts-Lotteryagent-{$setting['Lotteryagent']}"],
-             ['text' => "🎁 قرعه کشی نمایندگان", 'callback_data' => "Lotteryagent"]],
-            [['text' => "⚙️ تنظیمات", 'callback_data' => "settingaffiliatesf"],
-             ['text' => $refralstatus, 'callback_data' => "editstsuts-affiliatesstatus-{$setting['affiliatesstatus']}"],
-             ['text' => "🎁 زیرمجموعه", 'callback_data' => "affiliatesstatus"]],
-            [['text' => $statusDice, 'callback_data' => "editstsuts-Dice-{$setting['Dice']}"],
-             ['text' => "🎰 نمایش تاس", 'callback_data' => "Dice"]],
-            $rxBackRow,
-        ];
+        $rxFeatKb = rx_featCategoryRows('lottery');
+        $rxFeatKb[] = $rxBackRow;
         $rxFeatTitle = "🎁 <b>گردونه و قرعه‌کشی</b>\n\nقابلیت‌های گردونه شانس، قرعه‌کشی و زیرمجموعه را اینجا تنظیم کنید.";
     } elseif ($rxFeatView === 'crons') {
-        $rxFeatKb = [
-            [['text' => $cronteststatustext, 'callback_data' => "editstsuts-crontest-{$status_cron['test']}"],
-             ['text' => "🔓 کرون تست", 'callback_data' => "none"]],
-            [['text' => $cronuptime_nodestatustext, 'callback_data' => "editstsuts-uptime_node-{$status_cron['uptime_node']}"],
-             ['text' => "🎛 آپتایم نود", 'callback_data' => "none"]],
-            [['text' => $cronuptime_panelstatustext, 'callback_data' => "editstsuts-uptime_panel-{$status_cron['uptime_panel']}"],
-             ['text' => "🎛 آپتایم پنل", 'callback_data' => "none"]],
-            [['text' => "⚙️ زمان هشدار", 'callback_data' => "settimecornday"],
-             ['text' => $crondaystatustext, 'callback_data' => "editstsuts-cronday-{$status_cron['day']}"],
-             ['text' => "🕚 کرون زمان", 'callback_data' => "none"]],
-            [['text' => "⚙️ زمان اولین اتصال", 'callback_data' => "setting_on_holdcron"],
-             ['text' => $cronon_holdtext, 'callback_data' => "editstsuts-on_hold-{$status_cron['on_hold']}"],
-             ['text' => "🕚 کرون اولین اتصال", 'callback_data' => "none"]],
-            [['text' => "⚙️ حجم هشدار", 'callback_data' => "settimecornvolume"],
-             ['text' => $cronvolumestatustext, 'callback_data' => "editstsuts-cronvolume-{$status_cron['volume']}"],
-             ['text' => "🔋 کرون حجم", 'callback_data' => "none"]],
-            [['text' => "⚙️ زمان حذف", 'callback_data' => "settimecornremove"],
-             ['text' => $cronremovestatustext, 'callback_data' => "editstsuts-notifremove-{$status_cron['remove']}"],
-             ['text' => "❌ کرون حذف", 'callback_data' => "none"]],
-            [['text' => "⚙️ زمان حذف", 'callback_data' => "settimecornremovevolume"],
-             ['text' => $cronremovevolumestatustext, 'callback_data' => "editstsuts-notifremove_volume-{$status_cron['remove_volume']}"],
-             ['text' => "❌ کرون حذف حجم", 'callback_data' => "none"]],
-            [['text' => "⚙️ مدیریت", 'callback_data' => "cronjobs_settings"],
-             ['text' => "⏱ نمایش لیست", 'callback_data' => "cronjobs_settings"],
-             ['text' => "زمان‌بندی کرون‌ها", 'callback_data' => "none"]],
-            $rxBackRow,
-        ];
+        $rxFeatKb = rx_featCategoryRows('crons');
+        $rxFeatKb[] = $rxBackRow;
         $rxFeatTitle = "⏱ <b>کرون‌ها و زمان‌بندی</b>\n\nقابلیت‌های مربوط به کرون‌ها (cronjobs) و زمان‌بندی را اینجا تنظیم کنید.";
     } elseif ($rxFeatView === 'antispam') {
-
 
         $rxFeatKb = [
             [['text' => $rxAsStatusText, 'callback_data' => "antispam_toggle"],
@@ -3654,7 +3650,6 @@ $caption";
     nm_adminInstantReply($from_id, $rxFeatTitle, $Bot_Status, 'HTML');
 } elseif ($datain == "antispam_noop" && $adminrulecheck['rule'] == "administrator") {
 
-
     if (!empty($callback_query_id)) {
         try {
             telegram('answerCallbackQuery', [
@@ -3664,7 +3659,6 @@ $caption";
         } catch (\Throwable $rxAsNoopErr) {  }
     }
 } elseif ($datain == "antispam_toggle" && $adminrulecheck['rule'] == "administrator") {
-
 
     $rxAsCurrent = (string)($setting['antispam_status'] ?? '0');
     $rxAsNew = ($rxAsCurrent === '1') ? '0' : '1';
@@ -3680,7 +3674,6 @@ $caption";
             ]);
         } catch (\Throwable $rxAsTogErr) {  }
     }
-
 
     $setting = select("setting", "*", null, null, "select", ['cache' => false]);
     $rxAsRefreshedStatusValue = (string)($setting['antispam_status'] ?? '0');
@@ -3753,7 +3746,6 @@ $caption";
     );
     step('antispam_get_mute', $from_id);
 } elseif ($user['step'] == "antispam_get_count" && $adminrulecheck['rule'] == "administrator") {
-
 
     $rxAsTrim = is_string($text) ? trim($text) : '';
     if (!ctype_digit($rxAsTrim)) {
@@ -3885,20 +3877,16 @@ $caption";
             $valuenew = "rolleon";
         }
         update("setting", "roll_Status", $valuenew);
-    } elseif ($type == "Authenticationphone") {
-        if ($value == "onAuthenticationphone") {
-            $valuenew = "offAuthenticationphone";
-        } else {
-            $valuenew = "onAuthenticationphone";
-        }
+    } elseif ($type == "get_number") {
+        $current = $setting['get_number'] ?? 'offAuthenticationphone';
+        $valuenew = ($current === "onAuthenticationphone") ? "offAuthenticationphone" : "onAuthenticationphone";
         update("setting", "get_number", $valuenew);
+        $setting['get_number'] = $valuenew;
     } elseif ($type == "Authenticationiran") {
-        if ($value == "onAuthenticationiran") {
-            $valuenew = "offAuthenticationiran";
-        } else {
-            $valuenew = "onAuthenticationiran";
-        }
+        $current = $setting['iran_number'] ?? 'offAuthenticationiran';
+        $valuenew = ($current === "onAuthenticationiran") ? "offAuthenticationiran" : "onAuthenticationiran";
         update("setting", "iran_number", $valuenew);
+        $setting['iran_number'] = $valuenew;
     } elseif ($type == "inlinebtnmain") {
         if ($value == "oninline") {
             $valuenew = "offinline";
@@ -3907,12 +3895,10 @@ $caption";
         }
         update("setting", "inlinebtnmain", $valuenew);
     } elseif ($type == "verifystart") {
-        if ($value == "onverify") {
-            $valuenew = "offverify";
-        } else {
-            $valuenew = "onverify";
-        }
+        $current = $setting['verifystart'] ?? 'offverify';
+        $valuenew = ($current === "onverify") ? "offverify" : "onverify";
         update("setting", "verifystart", $valuenew);
+        $setting['verifystart'] = $valuenew;
     } elseif ($type == "statussupportpv") {
         if ($value == "onpvsupport") {
             $valuenew = "offpvsupport";
@@ -3941,6 +3927,13 @@ $caption";
             $valuenew = "onverify";
         }
         update("setting", "verifybucodeuser", $valuenew);
+    } elseif ($type == "authscope") {
+        if ($value == "newonly") {
+            $valuenew = "all";
+        } else {
+            $valuenew = "newonly";
+        }
+        update("setting", "auth_scope", $valuenew);
     } elseif ($type == "wheelagent") {
         if ($value == "1") {
             $valuenew = "0";
@@ -3971,14 +3964,12 @@ $caption";
         update("setting", "statuscopycart", $valuenew);
     } elseif ($type == "premiumemoji") {
 
-
         $rxPemCurrent = (string)($setting['premium_emoji_status'] ?? '0');
         $valuenew = ($rxPemCurrent === '1') ? '0' : '1';
         update("setting", "premium_emoji_status", $valuenew);
 
         $setting['premium_emoji_status'] = $valuenew;
         if (function_exists('getPremiumEmojiMap')) { getPremiumEmojiMap(true); }
-
 
         if (function_exists('rxRenderPremiumEmojiPanel')) {
             rxRenderPremiumEmojiPanel($from_id, 1);
@@ -4028,13 +4019,6 @@ $caption";
             $valuenew = "onaffiliates";
         }
         update("setting", "affiliatesstatus", $valuenew);
-    } elseif ($type == "verifybyuser") {
-        if ($value == "onverify") {
-            $valuenew = "offverify";
-        } else {
-            $valuenew = "onverify";
-        }
-        update("setting", "verifybucodeuser", $valuenew);
     } elseif ($type == "btn_status_category") {
         if ($value == "1") {
             $valuenew = "0";
@@ -4256,6 +4240,11 @@ $caption";
         'onverify' => $_rxOn,
         'offverify' => $_rxOff,
     ][$setting['verifybucodeuser']] ?? $_rxOff;
+    $authScopeVal = (string)($setting['auth_scope'] ?? 'all');
+    if ($authScopeVal === '') { $authScopeVal = 'all'; }
+    $authScopeBtn = ($authScopeVal === 'newonly')
+        ? "👥 محدوده احراز هویت: فقط کاربران جدید"
+        : "👥 محدوده احراز هویت: همه کاربران";
     $score = [
         '1' => $_rxOn,
         '0' => $_rxOff,
@@ -4312,12 +4301,11 @@ $caption";
     $premiumEmojiStatusValue = (string)($setting['premium_emoji_status'] ?? '0');
     $premiumEmojiStatusText = ($premiumEmojiStatusValue === '1') ? $_rxOn : $_rxOff;
 
-
     $rxFeatTypeCatMap = [
 
         'statusbot' => 'bot', 'role' => 'bot',
-        'Authenticationphone' => 'bot', 'Authenticationiran' => 'bot',
-        'verifystart' => 'bot', 'verifybyuser' => 'bot',
+        'get_number' => 'bot', 'Authenticationiran' => 'bot',
+        'verifystart' => 'bot', 'verifybyuser' => 'bot', 'authscope' => 'bot',
         'inlinebtnmain' => 'bot',
 
         'usernamebtn' => 'users', 'notifnew' => 'users', 'showagent' => 'users',
@@ -4346,72 +4334,29 @@ $caption";
     } catch (\Throwable $rxPostTglPemErr) { $rxPostTglPemCount = 0; }
     $rxPostTglPremiumLabel = "🌟 ایموجی پرمیوم" . ($rxPostTglPemCount > 0 ? " ({$rxPostTglPemCount})" : "");
 
-
     $rxFeatTitle = "📋 <b>وضعیت قابلیت‌ها</b>";
     $rxFeatBackRow = [['text' => "🔙 بازگشت", 'callback_data' => 'featcat_main'], ['text' => "❌ بستن", 'callback_data' => 'close_stat']];
 
     if ($rxFeatTargetCat === 'bot') {
         $rxFeatTitle = "🤖 <b>آپشن‌های اصلی ربات</b>";
-        $rxFeatRows = [
-            [['text' => $name_status, 'callback_data' => "editstsuts-statusbot-{$setting['Bot_Status']}"], ['text' => (string)($textbotlang['Admin']['Status']['stautsbot'] ?? 'stautsbot'), 'callback_data' => "statusbot"]],
-            [['text' => $name_status_role, 'callback_data' => "editstsuts-role-{$setting['roll_Status']}"], ['text' => (string)($textbotlang['Admin']['Status']['stautsrolee'] ?? 'stautsrolee'), 'callback_data' => "stautsrolee"]],
-            [['text' => $Authenticationphone, 'callback_data' => "editstsuts-Authenticationphone-{$setting['get_number']}"], ['text' => (string)($textbotlang['Admin']['Status']['Authenticationphone'] ?? 'Authenticationphone'), 'callback_data' => "Authenticationphone"]],
-            [['text' => $Authenticationiran, 'callback_data' => "editstsuts-Authenticationiran-{$setting['iran_number']}"], ['text' => (string)($textbotlang['Admin']['Status']['Authenticationiran'] ?? 'Authenticationiran'), 'callback_data' => "Authenticationiran"]],
-            [['text' => $statusverify, 'callback_data' => "editstsuts-verifystart-{$setting['verifystart']}"], ['text' => "🔒 احراز هویت", 'callback_data' => "verify"]],
-            [['text' => $statusverifybyuser, 'callback_data' => "editstsuts-verifybyuser-{$setting['verifybucodeuser']}"], ['text' => "🔑 احراز هویت با لینک", 'callback_data' => "verifybyuser"]],
-            [['text' => $statusinline, 'callback_data' => "editstsuts-inlinebtnmain-{$setting['inlinebtnmain']}"], ['text' => (string)($textbotlang['Admin']['Status']['inlinebtns'] ?? 'inlinebtns'), 'callback_data' => "inlinebtnmain"]],
-            $rxFeatBackRow,
-        ];
+        $rxFeatRows = rx_featCategoryRows('bot');
+        $rxFeatRows[] = $rxFeatBackRow;
     } elseif ($rxFeatTargetCat === 'users') {
         $rxFeatTitle = "👥 <b>کاربران و پشتیبانی</b>";
-        $rxFeatRows = [
-            [['text' => $name_status_username, 'callback_data' => "editstsuts-usernamebtn-{$setting['NotUser']}"], ['text' => (string)($textbotlang['Admin']['Status']['statususernamebtn'] ?? 'statususernamebtn'), 'callback_data' => "usernamebtn"]],
-            [['text' => $name_status_notifnewuser, 'callback_data' => "editstsuts-notifnew-{$setting['statusnewuser']}"], ['text' => (string)($textbotlang['Admin']['Status']['statusnotifnewuser'] ?? 'statusnotifnewuser'), 'callback_data' => "statusnewuser"]],
-            [['text' => $name_status_showagent, 'callback_data' => "editstsuts-showagent-{$setting['statusagentrequest']}"], ['text' => (string)($textbotlang['Admin']['Status']['statusshowagent'] ?? 'statusshowagent'), 'callback_data' => "statusnewuser"]],
-            [['text' => $statuspvsupport, 'callback_data' => "editstsuts-statussupportpv-{$setting['statussupportpv']}"], ['text' => "👤 پشتیبانی در پیوی", 'callback_data' => "statussupportpv"]],
-            [['text' => $statusnameconfig, 'callback_data' => "editstsuts-statusnamecustom-{$setting['statusnamecustom']}"], ['text' => "📨 یادداشت کانفیگ", 'callback_data' => "statusnamecustom"]],
-            [['text' => $statusnotef, 'callback_data' => "editstsuts-statusnamecustomf-{$setting['statusnoteforf']}"], ['text' => "📨 یادداشت کاربر عادی", 'callback_data' => "statusnamecustomf"]],
-            $rxFeatBackRow,
-        ];
+        $rxFeatRows = rx_featCategoryRows('users');
+        $rxFeatRows[] = $rxFeatBackRow;
     } elseif ($rxFeatTargetCat === 'shop') {
         $rxFeatTitle = "🛍 <b>فروش و خدمات</b>";
-        $rxFeatRows = [
-            [['text' => $statusnamebulk, 'callback_data' => "editstsuts-bulkbuy-{$setting['bulkbuy']}"], ['text' => "🛍 وضعیت خرید عمده", 'callback_data' => "bulkbuy"]],
-            [['text' => $btnstatuscategory, 'callback_data' => "editstsuts-btn_status_category-{$setting['categoryhelp']}"], ['text' => "📗دسته بندی آموزش", 'callback_data' => "btn_status_category"]],
-            [['text' => $keyboard_config_text, 'callback_data' => "editstsuts-keyconfig-{$setting['status_keyboard_config']}"], ['text' => "🔗 کیبورد کانفیگی", 'callback_data' => "keyconfig"]],
-            [['text' => $status_copy_cart, 'callback_data' => "editstsuts-compycart-{$setting['statuscopycart']}"], ['text' => "💳 کپی شماره کارت", 'callback_data' => "copycart"]],
-            [['text' => $statusDebtsettlement, 'callback_data' => "editstsuts-Debtsettlement-{$setting['Debtsettlement']}"], ['text' => "💎 تسویه بدهی", 'callback_data' => "Debtsettlement"]],
-            [['text' => "⚙️ تنظیمات", 'callback_data' => "changeloclimit"], ['text' => $statuslimitchangeloc, 'callback_data' => "editstsuts-changeloc-{$setting['statuslimitchangeloc']}"], ['text' => "🌍 محدودیت تغییر لوکیشن", 'callback_data' => "changeloc"]],
-            [['text' => "{$infocardColorEmoji} انتخاب رنگ", 'callback_data' => "infocard_color_menu"], ['text' => $infocardStatusText, 'callback_data' => "editstsuts-infocard-{$infocardStatusValue}"], ['text' => "📊 کارت مشخصات سرویس", 'callback_data' => "infocard_status"]],
-            [['text' => "⚙️ تنظیمات", 'callback_data' => "linkappsetting"], ['text' => $btnstatuslinkapp, 'callback_data' => "editstsuts-linkappstatus-{$setting['linkappstatus']}"], ['text' => "🔗لینک دانلود برنامه", 'callback_data' => "linkappstatus"]],
-            $rxFeatBackRow,
-        ];
+        $rxFeatRows = rx_featCategoryRows('shop');
+        $rxFeatRows[] = $rxFeatBackRow;
     } elseif ($rxFeatTargetCat === 'lottery') {
         $rxFeatTitle = "🎁 <b>گردونه و قرعه‌کشی</b>";
-        $rxFeatRows = [
-            [['text' => $wheelagent, 'callback_data' => "editstsuts-wheelagent-{$setting['wheelagent']}"], ['text' => "🎲 گردونه شانس  نمایندگان", 'callback_data' => "wheelagent"]],
-            [['text' => $statusfirstwheel, 'callback_data' => "editstsuts-wheelagentfirst-{$setting['statusfirstwheel']}"], ['text' => "🎲 گردونه شانس خرید اول", 'callback_data' => "wheelagentfirst"]],
-            [['text' => "⚙️ تنظیمات", 'callback_data' => "gradonhshans"], ['text' => $wheel_luck, 'callback_data' => "editstsuts-wheel_luck-{$setting['wheelـluck']}"], ['text' => "🎲 گردونه شانس", 'callback_data' => "wheel_luck"]],
-            [['text' => $Lotteryagent, 'callback_data' => "editstsuts-Lotteryagent-{$setting['Lotteryagent']}"], ['text' => "🎁 قرعه کشی نمایندگان", 'callback_data' => "Lotteryagent"]],
-            [['text' => "⚙️ تنظیمات", 'callback_data' => "scoresetting"], ['text' => $score, 'callback_data' => "editstsuts-score-{$setting['scorestatus']}"], ['text' => "🎁 قرعه کشی شبانه", 'callback_data' => "score"]],
-            [['text' => "⚙️ تنظیمات", 'callback_data' => "settingaffiliatesf"], ['text' => $refralstatus, 'callback_data' => "editstsuts-affiliatesstatus-{$setting['affiliatesstatus']}"], ['text' => "🎁زیرمجموعه", 'callback_data' => "affiliatesstatus"]],
-            [['text' => $statusDice, 'callback_data' => "editstsuts-Dice-{$setting['Dice']}"], ['text' => "🎰 نمایش تاس", 'callback_data' => "Dice"]],
-            $rxFeatBackRow,
-        ];
+        $rxFeatRows = rx_featCategoryRows('lottery');
+        $rxFeatRows[] = $rxFeatBackRow;
     } elseif ($rxFeatTargetCat === 'crons') {
         $rxFeatTitle = "⏱ <b>کرون‌ها و زمان‌بندی</b>";
-        $rxFeatRows = [
-            [['text' => $cronteststatustext, 'callback_data' => "editstsuts-crontest-{$status_cron['test']}"], ['text' => "🔓کرون تست", 'callback_data' => "none"]],
-            [['text' => $cronuptime_nodestatustext, 'callback_data' => "editstsuts-uptime_node-{$status_cron['uptime_node']}"], ['text' => "🎛 آپتایم نود", 'callback_data' => "none"]],
-            [['text' => $cronuptime_panelstatustext, 'callback_data' => "editstsuts-uptime_panel-{$status_cron['uptime_panel']}"], ['text' => "🎛 آپتایم پنل", 'callback_data' => "none"]],
-            [['text' => "⚙️ زمان هشدار", 'callback_data' => "settimecornday"], ['text' => $crondaystatustext, 'callback_data' => "editstsuts-cronday-{$status_cron['day']}"], ['text' => "🕚 کرون زمان", 'callback_data' => "none"]],
-            [['text' => "⚙️ زمان اولین اتصال", 'callback_data' => "setting_on_holdcron"], ['text' => $cronon_holdtext, 'callback_data' => "editstsuts-on_hold-{$status_cron['on_hold']}"], ['text' => "🕚 کرون اولین اتصال", 'callback_data' => "none"]],
-            [['text' => "⚙️ حجم هشدار", 'callback_data' => "settimecornvolume"], ['text' => $cronvolumestatustext, 'callback_data' => "editstsuts-cronvolume-{$status_cron['volume']}"], ['text' => "🔋 کرون حجم", 'callback_data' => "none"]],
-            [['text' => "⚙️ زمان حذف", 'callback_data' => "settimecornremove"], ['text' => $cronremovestatustext, 'callback_data' => "editstsuts-notifremove-{$status_cron['remove']}"], ['text' => "❌ کرون حذف", 'callback_data' => "none"]],
-            [['text' => "⚙️ زمان حذف", 'callback_data' => "settimecornremovevolume"], ['text' => $cronremovevolumestatustext, 'callback_data' => "editstsuts-notifremove_volume-{$status_cron['remove_volume']}"], ['text' => "❌ کرون حذف حجم", 'callback_data' => "none"]],
-            [['text' => "⚙️ مدیریت", 'callback_data' => "cronjobs_settings"], ['text' => "⏱ نمایش لیست", 'callback_data' => "cronjobs_settings"], ['text' => "زمان‌بندی کرون‌ها", 'callback_data' => "none"]],
-            $rxFeatBackRow,
-        ];
+        $rxFeatRows = rx_featCategoryRows('crons');
+        $rxFeatRows[] = $rxFeatBackRow;
     } else {
 
         $rxFeatTitle = "📌 <b>وضعیت قابلیت‌ها</b>\n\n✅ تنظیم به‌روزرسانی شد.\n\nاز کدام دسته از قابلیت‌ها می‌خواهید استفاده کنید؟";
@@ -4759,7 +4704,6 @@ $caption";
         return;
     }
 
-
     try {
         $atomicStmt = $pdo->prepare(
             "UPDATE Payment_report SET payment_Status = 'paid' WHERE id_order = :id_order AND payment_Status <> 'paid' AND payment_Status <> 'reject'"
@@ -4795,7 +4739,6 @@ $caption";
     $Balance_id = select("user", "*", "id", $Payment_report['id_user'], "select");
     if ($pricecashback != "0") {
         $result = ($Payment_report['price'] * $pricecashback) / 100;
-
 
         $stmtCashback = $pdo->prepare("UPDATE user SET Balance = Balance + :delta WHERE id = :uid");
         $stmtCashback->bindValue(':delta', (int) round($result), PDO::PARAM_INT);
@@ -5533,7 +5476,6 @@ $caption";
     }
     nm_adminInstantReply($from_id, $textbotlang['Admin']['Balance']['NegativeBalanceUser'], $keyboardadmin, 'HTML');
 
-
     $stmtAtomic = $pdo->prepare("UPDATE user SET Balance = Balance - :delta WHERE id = :uid");
     $stmtAtomic->bindValue(':delta', (int) $text, PDO::PARAM_INT);
     $stmtAtomic->bindValue(':uid', $user['Processing_value'], PDO::PARAM_STR);
@@ -5790,8 +5732,6 @@ $text_expie_agent
     step("home", $from_id);
     update("Discount", "limituse", $text, "code", $user['Processing_value']);
 
-    // Preview summary — mirror the discount-code success message at
-    // finance.php:1482-1491 so the admin can verify the fields at a glance.
     $giftRow = select("Discount", "*", "code", $user['Processing_value'], "select");
     $textgift = "🎁 کد هدیه شما با موفقیت ساخته شد.
 

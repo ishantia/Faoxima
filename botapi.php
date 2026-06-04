@@ -1,5 +1,10 @@
 <?php
 require_once __DIR__ . '/config.php';
+if (!function_exists('rx_kb_debug_log')) {
+    function rx_kb_debug_log($label, $data = null) {
+        return;
+    }
+}
 function telegram($method, $datas = [], $token = null)
 {
     global $APIKEY, $telegramCurlTimeout;

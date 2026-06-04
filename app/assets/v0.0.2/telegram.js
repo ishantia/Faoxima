@@ -2,9 +2,7 @@ function tg() {
     return (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) || null;
 }
 
-
 const INIT_DATA_KEY = 'faoxima.initData';
-
 
 function readPersistedInitData() {
     try {
@@ -36,7 +34,6 @@ export function ready() {
     } catch (_) {  }
 }
 
-
 export function getInitData() {
     const w = tg();
     const live = (w && w.initData) || '';
@@ -49,12 +46,10 @@ export function getInitData() {
     return readPersistedInitData();
 }
 
-
 export function getInitDataUnsafe() {
     const w = tg();
     return (w && w.initDataUnsafe) || null;
 }
-
 
 export function waitForSDK(timeoutMs = 4000) {
     if (tg()) return Promise.resolve(true);
@@ -68,7 +63,6 @@ export function waitForSDK(timeoutMs = 4000) {
         tick();
     });
 }
-
 
 export function waitForInitData(timeoutMs = 1500) {
     const immediate = getInitData();
@@ -88,7 +82,6 @@ export function waitForInitData(timeoutMs = 1500) {
         tick();
     });
 }
-
 
 export function diagnostics() {
     const w = tg();
@@ -157,7 +150,6 @@ export function showConfirm(msg) {
     });
 }
 
-
 export function openBot(botUsername) {
     if (!botUsername) return;
     const w = tg();
@@ -169,5 +161,85 @@ export function openBot(botUsername) {
         }
     } catch (_) {  }
     try { window.location.href = url; } catch (_) {}
+}
+
+export function openChannel(url) {
+    const u = String(url || '');
+    if (!u) return;
+    const w = tg();
+    const isTme = u.startsWith('https://t.me/') || u.startsWith('http://t.me/');
+    try {
+        if (w && isTme && typeof w.openTelegramLink === 'function') {
+            w.openTelegramLink(u);
+            return;
+        }
+        if (w && typeof w.openLink === 'function') {
+            w.openLink(u);
+            return;
+        }
+    } catch (_) {  }
+    try { window.open(u, '_blank', 'noopener'); } catch (_) {
+        try { window.location.href = u; } catch (__) {}
+    }
+}
+
+export function getBotUsername() {
+    try {
+        const cfg = window.__APP_CONFIG__ || {};
+        if (cfg.botUsername) return String(cfg.botUsername);
+    } catch (_) {  }
+    try {
+        const w = tg();
+        const u = w && w.initDataUnsafe ? w.initDataUnsafe : null;
+        if (u && u.bot && u.bot.username) return String(u.bot.username);
+    } catch (_) {  }
+    return '';
+}
+
+export function supportsContactRequest() {
+    const w = tg();
+    if (!w) return false;
+    if (typeof w.requestContact !== 'function') return false;
+    if (typeof w.isVersionAtLeast === 'function') {
+        try { return !!w.isVersionAtLeast('6.9'); } catch (_) { return true; }
+    }
+    return true;
+}
+
+export function requestContact() {
+    return new Promise((resolve, reject) => {
+        const w = tg();
+        if (!w || typeof w.requestContact !== 'function') {
+            reject(new Error('UNSUPPORTED'));
+            return;
+        }
+        let settled = false;
+        const finish = (fn, arg) => {
+            if (settled) return;
+            settled = true;
+            fn(arg);
+        };
+        try {
+            w.requestContact((sent, event) => {
+                if (!sent) {
+                    finish(reject, new Error('CANCELLED'));
+                    return;
+                }
+                const response = (event && typeof event.response === 'string') ? event.response : '';
+                if (!response) {
+                    finish(reject, new Error('NO_RESPONSE'));
+                    return;
+                }
+                finish(resolve, response);
+            });
+        } catch (err) {
+            const msg = (err && err.message) ? String(err.message) : String(err);
+            if (msg.indexOf('Unsupported') !== -1) {
+                finish(reject, new Error('UNSUPPORTED'));
+            } else {
+                finish(reject, err instanceof Error ? err : new Error(msg));
+            }
+        }
+    });
 }
 

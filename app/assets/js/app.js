@@ -2,6 +2,7 @@ window.__FAOXIMA_APP_STARTED__ = true;
 
 import * as Telegram from './telegram.js';
 import { verify } from './api.js';
+import { ensureAccess } from './gates.js';
 import { start as startRouter } from './router.js';
 import { getToken, clearToken } from './state.js';
 import { loadSavedTheme } from './pages/settings.js';
@@ -174,7 +175,7 @@ async function bootstrap() {
     }
 
     try {
-        await verify();
+        await ensureAccess();
     } catch (err) {
         logErr((err && err.message) || 'verify failed', 'bootstrap-verify', (err && err.stack) || '', {
             code: err && err.code, status: err && err.status, data: err && err.data,

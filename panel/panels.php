@@ -1541,8 +1541,6 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                                     <th>کانفیگ</th>
                                     <th>لینک ساب</th>
                                     <th>سطر کانکشن</th>
-                                    <th>اضطراری</th>
-                                    <th>نت ملی</th>
                                     <th>عملیات</th>
                                 </tr>
                             </thead>
@@ -1574,8 +1572,6 @@ function faoxima_is_truthy_panel_flag($v, $trueValues) {
                                     <td data-label="کانفیگ"><?php echo (!in_array($type, ['Manualsale','WGDashboard','hiddify','guard'])) ? ($configOn_t ? icon('circle-check','svg-icon svg-sm icon-ok') : icon('xmark','svg-icon svg-sm icon-no')) : '—'; ?></td>
                                     <td data-label="لینک ساب"><?php echo (!in_array($type, ['Manualsale','WGDashboard','hiddify'])) ? ($sublinkOn_t ? icon('circle-check','svg-icon svg-sm icon-ok') : icon('xmark','svg-icon svg-sm icon-no')) : '—'; ?></td>
                                     <td data-label="سطر کانکشن"><?php echo in_array($type, ['marzban','x-ui_single','marzneshin']) ? ($conectonOn_t ? icon('circle-check','svg-icon svg-sm icon-ok') : icon('xmark','svg-icon svg-sm icon-no')) : '—'; ?></td>
-                                    <td data-label="اضطراری"><?php echo $emergencyOn ? icon('siren','svg-icon svg-sm icon-warn').' روشن' : icon('circle','svg-icon svg-sm icon-muted'); ?></td>
-                                    <td data-label="نت ملی"><?php echo $nationalOn ? icon('globe','svg-icon svg-sm icon-warn').' روشن' : icon('circle','svg-icon svg-sm icon-muted'); ?></td>
                                     <td data-label="عملیات" class="cell-actions">
                                         <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
                                             <button class="btn btn-sm btn-soft-purple"

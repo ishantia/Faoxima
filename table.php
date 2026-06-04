@@ -136,6 +136,7 @@ try {
         addFieldToTable($tableName, 'agent', 'f');
         addFieldToTable($tableName, 'verify', '1');
         addFieldToTable($tableName, 'register', 'none');
+        addFieldToTable($tableName, 'auth_exempt', '0', "varchar(20)");
         addFieldToTable($tableName, 'namecustom', 'none');
         addFieldToTable($tableName, 'number_username', '100');
         addFieldToTable($tableName, 'cardpayment', '1');
@@ -291,6 +292,7 @@ try {
         addFieldToTable("setting", "categoryhelp", "0", "varchar(45)");
         addFieldToTable("setting", "daywarn", "2", "varchar(45)");
         addFieldToTable("setting", "btn_status_extned", "0", "varchar(45)");
+        addFieldToTable("setting", "auth_scope", "all", "varchar(20)");
         addFieldToTable("setting", "iplogin", "[]", "TEXT");
         $stmt_ip = $pdo->prepare("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'setting' AND COLUMN_NAME = 'iplogin'");
         $stmt_ip->execute();
@@ -399,9 +401,10 @@ try {
     $tableExists = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$tableExists) {
         $stmt = $pdo->prepare("CREATE TABLE $tableName (
-            remark varchar(200) NOT NULL,
+            remark varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
             linkjoin varchar(200) NOT NULL,
-            link varchar(200) NOT NULL)");
+            link varchar(200) NOT NULL)
+            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci");
         $stmt->execute();
     } else {
         addFieldToTable("channels", "remark", null, "VARCHAR(200)");
@@ -1259,6 +1262,22 @@ try {
 try {
     $result = $connect->query("SHOW TABLES LIKE 'shopSetting'");
     $table_exists = ($result->num_rows > 0);
+    if ($table_exists) {
+        try {
+            $rxPkRes = $connect->query("SHOW KEYS FROM shopSetting WHERE Key_name = 'PRIMARY'");
+            $rxHasPk = ($rxPkRes && $rxPkRes->num_rows > 0);
+            if (!$rxHasPk) {
+                $connect->query("DELETE s1 FROM shopSetting s1 JOIN shopSetting s2 ON s1.Namevalue = s2.Namevalue WHERE s1.value = '#7c5cff' AND s2.value <> '#7c5cff'");
+                $connect->query("ALTER TABLE shopSetting ADD COLUMN __rid INT AUTO_INCREMENT PRIMARY KEY");
+                $connect->query("DELETE s1 FROM shopSetting s1 JOIN shopSetting s2 ON s1.Namevalue = s2.Namevalue AND s1.__rid > s2.__rid");
+                $connect->query("ALTER TABLE shopSetting DROP COLUMN __rid");
+                $connect->query("ALTER TABLE shopSetting ADD PRIMARY KEY (Namevalue)");
+                echo "shopSetting primary key restored ✅";
+            }
+        } catch (Exception $rxShopPkErr) {
+            error_log('[table.php shopSetting pk] ' . $rxShopPkErr->getMessage());
+        }
+    }
     $agent_cashback = json_encode(array(
         'n' => 0,
         'n2' => 0
@@ -1673,6 +1692,20 @@ $connect->query("ALTER TABLE marzban_panel MODIFY name_panel VARCHAR(255) COLLAT
 $connect->query("ALTER TABLE product MODIFY name_product VARCHAR(255) COLLATE utf8mb4_bin");
 $connect->query("ALTER TABLE help MODIFY name_os VARCHAR(500) COLLATE utf8mb4_bin");
 
+try {
+    $result = $connect->query("SHOW TABLES LIKE 'channels'");
+    if ($result && $result->num_rows > 0) {
+        $connect->query("ALTER TABLE channels CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        $connect->query("ALTER TABLE channels MODIFY remark VARCHAR(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
+        $connect->query("ALTER TABLE channels MODIFY linkjoin VARCHAR(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
+        $connect->query("ALTER TABLE channels MODIFY link VARCHAR(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
+        echo "channels charset fixed to utf8mb4 ✅";
+    }
+} catch (Exception $e) {
+    error_log('[table.php channels charset] ' . $e->getMessage());
+}
+
+
 
 try {
     addFieldToTable("setting", "webhook_secret_token", "", "VARCHAR(64)");
@@ -2021,8 +2054,13 @@ try {
             $rxSeedRes = $connect->query("SELECT keyboard_styles_all FROM setting LIMIT 1");
             $rxSeedRow = ($rxSeedRes && $rxSeedRes->num_rows > 0) ? $rxSeedRes->fetch_assoc() : null;
             $rxSeedRaw = is_array($rxSeedRow) ? (string)($rxSeedRow['keyboard_styles_all'] ?? '') : '';
+            $rxSeedTrim = trim($rxSeedRaw);
+            $rxSeedAlready = ($rxSeedTrim !== '' && $rxSeedTrim !== '{}' && $rxSeedTrim !== '[]' && $rxSeedTrim !== 'null');
             $rxSeedExisting = ($rxSeedRaw !== '') ? json_decode($rxSeedRaw, true) : [];
             if (!is_array($rxSeedExisting)) { $rxSeedExisting = []; }
+            if ($rxSeedAlready) {
+                echo "admin keyboard styles preserved ✅";
+            } else {
 
             $rxSeedChanged = false;
             foreach ($rxSeedDefaults as $rxSeedSection => $rxSeedPairs) {
@@ -2051,6 +2089,7 @@ try {
                 }
             }
             echo "admin keyboard defaults seeded ✅";
+            }
         }
     }
 } catch (Exception $rxSeedErr) {

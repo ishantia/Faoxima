@@ -17,23 +17,47 @@
         }
     } catch (e) {  }
 
-    function applyColor(color) {
-        if (ALLOWED_COLORS.indexOf(color) === -1) color = DEFAULT_COLOR;
-        document.documentElement.setAttribute('data-color', color);
-        try { localStorage.setItem(COLOR_KEY, color); } catch (e) {}
+    var PRESET_HEX = { red:'#ef4444', blue:'#3b82f6', purple:'#a855f7', yellow:'#facc15', orange:'#f97316', green:'#22c55e' };
+    var ACCENT_VARS = ['--accent', '--accent-soft', '--accent-mid', '--accent-glow'];
 
-        var swatches = document.querySelectorAll('.swatch');
-        for (var i = 0; i < swatches.length; i++) {
-            if (swatches[i].getAttribute('data-color') === color) {
-                swatches[i].classList.add('active');
-            } else {
-                swatches[i].classList.remove('active');
-            }
+    function normHex(v) { var m = /^#?([0-9a-f]{6})$/i.exec(String(v == null ? '' : v).trim()); return m ? ('#' + m[1].toLowerCase()) : null; }
+    function parts(hex) { var n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+    function contrastFg(hex) {
+        var p = parts(hex);
+        function lin(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+        var L = 0.2126 * lin(p[0]) + 0.7152 * lin(p[1]) + 0.0722 * lin(p[2]);
+        return L > 0.45 ? '#14121d' : '#ffffff';
+    }
+
+    function applyColor(value) {
+        var s = document.documentElement.style;
+        var preset = PRESET_HEX[value] ? value : null;
+        var hex = preset ? PRESET_HEX[preset] : normHex(value);
+        if (!hex) { preset = DEFAULT_COLOR; hex = PRESET_HEX[DEFAULT_COLOR]; }
+
+        if (preset) {
+            for (var i = 0; i < ACCENT_VARS.length; i++) s.removeProperty(ACCENT_VARS[i]);
+            document.documentElement.setAttribute('data-color', preset);
+        } else {
+            var p = parts(hex);
+            s.setProperty('--accent', hex);
+            s.setProperty('--accent-soft', 'rgba(' + p[0] + ',' + p[1] + ',' + p[2] + ',0.15)');
+            s.setProperty('--accent-mid',  'rgba(' + p[0] + ',' + p[1] + ',' + p[2] + ',0.35)');
+            s.setProperty('--accent-glow', 'rgba(' + p[0] + ',' + p[1] + ',' + p[2] + ',0.5)');
+            document.documentElement.setAttribute('data-color', 'custom');
+        }
+        s.setProperty('--accent-fg', contrastFg(hex));
+
+        try { localStorage.setItem(COLOR_KEY, preset ? preset : hex); } catch (e) {}
+
+        var sw = document.querySelectorAll('.swatch, .ap-swatch');
+        for (var k = 0; k < sw.length; k++) {
+            var c = sw[k].getAttribute('data-color');
+            var match = preset ? (c === preset) : (normHex(c) === hex);
+            sw[k].classList.toggle('active', match);
         }
 
-        try {
-            document.dispatchEvent(new CustomEvent('faoxima:themechange', { detail: { color: color } }));
-        } catch (e) {}
+        try { document.dispatchEvent(new CustomEvent('faoxima:themechange', { detail: { color: preset ? preset : hex } })); } catch (e) {}
     }
 
 

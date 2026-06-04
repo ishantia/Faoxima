@@ -155,11 +155,13 @@ $jsUrl       = htmlspecialchars($assetPrefix . 'assets/v0.0.2/app.js?v=' . $cach
             var key, t;
             if (GA) { key = 'custom'; t = { c: GA, b: lighten(GA, 0.28) }; }
             else { key = 'purple'; t = THEMES[key] || THEMES.gold; }
+            function onAcc(h){var m=/^#([0-9a-f]{6})$/i.exec(h);if(!m)return '#ffffff';var n=parseInt(m[1],16);function lin(v){v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);}var L=0.2126*lin((n>>16)&255)+0.7152*lin((n>>8)&255)+0.0722*lin(n&255);return L>0.45?'#14121d':'#ffffff';}
             var s = document.documentElement.style;
             s.setProperty('--gold', t.c);
             s.setProperty('--gold-bright', t.b);
             s.setProperty('--accent', t.c);
             s.setProperty('--accent-bright', t.b);
+            s.setProperty('--on-accent', onAcc(t.c));
             s.setProperty('--gold-soft',   rgba(t.c, 0.10));
             s.setProperty('--gold-soft-2', rgba(t.c, 0.18));
             s.setProperty('--accent-soft',   rgba(t.c, 0.10));
