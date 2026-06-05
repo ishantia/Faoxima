@@ -58,7 +58,7 @@ if ($table_exists) {
         }
     }
 }
-$month_date_time_start = date('Y/m/d H:i:s', time() - 86400);
+$month_date_time_start = date('Y/m/d H:i:s', time() - 1800);
 $stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE time < :cutoff AND payment_Status = 'Unpaid' ORDER BY id ASC LIMIT 200");
 $stmt->execute([':cutoff' => $month_date_time_start]);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -95,6 +95,10 @@ foreach ($rows as $result) {
     $expireStmt->execute([':o' => $result['id_order']]);
     if ($expireStmt->rowCount() !== 1) {
         continue;
+    }
+    if (function_exists('rx_release_unpaid_discount')) {
+        $rxRefTime = isValidDate($result['time'] ?? '') ? strtotime(str_replace('/', '-', (string)$result['time'])) : null;
+        rx_release_unpaid_discount((string)$result['id_user'], null, $rxRefTime ?: null);
     }
     deletemessage($result['id_user'], $result['message_id']);
 }

@@ -5,14 +5,6 @@ if (is_file($guardHelperPath)) {
     require_once $guardHelperPath;
 }
 
-
-// (Removed) Pre-handler auto-delete of admin typed input.
-// Used to fire when $setting['inlinebtnmain'] === 'oninline', muxing the
-// "glass/inline button mode" feature with "delete admin's typed text",
-// which are unrelated concerns. The glass-button feature is preserved
-// elsewhere (rx_keyboardToInline); the typed-input deletion is removed
-// so admin commands / form inputs stay visible in chat history.
-
 $textadmin = ["panel", "/panel", $textbotlang['Admin']['textpaneladmin']];
 if (isset($datain) && $datain != "" && $text == "" && in_array($from_id, $admin_ids)) {
     $text = $datain;
@@ -23,16 +15,13 @@ if (!function_exists('normalizeXuiSingleSubscriptionBaseUrl')) {
 
 }
 
-
 if (!function_exists('buildXuiSingleBaseUrl')) {
 
 }
 
-
 if (!function_exists('hasLikelyXuiSubscriptionId')) {
 
 }
-
 
 function ensureGuardPanelColumnsReady(PDO $pdo)
 {
@@ -542,11 +531,18 @@ function guardFormatConnectionResult(array $result)
     return $prefix;
 }
 
-
 if (!function_exists('sendAdminFinanceMenu')) {
 function sendAdminFinanceMenu($chatId, $message = null)
 {
-    global $textbotlang;
+    global $textbotlang, $datatextbot;
+    $rxIranpayName = function ($key, $fallback) use ($datatextbot) {
+        $name = (is_array($datatextbot) && isset($datatextbot[$key])) ? trim((string)$datatextbot[$key]) : '';
+        if ($name === '') {
+            $row = select("textbot", "text", "id_text", $key, "select");
+            $name = is_array($row) ? trim((string)($row['text'] ?? '')) : '';
+        }
+        return $name !== '' ? ("📌 " . $name) : $fallback;
+    };
     $cartotcart = getPaySettingValue('Cartstatus', 'offcard');
     $plisio = getPaySettingValue('nowpaymentstatus', 'offnowpayment');
     $arzireyali1 = getPaySettingValue('statusSwapWallet', 'offSwapinoBot');
@@ -601,17 +597,17 @@ function sendAdminFinanceMenu($chatId, $message = null)
         [
             ['text' => '⚙️ تنظیمات', 'callback_data' => 'iranpay1setting'],
             ['text' => $arzireyali1status, 'callback_data' => "editpayment-arzireyali1-$arzireyali1"],
-            ['text' => '📌 ارزی ریالی اول', 'callback_data' => 'arzireyali1'],
+            ['text' => $rxIranpayName('iranpay2', '📌 ارزی ریالی اول'), 'callback_data' => 'arzireyali1'],
         ],
         [
             ['text' => '⚙️ تنظیمات', 'callback_data' => 'iranpay2setting'],
             ['text' => $arzireyali2status, 'callback_data' => "editpayment-arzireyali2-$arzireyali2"],
-            ['text' => '📌 ارزی ریالی دوم', 'callback_data' => 'arzireyali2'],
+            ['text' => $rxIranpayName('iranpay3', '📌 ارزی ریالی دوم'), 'callback_data' => 'arzireyali2'],
         ],
         [
             ['text' => '⚙️ تنظیمات', 'callback_data' => 'iranpay3setting'],
             ['text' => $arzireyali3text, 'callback_data' => "editpayment-oniranpay3-$arzireyali3"],
-            ['text' => '📌ارزی ریالی سوم', 'callback_data' => 'oniranpay3'],
+            ['text' => $rxIranpayName('iranpay1', '📌ارزی ریالی سوم'), 'callback_data' => 'oniranpay3'],
         ],
         [
             ['text' => '⚙️ تنظیمات', 'callback_data' => 'zarinpeysetting'],
@@ -655,7 +651,6 @@ function sendAdminFinanceMenu($chatId, $message = null)
 }
 }
 
-
 if (!in_array($from_id, $admin_ids))
     return;
 
@@ -679,7 +674,6 @@ $miniAppInstructionText = <<<HTML
 <code> curl -s https://{$domainhostsEscaped}/cron/cron.php &gt; /dev/null 2&gt;&amp;1</code>
 HTML;
 
-
 if (!function_exists('nm_getBroadcastStatus')) {
     function nm_getBroadcastStatus() {
         $infoFile      = 'cronbot/info';
@@ -696,7 +690,6 @@ if (!function_exists('nm_getBroadcastStatus')) {
         if (!is_array($info)) {
             return null;
         }
-
 
         $remaining = 0;
         if (is_file($usersFileTxt)) {
@@ -808,14 +801,9 @@ if (!function_exists('nm_buildBroadcastStatusKeyboard')) {
     }
 }
 
-// ── Admin inline-keyboard → $text normalisation ───────────────────────────
-// When admin presses an inline keyboard button (converted from reply keyboard),
-// $datain has the callback_data but $text is empty. Map it back to the button
-// text so ALL existing $text == "..." routing comparisons work unchanged.
-// Fix: run mapping even if $text was already set to $datain by the early assignment above
 if (!empty($datain) && in_array($from_id, $admin_ids ?? [])) {
     $_rx_adm_cb_map = [
-        // admin_main
+
         'admin_status'      => $textbotlang['Admin']['Status']['btn'],
         'admin_managepanel' => $textbotlang['Admin']['btnkeyboardadmin']['managementpanel'],
         'admin_addpanel'    => $textbotlang['Admin']['btnkeyboardadmin']['addpanel'],
@@ -830,14 +818,14 @@ if (!empty($datain) && in_array($from_id, $admin_ids ?? [])) {
         'admin_settings'    => "⚙️ تنظیمات عمومی",
         'admin_invoices'    => "💵 رسید های تایید نشده",
         'admin_back'        => $textbotlang['Admin']['backadmin'],
-        // roles
+
         'seller_status'     => $textbotlang['Admin']['Status']['btn'],
         'seller_users'      => "👤 مدیریت کاربر",
         'seller_back'       => $textbotlang['users']['backbtn'],
         'support_users'     => "👤 مدیریت کاربر",
         'support_search'    => "👁‍🗨 جستجو کاربر",
         'support_back'      => $textbotlang['users']['backbtn'],
-        // admin_settings
+
         'set_features'   => "⚙️ وضعیت قابلیت ها",
         'set_reports'    => "📣 گزارشات ربات",
         'set_channel'    => "📯 تنظیمات کانال",
@@ -851,7 +839,7 @@ if (!empty($datain) && in_array($from_id, $admin_ids ?? [])) {
         'set_webhook'    => "🔗 وبهوک مجدد ربات های نماینده",
         'set_backadmin'  => $textbotlang['Admin']['backadmin'],
         'set_backmenu'   => $textbotlang['Admin']['backmenu'],
-        // admin_shop
+
         'shop_status'      => "🛒 وضعیت قابلیت های فروشگاه",
         'shop_category'    => "🗂 مدیریت دسته بندی",
         'shop_products'    => "🛍 مدیریت محصولات",
@@ -863,7 +851,7 @@ if (!empty($datain) && in_array($from_id, $admin_ids ?? [])) {
         'shop_renewcb'     => "🎁 کش بک تمدید",
         'shop_backadmin'   => $textbotlang['Admin']['backadmin'],
         'shop_backmenu'    => $textbotlang['Admin']['backmenu'],
-        // admin_gateways — cart
+
         'cart_title'       => "🗂 نام درگاه کارت به کارت",
         'cart_setnum'      => "💳 تنظیم شماره کارت",
         'cart_delnum'      => "❌ حذف شماره کارت",
@@ -885,7 +873,7 @@ if (!empty($datain) && in_array($from_id, $admin_ids ?? [])) {
         'cart_back'        => $textbotlang['Admin']['backadmin'],
         'cart_backmenu'    => $textbotlang['Admin']['backmenu'],
         'adm_backmenu'     => $textbotlang['Admin']['backmenu'],
-        // trnado
+
         'trnado_name'     => "🏷️ نام نمایشی درگاه ترنادو",
         'trnado_apikey'   => "🔑 ثبت API Key ترنادو",
         'trnado_wallet'   => "💼 ثبت آدرس ولت ترون (TRC20)",
@@ -896,7 +884,7 @@ if (!empty($datain) && in_array($from_id, $admin_ids ?? [])) {
         'trnado_edu'      => "📚 تنظیم آموزش ارزی ریالی  دوم",
         'trnado_back'     => $textbotlang['Admin']['backadmin'],
         'trnado_backmenu' => $textbotlang['Admin']['backmenu'],
-        // zarinpal
+
         'zpal_name'     => "🗂 نام درگاه زرین پال",
         'zpal_merchant' => "مرچنت زرین پال",
         'zpal_cashback' => "💰 کش بک زرین پال",
@@ -905,7 +893,7 @@ if (!empty($datain) && in_array($from_id, $admin_ids ?? [])) {
         'zpal_edu'      => "📚 تنظیم آموزش زرین پال",
         'zpal_back'     => $textbotlang['Admin']['backadmin'],
         'zpal_backmenu' => $textbotlang['Admin']['backmenu'],
-        // zarinpey
+
         'zpey_name'     => "🗂 نام درگاه زرین پی",
         'zpey_token'    => "🔑 توکن زرین پی",
         'zpey_cashback' => "💰 کش بک زرین پی",
@@ -915,7 +903,7 @@ if (!empty($datain) && in_array($from_id, $admin_ids ?? [])) {
         'zpey_edu'      => "📚 تنظیم آموزش زرین پی",
         'zpey_back'     => $textbotlang['Admin']['backadmin'],
         'zpey_backmenu' => $textbotlang['Admin']['backmenu'],
-        // aqayepardakht
+
         'aqaye_name'     => "🗂 نام درگاه آقای پرداخت",
         'aqaye_merchant' => "تنظیم مرچنت آقای پرداخت",
         'aqaye_cashback' => "💰 کش بک آقای پرداخت",
@@ -924,7 +912,7 @@ if (!empty($datain) && in_array($from_id, $admin_ids ?? [])) {
         'aqaye_edu'      => "📚 تنظیم آموزش درگاه اقای پرداخت",
         'aqaye_back'     => $textbotlang['Admin']['backadmin'],
         'aqaye_backmenu' => $textbotlang['Admin']['backmenu'],
-        // plisio
+
         'plisio_name'     => "🗂 نام درگاه   plisio",
         'plisio_api'      => "🧩 api plisio",
         'plisio_cashback' => "💰 کش بک plisio",
@@ -933,31 +921,31 @@ if (!empty($datain) && in_array($from_id, $admin_ids ?? [])) {
         'plisio_edu'      => "📚 تنظیم آموزش plisio",
         'plisio_back'     => $textbotlang['Admin']['backadmin'],
         'plisio_backmenu' => $textbotlang['Admin']['backmenu'],
-        // help
+
         'help_add'      => "📚 اضافه کردن آموزش",
         'help_del'      => "❌ حذف آموزش",
         'help_edit'     => "✏️ ویرایش آموزش",
         'help_back'     => $textbotlang['Admin']['backadmin'],
         'help_backmenu' => $textbotlang['Admin']['backmenu'],
-        // category
+
         'cat_add'  => "🛒 اضافه کردن دسته بندی",
         'cat_del'  => "❌ حذف دسته بندی",
         'cat_edit' => "✏️ ویرایش دسته بندی",
         'cat_back' => "⬅️ بازگشت به منوی فروشگاه",
-        // shop items
+
         'shopitem_add'      => "🛍 اضافه کردن محصول",
         'shopitem_del'      => "❌ حذف محصول",
         'shopitem_edit'     => "✏️ ویرایش محصول",
         'shopitem_priceinc' => "⬆️ افزایش گروهی قیمت",
         'shopitem_pricedec' => "⬇️ کاهش  گروهی قیمت",
         'shopitem_back'     => "⬅️ بازگشت به منوی فروشگاه",
-        // features
+
         'feat_info'     => "قابلیت مشاهده اطلاعات اکانت",
         'feat_test'     => "قابلیت اکانت تست",
         'feat_help'     => "قابلیت آموزش",
         'feat_back'     => $textbotlang['Admin']['backadmin'],
         'feat_backmenu' => $textbotlang['Admin']['backmenu'],
-        // channel
+
         'ch_add'      => "اضافه کردن کانال",
         'ch_del'      => "حذف کانال",
         'ch_back'     => $textbotlang['Admin']['backadmin'],

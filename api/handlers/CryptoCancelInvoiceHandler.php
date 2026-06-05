@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/BaseHandler.php';
+require_once __DIR__ . '/DiscountSupport.php';
 
 final class CryptoCancelInvoiceHandler extends BaseHandler
 {
@@ -25,7 +26,7 @@ final class CryptoCancelInvoiceHandler extends BaseHandler
             FaoximaResponse::notFound('Payment not found');
         }
         $method = trim((string)($report['Payment_Method'] ?? ''));
-        $cancellable = ['arze digital offline', 'plisio', 'nowpayment', 'digitaltron', 'cart to cart', 'carttocart_pv'];
+        $cancellable = ['arze digital offline', 'plisio', 'nowpayment', 'digitaltron', 'cart to cart', 'carttocart_pv', 'iranpay1'];
         if (!in_array($method, $cancellable, true)) {
             FaoximaResponse::fail(422, 'این فاکتور قابل لغو از این طریق نیست');
         }
@@ -44,6 +45,8 @@ final class CryptoCancelInvoiceHandler extends BaseHandler
         if (!in_array($status, ['Unpaid', 'AwaitingHash'], true)) {
             FaoximaResponse::fail(409, 'این فاکتور در وضعیتی نیست که قابل لغو باشد (' . $status . ')');
         }
+
+        MiniDiscount::releaseLastUnpaidDiscount((string)$this->user['id']);
 
         try {
             $pdo = FaoximaDb::pdo();

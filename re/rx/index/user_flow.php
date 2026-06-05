@@ -3062,7 +3062,7 @@ $textonebuy
 🔢 شماره فاکتور : $randomString
 💰 مبلغ فاکتور : $price_format تومان
 
-❌ این تراکنش به مدت یک روز اعتبار دارد پس از آن امکان پرداخت این تراکنش امکان ندارد.
+❌ این تراکنش به مدت ۳۰ دقیقه اعتبار دارد پس از آن امکان پرداخت این تراکنش امکان ندارد.
 
 📌لطفاً پس از پرداخت و موفق بودن تراکنش ، کمی صبر کنید تا پیام پرداخت موفق در سایت ما دریافت کنید. در غیراینصورت اکانت شما شارژ نخواهد شد.
 
@@ -3315,8 +3315,8 @@ $textonebuy
         $stmt->bind_param("sssssss", $from_id, $randomString, $dateacc, $user['Processing_value'], $payment_Status, $Payment_Method, $invoice);
         $stmt->execute();
         $pay = createInvoiceiranpay1($user['Processing_value'], $randomString);
-        if ($pay['status'] != "100") {
-            $text_error = $pay['message'];
+        if ($pay['status'] != "100" || empty($pay['payment_url_bot']) || empty($pay['Authority'])) {
+            $text_error = $pay['message'] ?? 'پاسخ نامعتبر از درگاه';
             sendmessage($from_id, $textbotlang['users']['Balance']['errorLinkPayment'], $keyboard, 'HTML');
             step('home', $from_id);
             $ErrorsLinkPayment = "
@@ -3352,7 +3352,7 @@ $textonebuy
 
 💢 لطفا به این نکات قبل از پرداخت توجه کنید 👇
 
-❌ این تراکنش به مدت ۲۴ ساعت اعتبار دارد پس از آن امکان پرداخت این تراکنش امکان ندارد.
+❌ این تراکنش به مدت ۳۰ دقیقه اعتبار دارد پس از آن امکان پرداخت این تراکنش امکان ندارد.
 
 ✅ در صورت مشکل میتوانید با پشتیبانی در ارتباط باشید";
         $gethelp = select("PaySetting", "ValuePay", "NamePay", "helpiranpay1", "select")['ValuePay'];
@@ -3496,7 +3496,7 @@ $textonebuy
 
 💢 لطفا به این نکات قبل از پرداخت توجه کنید 👇
 
-🔹 تراکنش تا یک روز اعتبار و پس از آن در صورت پرداخت تایید نخواهد شد .
+🔹 تراکنش تا ۳۰ دقیقه اعتبار و پس از آن در صورت پرداخت تایید نخواهد شد .
 ❌ پس از تراکنش 15 تا یک ساعت زمان میبرد تا تراکنش تایید شود
 
 ✅ در صورت مشکل میتوانید با پشتیبانی در ارتباط باشید";
@@ -3596,7 +3596,7 @@ $textonebuy
 
 💢 لطفا به این نکات قبل از پرداخت توجه کنید 👇
 
-❌ این تراکنش به مدت یک روز اعتبار دارد پس از آن امکان پرداخت این تراکنش امکان ندارد.
+❌ این تراکنش به مدت ۳۰ دقیقه اعتبار دارد پس از آن امکان پرداخت این تراکنش امکان ندارد.
 
 ✅ در صورت مشکل میتوانید با پشتیبانی در ارتباط باشید";
         $gethelp = select("PaySetting", "ValuePay", "NamePay", "helpiranpay3", "select")['ValuePay'];
@@ -3791,6 +3791,13 @@ $textonebuy
             $pdo = getDatabaseConnection();
             if ($pdo instanceof \PDO) {
                 try {
+                    if (function_exists('rx_release_unpaid_discount')) {
+                        $rxRep = $pdo->prepare("SELECT time FROM Payment_report WHERE id_order = :o AND id_user = :u AND payment_Status IN ('Unpaid','AwaitingHash') LIMIT 1");
+                        $rxRep->execute([':o' => $orderId, ':u' => (string) $from_id]);
+                        $rxRepRow = $rxRep->fetch(\PDO::FETCH_ASSOC);
+                        $rxRefTime = (is_array($rxRepRow) && !empty($rxRepRow['time'])) ? strtotime(str_replace('/', '-', (string) $rxRepRow['time'])) : null;
+                        rx_release_unpaid_discount((string) $from_id, null, $rxRefTime ?: null);
+                    }
                     $stmt = $pdo->prepare(
                         "UPDATE Payment_report
                             SET payment_Status = 'expire'

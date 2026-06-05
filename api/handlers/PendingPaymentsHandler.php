@@ -24,7 +24,7 @@ final class PendingPaymentsHandler extends BaseHandler
                    FROM Payment_report
                   WHERE id_user = :u
                     AND payment_Status IN ('Unpaid','waiting','AwaitingHash','pending')
-                    AND Payment_Method IN ('plisio','nowpayment','digitaltron','arze digital offline','cart to cart','carttocart_pv')
+                    AND Payment_Method IN ('plisio','nowpayment','digitaltron','arze digital offline','cart to cart','carttocart_pv','iranpay1')
                     AND source = 'miniapp'
                   ORDER BY id DESC
                   LIMIT 8",
@@ -54,7 +54,7 @@ final class PendingPaymentsHandler extends BaseHandler
                 if ($hashVal === '') continue;
             } elseif (in_array($methodLc, ['cart to cart', 'carttocart_pv'], true)) {
                 if ($decVal === '') continue;
-            } elseif (in_array($methodLc, ['plisio', 'nowpayment', 'digitaltron'], true)) {
+            } elseif (in_array($methodLc, ['plisio', 'nowpayment', 'digitaltron', 'iranpay1'], true)) {
                 if ($decVal === '') continue;
             }
 

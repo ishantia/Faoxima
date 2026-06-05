@@ -157,6 +157,9 @@ final class PaymentInitHandler extends BaseHandler
                 return;
 
             case 'iranpay1':
+                $this->handleIranpay1($amount);
+                return;
+
             case 'iranpay2':
             case 'iranpay3':
                 $url = $this->buildIranpayUrlFallback($method, $amount);
@@ -393,6 +396,50 @@ final class PaymentInitHandler extends BaseHandler
     private function buildIranpayUrlFallback(string $method, int $amount): string
     {
         return $this->botDeepLink('miniapp_pay_' . $method);
+    }
+
+    private function handleIranpay1(int $amount): void
+    {
+        if (!function_exists('createInvoiceiranpay1')) {
+            FaoximaResponse::fail(503, '❌ تابع درگاه ارزی ریالی روی این سرور موجود نیست.');
+        }
+
+        $minRow = select('PaySetting', 'ValuePay', 'NamePay', 'minbalanceiranpay1', 'select');
+        $maxRow = select('PaySetting', 'ValuePay', 'NamePay', 'maxbalanceiranpay1', 'select');
+        $min = is_array($minRow) ? (int)($minRow['ValuePay'] ?? 0) : 0;
+        $max = is_array($maxRow) ? (int)($maxRow['ValuePay'] ?? 0) : 0;
+        if ($min > 0 && $amount < $min) {
+            FaoximaResponse::fail(422, '❌ حداقل مبلغ پرداخت ' . number_format($min) . ' تومان است.');
+        }
+        if ($max > 0 && $amount > $max) {
+            FaoximaResponse::fail(422, '❌ حداکثر مبلغ پرداخت ' . number_format($max) . ' تومان است.');
+        }
+
+        $orderId = bin2hex(random_bytes(5));
+
+        try {
+            $pay = createInvoiceiranpay1($amount, $orderId);
+        } catch (Throwable $e) {
+            FaoximaLogger::userFacing('createInvoiceiranpay1() threw', ['err' => $e->getMessage()]);
+            FaoximaResponse::fail(502, '❌ خطا در ارتباط با درگاه پرداخت.');
+        }
+
+        $paymentUrl = is_array($pay) ? (string)($pay['payment_url_bot'] ?? '') : '';
+        $authority  = is_array($pay) ? (string)($pay['Authority'] ?? '') : '';
+        if ($paymentUrl === '' || $authority === '') {
+            $errMsg = is_array($pay) ? json_encode($pay, JSON_UNESCAPED_UNICODE) : 'unknown';
+            FaoximaLogger::userFacing('createInvoiceiranpay1() returned bad response', ['raw' => $errMsg]);
+            FaoximaResponse::fail(502, '❌ ساخت لینک پرداخت ناموفق بود.');
+        }
+
+        $this->insertPaymentReport('iranpay1', $amount, $orderId, $authority);
+
+        FaoximaResponse::ok([
+            'kind'     => 'url',
+            'url'      => $paymentUrl,
+            'order_id' => $orderId,
+            'message'  => '🌸 برای تکمیل پرداخت روی لینک زیر کلیک کنید.',
+        ]);
     }
 
     private function buildCryptoUrlFallback(string $method, int $amount): string

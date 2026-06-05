@@ -1,6 +1,63 @@
 <?php
 
 
+if (!function_exists('rx_release_unpaid_discount')) {
+
+    function rx_release_unpaid_discount($userId, $discountCode = null, $referenceTime = null) {
+        global $pdo;
+        $userId = trim((string)$userId);
+        if ($userId === '' || !isset($pdo)) return false;
+        try {
+            if ($referenceTime !== null && (int)$referenceTime > 0) {
+                $low = (string)((int)$referenceTime - 900);
+                $high = (string)((int)$referenceTime + 900);
+            } else {
+                $low = (string)(time() - 1800);
+                $high = (string)(time() + 60);
+            }
+            $params = [':u' => $userId, ':lo' => $low, ':hi' => $high];
+            $codeClause = '';
+            if ($discountCode !== null && trim((string)$discountCode) !== '') {
+                $codeClause = ' AND code = :c';
+                $params[':c'] = trim((string)$discountCode);
+            }
+            $stmt = $pdo->prepare(
+                "SELECT id, code FROM Giftcodeconsumed
+                  WHERE id_user = :u
+                    AND kind = 'sell'
+                    AND (released IS NULL OR released = 0)
+                    AND consumed_at <> ''
+                    AND CAST(consumed_at AS UNSIGNED) BETWEEN :lo AND :hi" . $codeClause . "
+                  ORDER BY id DESC LIMIT 1"
+            );
+            $stmt->execute($params);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!is_array($row) || empty($row['code'])) return false;
+
+            $code = (string)$row['code'];
+            $rowId = (int)$row['id'];
+
+            $marked = $pdo->prepare('UPDATE Giftcodeconsumed SET released = 1 WHERE id = :id AND (released IS NULL OR released = 0)');
+            $marked->execute([':id' => $rowId]);
+            if ($marked->rowCount() < 1) return false;
+
+            $ds = $pdo->prepare('SELECT usedDiscount FROM DiscountSell WHERE codeDiscount = :c LIMIT 1');
+            $ds->execute([':c' => $code]);
+            $dsRow = $ds->fetch(PDO::FETCH_ASSOC);
+            if (is_array($dsRow)) {
+                $used = (int)($dsRow['usedDiscount'] ?? 0) - 1;
+                if ($used < 0) $used = 0;
+                $pdo->prepare('UPDATE DiscountSell SET usedDiscount = :v WHERE codeDiscount = :c')
+                    ->execute([':v' => (string)$used, ':c' => $code]);
+            }
+            return true;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+}
+
+
 if (!function_exists('balance_atomic_charge')) {
 
     function balance_atomic_charge($userId, $delta, $allowNegativeUpTo = 0) {

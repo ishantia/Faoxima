@@ -78,11 +78,11 @@ if ($StatusPayment == 100) {
         "hashid" => $invoice_id,
     ];
     curl_setopt_array($curl, array(
-        CURLOPT_URL => "https://tetra98.ir/api/verify",
+        CURLOPT_URL => "https://tetra98.com/api/verify",
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
+        CURLOPT_TIMEOUT => 30,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_POSTFIELDS => json_encode($data),
@@ -93,9 +93,11 @@ if ($StatusPayment == 100) {
         ),
     ));
     $response = curl_exec($curl);
+    $http_code = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
     curl_close($curl);
-    $response = json_decode($response, true);
-    if (!empty($response['status']) && $response['status'] == 100) {
+    $verifyData = json_decode($response, true);
+    $verifyOk = ($http_code === 200 && is_array($verifyData) && isset($verifyData['status']) && (int) $verifyData['status'] === 100);
+    if ($verifyOk) {
         $payment_status = "پرداخت موفق";
         $dec_payment_status = "از انجام تراکنش متشکریم!";
         $atomic = $pdo->prepare(

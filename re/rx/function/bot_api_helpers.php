@@ -747,7 +747,7 @@ function createInvoiceiranpay1($amount, $id_invoice)
         "CallbackURL" => "https://$domainhosts/payment/iranpay1.php"
     ];
     curl_setopt_array($curl, array(
-        CURLOPT_URL => "https://tetra98.ir/api/create_order",
+        CURLOPT_URL => "https://tetra98.com/api/create_order",
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,

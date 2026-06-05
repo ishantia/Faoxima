@@ -1,5 +1,16 @@
 <?php
 
+if (!function_exists('rx_iranpay_label')) {
+    function rx_iranpay_label($datatextbot, $key, $fallback)
+    {
+        $name = (is_array($datatextbot) && isset($datatextbot[$key])) ? trim((string)$datatextbot[$key]) : '';
+        if ($name !== '') {
+            return "📌 " . $name;
+        }
+        return $fallback;
+    }
+}
+
 if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator") {
     nm_adminInstantReply($from_id, $textbotlang['Admin']['cronjob']['setdayremove'] . $setting['removedayc'] . "روز", $backadmin, 'HTML');
     step("getdaycron", $from_id);
@@ -183,7 +194,6 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     ]);
     nm_adminInstantReply($from_id, "✅  پنل تحت وب شما با موفقیت فعال گردید.
 
-
 🔗آدرس ورود : https://$domainhosts/panel
 👤نام کاربری :  <code>$from_id</code>
 🔑رمز عبور :  <code>$randomString</code>", $keyboardstatistics, 'HTML');
@@ -343,7 +353,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     nm_adminInstantReply($from_id, "✅ شماره کارت با موفقیت حذف گردید.", $CartManage, 'HTML');
     step("home", $from_id);
 } elseif (preg_match('/^rejectrequesta_(\w+)/', $datain, $datagetr)) {
-    // مرحله اول: فقط درخواست تایید از ادمین (جلوگیری از کلیک اشتباهی)
+
     $id_user = $datagetr[1];
     $request_agent = select("Requestagent", "*", "id", $id_user, "select", ['cache' => false]);
     if (!$request_agent) {
@@ -382,7 +392,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         'cache_time' => 1,
     ));
 } elseif (preg_match('/^cfmreja_(\w+)/', $datain, $datagetr)) {
-    // مرحله دوم: اجرای واقعی رد درخواست پس از تایید ادمین
+
     $id_user = $datagetr[1];
     $request_agent = select("Requestagent", "*", "id", $id_user, "select", ['cache' => false]);
 
@@ -459,7 +469,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         'cache_time' => 5,
     ));
 } elseif (preg_match('/^addagentrequest_(\w+)/', $datain, $datagetr)) {
-    // مرحله اول: فقط درخواست تایید از ادمین (جلوگیری از کلیک اشتباهی)
+
     $id_user = $datagetr[1];
     $request_agent = select("Requestagent", "*", "id", $id_user, "select", ['cache' => false]);
     if (!$request_agent) {
@@ -498,7 +508,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         'cache_time' => 1,
     ));
 } elseif (preg_match('/^cnclagentreq_(\w+)/', $datain, $datagetr)) {
-    // لغو: بازگشت به حالت اولیه با دکمه‌های تایید/رد
+
     $id_user = $datagetr[1];
     $request_agent = select("Requestagent", "*", "id", $id_user, "select", ['cache' => false]);
     if (!$request_agent) {
@@ -539,7 +549,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         'cache_time' => 1,
     ));
 } elseif (preg_match('/^cfmacea_(\w+)/', $datain, $datagetr)) {
-    // مرحله دوم: اجرای واقعی تایید درخواست پس از تایید ادمین
+
     $id_user = $datagetr[1];
     $request_agent = select("Requestagent", "*", "id", $id_user, "select", ['cache' => false]);
     if (!$request_agent) {
@@ -1538,17 +1548,17 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             [
                 ['text' => "⚙️ تنظیمات", 'callback_data' => "iranpay1setting"],
                 ['text' => $arzireyali1status, 'callback_data' => "editpayment-arzireyali1-$arzireyali1"],
-                ['text' => "📌 ارزی ریالی اول", 'callback_data' => "arzireyali1"],
+                ['text' => rx_iranpay_label($datatextbot, 'iranpay2', "📌 ارزی ریالی اول"), 'callback_data' => "arzireyali1"],
             ],
             [
                 ['text' => "⚙️ تنظیمات", 'callback_data' => "iranpay2setting"],
                 ['text' => $arzireyali2status, 'callback_data' => "editpayment-arzireyali2-$arzireyali2"],
-                ['text' => "📌 ارزی ریالی دوم", 'callback_data' => "arzireyali2"],
+                ['text' => rx_iranpay_label($datatextbot, 'iranpay3', "📌 ارزی ریالی دوم"), 'callback_data' => "arzireyali2"],
             ],
             [
                 ['text' => "⚙️ تنظیمات", 'callback_data' => "iranpay3setting"],
                 ['text' => $arzireyali3text, 'callback_data' => "editpayment-oniranpay3-$arzireyali3"],
-                ['text' => "📌ارزی ریالی سوم", 'callback_data' => "oniranpay3"],
+                ['text' => rx_iranpay_label($datatextbot, 'iranpay1', "📌ارزی ریالی سوم"), 'callback_data' => "oniranpay3"],
             ],
             [
                 ['text' => "⚙️ تنظیمات", 'callback_data' => "zarinpeysetting"],
@@ -1780,17 +1790,17 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
             [
                 ['text' => "⚙️ تنظیمات", 'callback_data' => "iranpay1setting"],
                 ['text' => $arzireyali1status, 'callback_data' => "editpayment-arzireyali1-$arzireyali1"],
-                ['text' => "📌 ارزی ریالی اول", 'callback_data' => "arzireyali1"],
+                ['text' => rx_iranpay_label($datatextbot, 'iranpay2', "📌 ارزی ریالی اول"), 'callback_data' => "arzireyali1"],
             ],
             [
                 ['text' => "⚙️ تنظیمات", 'callback_data' => "iranpay2setting"],
                 ['text' => $arzireyali2status, 'callback_data' => "editpayment-arzireyali2-$arzireyali2"],
-                ['text' => "📌 ارزی ریالی دوم", 'callback_data' => "arzireyali2"],
+                ['text' => rx_iranpay_label($datatextbot, 'iranpay3', "📌 ارزی ریالی دوم"), 'callback_data' => "arzireyali2"],
             ],
             [
                 ['text' => "⚙️ تنظیمات", 'callback_data' => "iranpay3setting"],
                 ['text' => $arzireyali3text, 'callback_data' => "editpayment-oniranpay3-$arzireyali3"],
-                ['text' => "📌ارزی ریالی سوم", 'callback_data' => "oniranpay3"],
+                ['text' => rx_iranpay_label($datatextbot, 'iranpay1', "📌ارزی ریالی سوم"), 'callback_data' => "oniranpay3"],
             ],
             [
                 ['text' => "⚙️ تنظیمات", 'callback_data' => "zarinpeysetting"],
@@ -1922,7 +1932,6 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     update("PaySetting", "ValuePay", $text, "NamePay", "chashbackzarinpal");
 } elseif ($text == "📦 انبار شبکه ملی" && $adminrulecheck['rule'] == "administrator") {
 
-
     $panel = function_exists('nmResolvePanelFromUserState') ? nmResolvePanelFromUserState($user) : select("marzban_panel", "*", "name_panel", $user['Processing_value'], "select");
     if (!$panel) {
 
@@ -2043,9 +2052,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         step('home', $from_id);
         return;
     }
-    // Robustly resolve the picked panel (exact -> emoji-stripped -> normalized
-    // fuzzy) so an inline/decorated button label can't strand the admin here and
-    // prevent them from ever reaching the category step.
+
     $panel = function_exists('nmResolveActivePanelByName') ? nmResolveActivePanelByName($text) : select("marzban_panel", "*", "name_panel", $text, "select");
     if (!$panel) $panel = select("marzban_panel", "*", "name_panel", $text, "select");
     if (!$panel && function_exists('nmResolvePanelFromUserState')) $panel = nmResolvePanelFromUserState(null, $text);
@@ -2111,14 +2118,10 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     $panel = function_exists('nmResolvePanelFromUserState') ? nmResolvePanelFromUserState($user) : select("marzban_panel", "*", "name_panel", $user['Processing_value'], "select");
     if (!$panel) { nm_replyOrEdit($from_id, "❌ پنل انتخاب نشده است. لطفاً ابتدا از منوی مدیریت پنل ها یک پنل را انتخاب کنید و سپس وارد بخش انبار شبکه ملی شوید.", $keyboardadmin, 'HTML'); step('home', $from_id); return; }
 
-
-    // Preserve namepanel/code_panel without wiping prior shelf-flow state.
     savedata("save", "namepanel", $panel['name_panel']);
     savedata("save", "code_panel", $panel['code_panel']);
     savedata("save", "nm_stock_import_mode", $text == "➕ افزودن کانفیگ تکی انبار" ? "single" : "bulk");
-    // Start a fresh DURABLE import session. Unlike Processing_value (which gets
-    // reset to "0" or the panel name by unrelated handlers), this column is only
-    // touched by the stock flow, so shelf_id / pending_cfg / etc. survive.
+
     if (function_exists('nmStockSessionClear')) nmStockSessionClear($from_id);
     if (function_exists('nmStockSessionPatch')) {
         nmStockSessionPatch($from_id, ['mode' => ($text == "➕ افزودن کانفیگ تکی انبار" ? "single" : "bulk")]);
@@ -2136,8 +2139,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     $panel = function_exists('nmResolvePanelFromUserState') ? nmResolvePanelFromUserState($user, $data['namepanel'] ?? null) : select("marzban_panel", "*", "name_panel", $data['namepanel'] ?? $user['Processing_value'], "select");
     $chosen = null;
     $needle = trim((string)$text);
-    // Try panel-scoped shelves first; if none match, widen to all shelves so the
-    // selection still works when the resolved panel code drifted between steps.
+
     $candidateLists = [nmStockShelves($panel['code_panel'] ?? null, false)];
     if (!empty($panel['code_panel'])) $candidateLists[] = nmStockShelves(null, false);
     foreach ($candidateLists as $list) {
@@ -2175,11 +2177,9 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         (string)($chosen['name'] ?? '∅'),
         (string)($user['Processing_value'] ?? '∅')
     ));
-    // Persist into BOTH Processing_value (legacy) and a durable column that the
-    // generic "0" state-resets (/start, back, Add_Balance, ...) never touch, so
-    // the selection survives even if Processing_value is wiped before the next tap.
+
     nmStockSetActiveShelf($from_id, $chosen['id']);
-    // Verify the write landed — same select() path savedata uses internally.
+
     $postWrite = select("user", "Processing_value", "id", $from_id, "select", ['cache' => false]);
     error_log(sprintf(
         '[STOCK_SHELF_PICK] post_save_pv=%s',
@@ -2215,7 +2215,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         nmStockRepromptShelf($from_id, $user);
         return;
     }
-    // Re-hydrate the shelf id (durable + legacy) so continuation steps keep working.
+
     nmStockSetActiveShelf($from_id, $shelf['id']);
     $session = nmStockSessionGet($user);
     $mode = $session['mode'] ?? ($data['nm_stock_import_mode'] ?? 'bulk');
@@ -2525,7 +2525,7 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         if ($shelfName !== '' && ($needle === $shelfName || strpos($needle, $shelfName) !== false)) { $chosen = $shelf; break; }
     }
     if (!$chosen) {
-        // fallback to all shelves
+
         foreach (nmStockShelves(null, false) as $shelf) {
             $shelfName = trim((string)($shelf['name'] ?? ''));
             if ($shelfName !== '' && ($needle === $shelfName || strpos($needle, $shelfName) !== false)) { $chosen = $shelf; break; }
@@ -3374,7 +3374,6 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     update("PaySetting", "ValuePay", $text, "NamePay", "maxbalancezarinpal");
 } elseif ($datain == "walletaddress" && $adminrulecheck['rule'] == "administrator") {
 
-
     if (function_exists('crypto_active_wallet')) {
         $rowTrx   = crypto_active_wallet('TRX');
         $rowUsdtT = crypto_active_wallet('USDT_TRC20');
@@ -3404,7 +3403,6 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         ], JSON_UNESCAPED_UNICODE);
         nm_adminInstantReply($from_id, $msg, $networkPickerKb, 'HTML');
     } else {
-
 
         $PaySetting = select("PaySetting", "ValuePay", "NamePay", "walletaddress", "select");
         $currentWallet = $PaySetting['ValuePay'] ?? '';
@@ -3583,7 +3581,6 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     step('cryptowallet_set', $from_id);
 } elseif ($user['step'] == "cryptowallet_set" && empty($datain)) {
 
-
     $trimmed = trim((string) $text);
     $looksLikeNav = (
         $trimmed === ''
@@ -3622,7 +3619,6 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         return;
     }
 
-
     $label = $supported[$cur]['label'];
     $okMsg = "✅ آدرس کیف پول <b>{$label}</b> با موفقیت ثبت شد.\n\n<code>" . htmlspecialchars($address) . "</code>";
     if ($cur === 'TRX') {
@@ -3652,7 +3648,6 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     step('home', $from_id);
 } elseif ($user['step'] == "walletaddresssiranpay") {
     $walletInput = trim((string) $text);
-
 
     if ($walletInput === ''
         || mb_strlen($walletInput) < 30
@@ -4603,7 +4598,6 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     }
     nm_adminInstantReply($from_id, "✅ ادمین با موفقیت حذف گردید", null, 'HTML');
 }
-
 
 elseif ($text == "🫣 مخفی کردن پنل برای یک کاربر" && $adminrulecheck['rule'] == "administrator") {
     nm_adminInstantReply($from_id, "📌آیدی عددی کاربر را برای این پنل را ارسال نمایید.", $backadmin, 'HTML');

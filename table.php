@@ -123,7 +123,8 @@ try {
             token VARCHAR(100) NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci");
         $stmt->execute();
-    } else {
+    }
+    {
         addFieldToTable($tableName, 'token', null, "VARCHAR(100)");
         addFieldToTable($tableName, 'status_cron', "1", "VARCHAR(20)");
         addFieldToTable($tableName, 'expire', NULL, "VARCHAR(100)");
@@ -783,6 +784,22 @@ try {
 try {
     $result = $connect->query("SHOW TABLES LIKE 'textbot'");
     $table_exists = ($result->num_rows > 0);
+    if ($table_exists) {
+        try {
+            $rxTbPkRes = $connect->query("SHOW KEYS FROM textbot WHERE Key_name = 'PRIMARY'");
+            $rxTbHasPk = ($rxTbPkRes && $rxTbPkRes->num_rows > 0);
+            if (!$rxTbHasPk) {
+                $connect->query("DELETE t1 FROM textbot t1 JOIN textbot t2 ON t1.id_text = t2.id_text AND t1.text != t2.text WHERE (t1.text LIKE '💸 درگاه%' OR t1.text IS NULL OR t1.text = '') AND NOT (t2.text LIKE '💸 درگاه%' OR t2.text IS NULL OR t2.text = '')");
+                $connect->query("ALTER TABLE textbot ADD COLUMN __rid INT AUTO_INCREMENT PRIMARY KEY");
+                $connect->query("DELETE t1 FROM textbot t1 JOIN textbot t2 ON t1.id_text = t2.id_text AND t1.__rid > t2.__rid");
+                $connect->query("ALTER TABLE textbot DROP COLUMN __rid");
+                $connect->query("ALTER TABLE textbot ADD PRIMARY KEY (id_text)");
+                echo "textbot primary key restored ✅";
+            }
+        } catch (Exception $rxTbPkErr) {
+            error_log('[table.php textbot pk] ' . $rxTbPkErr->getMessage());
+        }
+    }
     $text_roll = "
 ♨️ قوانین استفاده از خدمات ما
 
@@ -944,9 +961,9 @@ try {
         ['textnowpayment', '💵 پرداخت ارزی 1'],
         ['textnowpaymenttron', '💵 واریز رمزارز ترون'],
         ['textsnowpayment', '💸 پرداخت با ارز دیجیتال'],
-        ['iranpay1', '💸 درگاه  پرداخت ریالی'],
-        ['iranpay2', '💸 درگاه  پرداخت ریالی دوم'],
-        ['iranpay3', '💸 درگاه  پرداخت ریالی سوم'],
+        ['iranpay1', 'ارزی ریالی سوم'],
+        ['iranpay2', 'تتراپی'],
+        ['iranpay3', 'ترونادو'],
         ['aqayepardakht', '🔵 درگاه آقای پرداخت'],
         ['zarinpey', '🟠 زرین پی'],
         ['mowpayment', '💸 پرداخت با ارز دیجیتال'],
@@ -991,6 +1008,21 @@ try {
             // ...and heal rows that exist but are blank/NULL (broken DB) without
             // clobbering an admin's customised, non-empty text.
             $connect->query("UPDATE textbot SET text = '$textEsc' WHERE id_text = '$idEsc' AND (text IS NULL OR text = '')");
+        }
+        $rxRialDefaults = [
+            'iranpay1' => ['ارزی ریالی سوم', ['💸 درگاه  پرداخت ریالی', '💸 درگاه پرداخت ریالی', '💸 درگاه  پرداخت ریالی سوم', '💸 درگاه پرداخت ریالی سوم']],
+            'iranpay2' => ['تتراپی', ['💸 درگاه  پرداخت ریالی دوم', '💸 درگاه پرداخت ریالی دوم', '💸 درگاه  پرداخت ریالی']],
+            'iranpay3' => ['ترونادو', ['💸 درگاه  پرداخت ریالی سوم', '💸 درگاه پرداخت ریالی سوم', '💸 درگاه  پرداخت ریالی دوم']],
+        ];
+        foreach ($rxRialDefaults as $rxKey => $rxPair) {
+            $rxKeyEsc = $connect->real_escape_string($rxKey);
+            $rxNewEsc = $connect->real_escape_string($rxPair[0]);
+            $rxOldList = [];
+            foreach ($rxPair[1] as $rxOld) {
+                $rxOldList[] = "'" . $connect->real_escape_string($rxOld) . "'";
+            }
+            $rxIn = implode(',', $rxOldList);
+            $connect->query("UPDATE textbot SET text = '$rxNewEsc' WHERE id_text = '$rxKeyEsc' AND (text IS NULL OR text = '' OR text IN ($rxIn))");
         }
     }
 } catch (Exception $e) {
@@ -1206,6 +1238,8 @@ try {
     if ($rx_tableexists('Giftcodeconsumed')) {
         $rx_addcol('Giftcodeconsumed', 'kind', "VARCHAR(8) NULL");
         $rx_addcol('Giftcodeconsumed', 'consumed_at', "VARCHAR(20) NULL");
+        $rx_addcol('Giftcodeconsumed', 'released', "TINYINT(1) NOT NULL DEFAULT 0");
+        $rx_addcol('Giftcodeconsumed', 'related_order', "VARCHAR(200) NULL");
     }
 
     if ($rx_tableexists('Payment_report')) {

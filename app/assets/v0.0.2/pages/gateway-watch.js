@@ -3,6 +3,20 @@ import { escapeHtml, toast } from '../utils.js';
 import { icon } from '../icons.js';
 import { hapticImpact, hapticNotify } from '../telegram.js';
 
+function openGatewayLink(url) {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    const u = String(url || '');
+    if (!u) return;
+    const isTme = u.startsWith('https://t.me/') || u.startsWith('http://t.me/');
+    if (tg && isTme && typeof tg.openTelegramLink === 'function') {
+        tg.openTelegramLink(u);
+    } else if (tg && typeof tg.openLink === 'function') {
+        tg.openLink(u);
+    } else {
+        window.open(u, '_blank', 'noopener');
+    }
+}
+
 
 function pad2(n) { return n < 10 ? '0' + n : String(n); }
 function fmtMmSs(totalSec) {
@@ -76,10 +90,10 @@ export function startGatewayWatch(view, opts) {
 
     function html() {
         const reopenBtn = gatewayUrl
-            ? `<a class="btn btn-ghost btn-block mt-sm" href="${escapeHtml(gatewayUrl)}" target="_blank" rel="noopener">
+            ? `<button type="button" class="btn btn-ghost btn-block mt-sm" id="watch-reopen">
                     ${icon('arrowLeft', 'class="ico ico-leading"')}
                     <span>بازکردن مجدد صفحه پرداخت</span>
-               </a>`
+               </button>`
             : '';
 
         view.innerHTML = `
@@ -276,6 +290,14 @@ export function startGatewayWatch(view, opts) {
                 return;
             }
             runFinalCheck();
+        });
+    }
+
+    const $reopen = view.querySelector('#watch-reopen');
+    if ($reopen) {
+        $reopen.addEventListener('click', () => {
+            hapticImpact('light');
+            openGatewayLink(gatewayUrl);
         });
     }
 

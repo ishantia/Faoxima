@@ -197,5 +197,6 @@ function methodLabel(m) {
     if (s === 'digitaltron') return 'هش‌چکر';
     if (s === 'arze digital offline') return 'هش‌چکر';
     if (s === 'cart to cart' || s === 'carttocart_pv') return 'کارت‌به‌کارت';
+    if (s === 'iranpay1') return 'ارزی ریالی اول';
     return m || 'پرداخت';
 }
