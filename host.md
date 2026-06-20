@@ -3,22 +3,6 @@
 
 ---
 
- #### **💸  حمایت مالی**
-
-
-<details>
-  <summary> دونیت </summary>
-
-👉 [حمایت از  ریفکتور کننده NowPayments](https://nowpayments.io/donation/faoximabot)
-
-
-
-  
-
-</details>
-
----
-
 
 
 #### **🌐 آموزش نصب هاست سیپنل / aapanel**  
@@ -33,7 +17,7 @@
 #### 1️⃣ ابتدا اخرین نسخه را از مسیر زیر فایل zip را دانلود کنید سپس فایل ZIP را در هاست خود آپلود کرده و از حالت فشرده خارج نمایید.
 
 ```
-https://github.com/Mmd-Amir/Faoxima/releases
+https://github.com/ishantia/Faoxima/releases
 ```
 
  #### 2️⃣مسیر زیر را در مرورگر باز کنید (به جای domin.ir و Faoximabot دامنه و مسیر استخراج شده‌ی خودتان را وارد کنید):
