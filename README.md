@@ -1,7 +1,6 @@
 ## ⭐ لطفاً پروژه را **Star** کنید تا دیگران هم آن را پیدا کنند!
 
 
----
 
 ## ربات فاکسیما — نسخه ریفکتور شده از ربات میرزا
 
@@ -45,7 +44,7 @@
 <details>
   <summary> نصب </summary>
 
-👉 [سیپنل / aapanel](https://github.com/Mmd-Amir/Faoxima/blob/main/host.md)
+👉 [سیپنل / aapanel](https://github.com/ishantia/Faoxima/blob/main/host.md)
 
 
   
@@ -64,7 +63,7 @@
 <details>
   <summary> نصب </summary>
 
-👉 [سرور اوبونتو 22](https://github.com/Mmd-Amir/Faoxima/blob/main/server.md)
+👉 [سرور اوبونتو 22](https://github.com/ishantia/Faoxima/blob/main/server.md)
   
 
 </details>
