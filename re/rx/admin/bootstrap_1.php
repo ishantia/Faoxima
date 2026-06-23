@@ -9,7 +9,7 @@ $textadmin = ["panel", "/panel", $textbotlang['Admin']['textpaneladmin']];
 if (isset($datain) && $datain != "" && $text == "" && in_array($from_id, $admin_ids)) {
     $text = $datain;
 }
-$text_panel_admin_login_template = "💎 | Version Bot: 0.0.2\n📌 | Version Mini App: 0.0.2\n<blockquote>🔹 | این ربات کاملاً رایگان است توسط Mmd | Amir ریفکتور شده است</blockquote>\n\n<blockquote>🔹 | هرگونه فروش یا دریافت وجه بابت این ربات تخلف محسوب می‌شود.</blockquote>\n\n<blockquote>🔹 | در صورت مشاهده فروش یا دریافت وجه، لطفاً وجه خود را پیگیری کرده و بازپس‌گیری نمایید.</blockquote>\n\n<blockquote>🐞 | اگر در عملکرد ربات با باگ یا مشکلی مواجه شدید، از طریق گیت هاب یا گروه فاکسیما اطلاع رسانی کنید</blockquote>\n\n<blockquote><a href=\"https://github.com/Mmd-Amir/Faoxima\">لینک گیت هاب</a></blockquote>";
+$text_panel_admin_login_template = "💎 | Version Bot: 0.0.2\n📌 | Version Mini App: 0.0.2\n<blockquote>🔹 | این ربات کاملاً رایگان است توسط ishantia ریفکتور شده است</blockquote>\n\n<blockquote>🔹 | هرگونه فروش یا دریافت وجه بابت این ربات تخلف محسوب می‌شود.</blockquote>\n\n<blockquote>🔹 | در صورت مشاهده فروش یا دریافت وجه، لطفاً وجه خود را پیگیری کرده و بازپس‌گیری نمایید.</blockquote>\n\n<blockquote>🐞 | اگر در عملکرد ربات با باگ یا مشکلی مواجه شدید، از طریق گیت هاب یا گروه فاکسیما اطلاع رسانی کنید</blockquote>\n\n<blockquote><a href=\"https://github.com/ishantia/Faoxima\">لینک گیت هاب</a></blockquote>";
 
 if (!function_exists('normalizeXuiSingleSubscriptionBaseUrl')) {
 

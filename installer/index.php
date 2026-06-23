@@ -10,7 +10,7 @@ $configDirectory = $rootDirectory.'config.php';
 $tablesDirectory = $rootDirectory.'table.php';
 if(!file_exists($configDirectory) || !file_exists($tablesDirectory)) {
     $ERROR[] = "فایل های پروژه ناقص هستند.";
-    $ERROR[] = "فایل های پروژه را مجددا دانلود و بارگذاری کنید (<a href='https://github.com/Mmd-Amir/Faoxima/releases/'>‎🌐 Github</a>)";
+    $ERROR[] = "فایل های پروژه را مجددا دانلود و بارگذاری کنید (<a href='https://github.com/ishantia/Faoxima/releases/'>‎🌐 Github</a>)";
 }
 if(phpversion() < 8.2){
     $ERROR[] = "نسخه PHP شما باید حداقل 8.2 باشد.";
@@ -111,7 +111,7 @@ if(isset($uPOST['submit']) && $uPOST['submit']) {
         $newConfigData = updateConfigValues($rawConfigData, $replacements, $replacementCount);
         if($replacementCount === 0 || file_put_contents($configDirectory,$newConfigData) === false) {
             $ERROR[] = '✏️❌ خطا در زمان بازنویسی اطلاعات فایل اصلی ربات';
-            $ERROR[] = "فایل های پروژه را مجددا دانلود و بارگذاری کنید (<a href='https://github.com/Mmd-Amir/Faoxima/releases/'>‎🌐 Github</a>)";
+            $ERROR[] = "فایل های پروژه را مجددا دانلود و بارگذاری کنید (<a href='https://github.com/ishantia/Faoxima/releases/'>‎🌐 Github</a>)";
     }
         else {
             $baseAddress = rtrim($document['address'], '/');
@@ -1184,7 +1184,7 @@ function ensureAdminRecord($dbInfo, $adminNumber) {
             <p>
                 Faoxima Installer
                 ·
-                <a href="https://github.com/Mmd-Amir/Faoxima" target="_blank" rel="noopener">گیت‌هاب</a>
+                <a href="https://github.com/ishantia/Faoxima" target="_blank" rel="noopener">گیت‌هاب</a>
                 ·
                 <a href="https://t.me/faoxima" target="_blank" rel="noopener">تلگرام</a>
                 ·
